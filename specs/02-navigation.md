@@ -1,7 +1,7 @@
 # 02 — Pantallas y navegación
 
-> **Estado:** ✅ Aprobado v1.0 (2026-10-10, D60)
-> **Última actualización:** 2026-10-03
+> **Estado:** ✅ Aprobado v1.1 (2026-10-10, D76: menú inferior en los detalles) · antes v1.0 (D60)
+> **Última actualización:** 2026-10-10
 > Base: [`01-mvp.md`](./01-mvp.md). Cada pantalla existe porque la necesita al menos una feature; si no, no se construye.
 > Este documento define **qué hay en cada pantalla y cómo se llega**, no cómo se ve (colores, tipografía, estilo): eso se define en la fase de Diseño.
 > Las rutas están escritas sin depender de una librería; la herramienta de navegación se elige en la fase de Diseño.
@@ -33,6 +33,8 @@ Inicio de sesión (S01)
 ```
 
 **Total: 13 pantallas** (3 modales, 1 solo administrador, 1 que reutiliza el diseño de Perfil).
+
+**Menú inferior (D76):** las pantallas que cuelgan de una pestaña (S03, S08, S13, S10) se abren **con el menú visible**, dentro de la pestaña desde la que se llegó (abrir un partido desde Inicio se queda en Inicio). Inicio de sesión (S01), los modales (S12, S05, S06) y la cámara (S07) **tapan el menú**. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar a otra. Una entrada externa (§4) abre el detalle en la pestaña Inicio.
 
 ## 2. Pantallas
 

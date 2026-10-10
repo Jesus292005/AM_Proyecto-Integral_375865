@@ -82,6 +82,8 @@
 | D73 | 2026-10-10 | Tareas de la semana 2 (`tasks/S2.md`) **aprobadas** (v1.0). Lo que Claude propone al planear cada tarea se registra en `tasks/S2-propuestas.md`. | Aprobación de Jesús. |
 | D74 | 2026-10-10 | El token tipográfico `menu` usa **Archivo 800** (no 700). | Ahorrar tamaño: así solo se incluyen los grosores 400/600/800 de 05-ui §3 (~120 KB menos). Decisión de Jesús. |
 | D75 | 2026-10-10 | **Adaptación a tamaños de pantalla** (05-ui §9): anchos con flex y porcentajes, nunca fijos; texto, espacios y áreas táctiles en dp sin escalar por ancho; lo que no cabe se reduce solo en su componente; revisión en un emulador angosto (320–360 dp) además del teléfono de Jesús. | Pedido de Jesús (la app debe ajustarse a distintos tamaños de teléfono); escalar todo por ancho rompe accesibilidad y áreas táctiles. |
+| D76 | 2026-10-10 | **Menú inferior visible en los detalles:** S03, S08, S13 y S10 se abren dentro de la pestaña desde la que se llega (cada pestaña tiene su propia pila; las URLs de 02-navigation §3 no cambian). S01, S12, S05, S06 y S07 tapan el menú. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar de pestaña. Un enlace externo (notificación) abre el detalle en la primera pestaña que lo contiene (Inicio). | Pedido de Jesús al probar T03: el menú desaparecía en los detalles. |
+| D77 | 2026-10-10 | La navegación usa un **tema oscuro construido con los tokens** y fondo nativo `fondo`; transición entre pantallas **de desvanecer** (en Android la pila nativa no permite fijar la duración de 05-ui §8, solo el tipo). | Al probar T03 se veía un destello blanco entre pantallas (tema claro por defecto del navegador). |
 
 ## Pendientes
 
