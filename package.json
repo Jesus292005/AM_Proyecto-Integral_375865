@@ -1,0 +1,11 @@
+{
+  "name": "campeon-de-sillon-herramientas",
+  "private": true,
+  "description": "Herramientas de desarrollo del repositorio (CLI de Supabase). La app vive en App/.",
+  "scripts": {
+    "supabase": "supabase"
+  },
+  "devDependencies": {
+    "supabase": "2.120.0"
+  }
+}

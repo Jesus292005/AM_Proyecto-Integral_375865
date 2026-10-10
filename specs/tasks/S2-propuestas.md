@@ -108,3 +108,18 @@
 - Las pantallas apiladas siguen montadas pero ocultas para accesibilidad, así que las pruebas cuentan con `includeHiddenElements`. Verificado que las 3 pruebas D78 **fallan** con `push` y pasan con `navigate`.
 - Límite de la regla de lint: no detecta `const r = useRouter(); r.push(...)`. Se acepta; la revisión de código lo cubre.
 - Total de pruebas de la app: 42.
+
+## T04 — Proyecto de Supabase y CLI (2026-10-10)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Proyecto `campeon-de-sillon` en el plan gratis, región lo más cercana a Tijuana (West US si el panel la ofrece; si no, "Americas"). Contraseña de la base de datos solo en el gestor de contraseñas de Jesús. | ✅ Creado (ref `hhfzadtibqhbxyevpmda`, región `us-west-2`, Oregón; PostgreSQL 17). |
+| 2 | Opciones de seguridad al crear el proyecto: **Data API activada** (la usa `supabase-js`); **"Automatically expose new tables" desactivado** → cada migración da los permisos (`GRANT`) explícitos, solo a `authenticated`, nunca a `anon` (F01 V6); **"Enable automatic RLS" activado** como red de seguridad (una tabla sin políticas queda cerrada, no abierta). Sin integración con GitHub: las migraciones se aplican con la CLI. | ✅ OK. |
+| 3 | CLI de Supabase como dependencia de desarrollo en un `package.json` de la **raíz** (solo herramientas), versión fija; se usa con `npx supabase`. Alternativa descartada: Scoop global (la versión no queda registrada). | ✅ Opción A. |
+| 4 | `supabase init` en la raíz → `supabase/config.toml` (con `project_id = "campeon-de-sillon"`) y `supabase/.gitignore`; sin ajustes de VS Code para Deno. | ✅ OK. |
+| 5 | `supabase login`, `supabase link` y `supabase secrets set` los corre **Jesús** (piden token, contraseña o clave). El secreto se carga con `--env-file supabase/functions/.env` para que la clave no quede en el historial de la terminal. | ✅ OK. |
+| 6 | **Pruebas de RLS con `supabase test db` pospuestas a T14** (T02 #3 decía configurarlas en T04). Requieren la base local en Docker (`supabase start`, varias imágenes grandes); se configuran cuando haya pruebas que correr. En T04 solo se verifica que Docker está instalado (29.2.0). | ✅ Pospuesto a T14. |
+
+**Verificación (2026-10-10):** `npx supabase projects list` → proyecto `ACTIVE_HEALTHY` y `linked: true`; `npx supabase secrets list` → `API_FOOTBALL_KEY` cargado (solo se muestra su resumen). `git status` no muestra secretos: `supabase/functions/.env` y `supabase/.temp/` están ignorados; `config.toml` solo referencia secretos con `env(...)`.
+
+**Riesgo registrado:** el plan gratis de Supabase **pausa el proyecto tras 7 días sin actividad**. Las tareas programadas de T24/T25 deberían mantenerlo activo, pero hay que confirmarlo antes de la demo (P-07); si se pausa, se reactiva desde el panel.

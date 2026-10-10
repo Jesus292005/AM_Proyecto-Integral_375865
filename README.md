@@ -24,7 +24,7 @@ Detalle y justificación en [`specs/04-tech-stack.md`](./specs/04-tech-stack.md)
 
 - Node.js LTS y npm
 - Un teléfono Android con el *development build* instalado (el inicio de sesión con Google no funciona en Expo Go)
-- Deno 2 y Supabase CLI (para el servidor)
+- Deno 2 (para el servidor; la CLI de Supabase se instala con `npm install` en la raíz)
 
 ## Cómo arrancar
 
@@ -36,6 +36,18 @@ npm start
 ```
 
 Para probar las funciones del servidor en local, copiar `supabase/functions/.env.example` como `supabase/functions/.env` y llenar los secretos.
+
+### Servidor (Supabase)
+
+La CLI de Supabase está como dependencia de desarrollo en la raíz (versión fija); se usa con `npx supabase`.
+
+```bash
+npm install                     # en la raíz: instala la CLI
+npx supabase login              # abre el navegador para autorizar la CLI
+npx supabase link --project-ref <ref-del-proyecto>   # pide la contraseña de la base de datos
+npx supabase secrets set --env-file supabase/functions/.env   # carga los secretos del servidor
+npx supabase secrets list       # verifica (muestra solo un resumen, nunca el valor)
+```
 
 ## Verificación (tipos, lint y pruebas)
 
