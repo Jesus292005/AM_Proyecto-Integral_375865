@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": ["no-explicit-any"]
+    }
+  },
+  "tasks": {
+    "typecheck": "deno check .",
+    "lint": "deno lint --permit-no-files",
+    "test": "deno test --permit-no-files"
+  }
+}
