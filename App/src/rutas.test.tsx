@@ -20,6 +20,11 @@ async function seCerro(id: string) {
   await waitFor(() => expect(screen.queryByText(id)).not.toBeOnTheScreen());
 }
 
+// Las pantallas apiladas siguen montadas (ocultas para accesibilidad): una copia de más cuenta.
+function contar(id: string) {
+  return screen.queryAllByText(id, { includeHiddenElements: true }).length;
+}
+
 const rutas = [
   { url: '/login', id: 'S01', titulo: 'Inicio de sesión' },
   { url: '/inicio', id: 'S11', titulo: 'Inicio' },
@@ -122,6 +127,43 @@ describe('menú inferior', () => {
     await tocar('Partidos', 'tab');
     expect(await screen.findByText('S03')).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Partidos' })).toBeSelected();
+  });
+
+  it('tocar varias veces el mismo enlace no apila la pantalla (D78)', async () => {
+    await abrir('/inicio');
+
+    // Toques rápidos sobre el mismo botón, antes de que la pantalla nueva lo tape.
+    const enlace = await screen.findByRole('button', { name: 'Partido 1' });
+    for (let i = 0; i < 3; i++) await fireEvent.press(enlace);
+    expect(await screen.findByText('S03')).toBeOnTheScreen();
+
+    await tocar('Volver');
+    await seCerro('S03');
+    expect(screen.getByText('S11')).toBeOnTheScreen();
+  });
+
+  it('cambiar la jornada actualiza Partidos sin agregar historial (D78)', async () => {
+    await abrir('/partidos');
+
+    await tocar('Jornada 2');
+    await tocar('Jornada 2');
+
+    expect(await screen.findByText('jornada: 2')).toBeOnTheScreen();
+    expect(contar('S02')).toBe(1);
+  });
+
+  it('cambiar la vista del grupo actualiza el grupo sin agregar historial (D78)', async () => {
+    await abrir('/grupos');
+
+    await tocar('Grupo 1');
+    await tocar('Vista jornada');
+    await tocar('Vista jornada');
+    expect(await screen.findByText('vista: jornada')).toBeOnTheScreen();
+    expect(contar('S08')).toBe(1);
+
+    await tocar('Volver');
+    await seCerro('S08');
+    expect(screen.getByText('S04')).toBeOnTheScreen();
   });
 
   it('al crear un grupo desde el modal se abre el grupo en la pestaña Grupos', async () => {

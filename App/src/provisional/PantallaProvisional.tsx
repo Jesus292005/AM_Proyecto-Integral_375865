@@ -70,7 +70,7 @@ export function PantallaProvisional({
                 key={e.titulo}
                 titulo={e.titulo}
                 variante="secundario"
-                onPress={() => router.push(e.href)}
+                onPress={() => router.navigate(e.href)}
               />
             ))}
             {children}

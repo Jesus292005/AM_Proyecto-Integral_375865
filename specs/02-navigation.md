@@ -1,6 +1,6 @@
 # 02 — Pantallas y navegación
 
-> **Estado:** ✅ Aprobado v1.1 (2026-10-10, D76: menú inferior en los detalles) · antes v1.0 (D60)
+> **Estado:** ✅ Aprobado v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
 > **Última actualización:** 2026-10-10
 > Base: [`01-mvp.md`](./01-mvp.md). Cada pantalla existe porque la necesita al menos una feature; si no, no se construye.
 > Este documento define **qué hay en cada pantalla y cómo se llega**, no cómo se ve (colores, tipografía, estilo): eso se define en la fase de Diseño.
@@ -57,6 +57,8 @@ Inicio de sesión (S01)
 ## 3. Rutas y datos que viajan
 
 **Regla:** entre pantallas solo viajan **identificadores**; cada pantalla carga sus propios datos. Así se evita mostrar datos viejos.
+
+**Regla de historial (D78):** nunca se apila la misma pantalla con los mismos parámetros (tocar dos veces un botón no deja dos copias). Cambiar un parámetro opcional de la pantalla actual (`jornada?` en S02, `vista?` en S08) actualiza esa pantalla y no agrega historial. Ir a una pantalla distinta sí deja historial para que "Volver" regrese.
 
 | Ruta | Pantalla | Parámetros | Llega desde | Puede ir a |
 |---|---|---|---|---|
