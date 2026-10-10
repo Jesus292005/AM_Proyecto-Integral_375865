@@ -1,6 +1,6 @@
 # 03 — Modelo de datos (conceptual)
 
-> **Estado:** ✅ Aprobado v1.0 (2026-10-04, D49)
+> **Estado:** ✅ Aprobado v1.1 (2026-10-10; v1.1 agrega colores de equipo, D70)
 > **Última actualización:** 2026-10-04
 > Base: [`01-mvp.md`](./01-mvp.md), [`02-navigation.md`](./02-navigation.md), [`decisions.md`](./decisions.md).
 > Este documento describe **qué datos existen y cómo se relacionan**. No decide dónde viven (base de datos, tablas, colecciones): eso es la fase de Diseño.
@@ -46,7 +46,7 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 
 **Jornada** — `id`, `torneoId`, `orden` (1–17 fase regular; 18+ rondas de liguilla), `nombre` ("Jornada 10", "Liguilla · Cuartos"), `nombresProveedor` (nombres de ronda de la API que agrupa), `fase` (`REGULAR` | `LIGUILLA`; una jornada por ronda de liguilla, D57), `fechaInicio`, `fechaFin`, `estaCerrada` (todos sus partidos calificados).
 
-**Equipo** — `id`, `proveedorId`, `nombre`, `nombreCorto`, `escudoUrl`.
+**Equipo** — `id`, `proveedorId`, `nombre`, `nombreCorto`, `escudoUrl`, `colorPrimario?`, `colorTexto?` (cargados manualmente, D70).
 
 **Partido** — `id`, `proveedorId`, `torneoId`, `jornadaId`, `equipoLocalId`, `equipoVisitanteId`, `inicio` (fecha y hora), `estado` (`PROGRAMADO` | `EN_JUEGO` | `TERMINADO` | `POSPUESTO` | `CANCELADO`), `golesLocal?`, `golesVisitante?`, `golesLocalMedioTiempo?`, `golesVisitanteMedioTiempo?`, `esSimulado`, `partidoOrigenId?` (partido de 2024 del que se copió, si es simulado), `calificadoEn?`, `sincronizadoEn`.
 

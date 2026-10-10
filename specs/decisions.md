@@ -64,6 +64,21 @@
 | D55 | 2026-10-04 | Spec **F01 aprobada** con las propuestas de sus preguntas Q1–Q4. | Aprobación de Jesús. |
 | D56 | 2026-10-04 | F02: propuestas Q1, Q2, Q4, Q5 aprobadas; las rondas finales se muestran como **"Liguilla"** (sin play-in, eliminado para 2026); la fase de `Jornada` pasa a `REGULAR` / `LIGUILLA`. Pendiente F02-Q6. | Aprobación de Jesús; rondas verificadas con la API. |
 | D57 | 2026-10-04 | La liguilla se divide en **una jornada por ronda** ("Liguilla · Cuartos", "Liguilla · Semifinales", "Liguilla · Final"), cada una con ranking de jornada e insignia "top de la jornada". Spec **F02 aprobada**. | Mantiene el ritmo semanal; la demo cae en liguilla. |
+| D58 | 2026-10-10 | Los commits los ejecuta **Jesús**. Claude entrega al final de cada bloque de trabajo los comandos listos (archivos exactos + mensaje), sin ejecutarlos. | Jesús quiere monitorear el avance. |
+| D59 | 2026-10-10 | **Un commit por tarea** terminada. El mínimo de 3 por semana es orientativo (fomentar trabajo constante), no un conteo estricto. | Respuesta de Jesús. |
+| D60 | 2026-10-10 | `02-navigation.md` **aprobado** (v1.0, 13 pantallas). | Aprobación de Jesús. |
+| D61 | 2026-10-10 | La app tendrá **modo claro y modo oscuro**, con una identidad visual propia (no una interfaz genérica). Dirección visual: pendiente (P-21). | Pedido de Jesús. |
+| D62 | 2026-10-10 | **Reemplaza D61:** la app tiene **solo tema oscuro**. Dirección visual: mezcla de "Pizarrón del DT" (base, análisis) y "Ultimate Team" (solo para recompensas). Base oscura **distinta del azul marino** que usan las apps de estadísticas. Los colores se definen como variables (tokens) para poder agregar un tema claro en el futuro sin reescribir. | Análisis de Jesús: las apps deportivas y de gamificación usan fondos oscuros para resaltar lo llamativo; además, un solo tema reduce el trabajo de diseño y pruebas a la mitad. |
+| D63 | 2026-10-10 | Nombre de la app: **"Campeón de Sillón"**. | Decisión de Jesús; "sillón" es más local que "sofá" y evita confusión con SofaScore. |
+| D64 | 2026-10-10 | Identificador de paquete Android: **`mx.campeondesillon.app`** (permanente). | Decisión de Jesús; sin nombre personal. |
+| D65 | 2026-10-10 | Paleta principal: **Grafito y naranja balón** (fondo #131211, acento #FF6A2B). La arquitectura de temas queda lista (colores como variables, proveedor de tema) para agregar más paletas en el futuro; el selector **no** entra al MVP (backlog B20). | Decisión de Jesús, por tiempo. |
+| D66 | 2026-10-10 | Trabajo por **módulos M1–M6** (ver `01-mvp.md` §4.1): specs del módulo → tareas → implementación → pruebas → validación de Jesús; las specs del siguiente módulo se escriben mientras se valida el actual. | Aprobado por Jesús (P-23), con ajuste pendiente sobre funcionalidades nativas (P-25). |
+| D67 | 2026-10-10 | Dirección de diseño: **mezcla de "Sección deportiva" y "Transmisión"**. De Sección deportiva: estructura con líneas finas, tablas, formas rectas (radio pequeño, sin cortes en diagonal), menú inferior de texto con barra de acento y **Archivo para todo el texto**. De Transmisión: **Teko para titulares y números** y los colores de los equipos en el encabezado del partido. Del Pizarrón: "Cierra en" separado del encabezado y la **forma de los equipos como círculos de color** con la letra (G/E/P). | Decisión de Jesús tras revisar las 3 direcciones y la mezcla. |
+| D68 | 2026-10-10 | Encabezado del partido: **variante 2** — nombres completos en Teko con una franja delgada del color de cada equipo; "Cierra en" debajo, separado. | Elección de Jesús (P-21). |
+| D69 | 2026-10-10 | F11 se divide: **F11a** (permiso de notificaciones, registro del dispositivo y recordatorio antes del partido) en **M2**; **F11b** (aviso de puntos listos) en **M3**. Ambas Must. | Funcionalidad nativa visible desde la semana 3 (P-25). |
+| D70 | 2026-10-10 | `Equipo` agrega `colorPrimario` y `colorTexto` (cargados manualmente: la API no los proporciona); si faltan, se usa un color neutro. | Necesario para el encabezado de partido (D68). |
+| D71 | 2026-10-11 | `05-ui.md` **aprobado** (v1.0). | Aprobación de Jesús. |
+| D72 | 2026-10-11 | El selector de marcador llega hasta **10 goles por equipo**. | Decisión de Jesús (UI-02). |
 
 ## Pendientes
 

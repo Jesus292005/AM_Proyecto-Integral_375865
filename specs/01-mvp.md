@@ -1,6 +1,6 @@
 # 01 — MVP: alcance, prioridades y plan
 
-> **Estado:** ✅ Aprobado v1.2 (2026-10-04; v1.1 agrega F17–F20 por D39/D41; v1.2 agrega F21 y reordena Should por D42)
+> **Estado:** ✅ Aprobado v1.3 (2026-10-10; F11 dividida por D69, módulos por D66) · antes v1.2 (2026-10-04; v1.1 agrega F17–F20 por D39/D41; v1.2 agrega F21 y reordena Should por D42)
 > **Última actualización:** 2026-10-03
 > Base: [`00-project.md`](./00-project.md) (aprobado) y [`decisions.md`](./decisions.md).
 > Este documento decide **qué entra y en qué orden**. El detalle de cada feature va en `features/Fxx-*.md`.
@@ -33,7 +33,8 @@ Si una funcionalidad no aporta a este flujo o a la gamificación que lo hace atr
 | F08 | Rankings del grupo: torneo y jornada | Must | F05, F07 | D10 |
 | F09 | Modo de partidos simulados | Must | F02 | D15 — necesario para probar F05/F06 sin esperar partidos |
 | F10 | Historial de mis predicciones con desglose de puntos | Must | F05, F06 | Transparencia (P5) |
-| F11 | Notificaciones push: puntos entregados y recordatorio antes del partido | **Must** | F05 | Funcionalidad nativa (D32) |
+| F11a | Notificaciones: permiso, registro del dispositivo y recordatorio antes del partido | **Must** | F01, F02 | Funcionalidad nativa (D32, D69) |
+| F11b | Notificación de puntos listos | **Must** | F05, F11a | D69 |
 | F12 | Unirse a un grupo escaneando QR | Should | F07 | Funcionalidad nativa (cámara) |
 | F13 | Rachas de aciertos | Should | F05 | P4: por aciertos, no por uso |
 | F14 | Insignias en la "Vitrina" del perfil (incluye "top de la jornada" y "mejor análisis de la jornada") | Should | F06, F08, F13 | D10, D42 |
@@ -65,12 +66,25 @@ Mínimo 3 commits por semana. Fecha de entrega: finales de noviembre (P-07).
 |---|---|---|---|
 | S1 | 5–11 oct | **Especificación y diseño:** aprobar este MVP, navegación, modelo de datos, specs de los Must, elegir herramientas de backend/BD. | — |
 | S2 | 12–18 oct | Base del proyecto (app + backend), development build, login, partidos 2024. | F01, F02 |
-| S3 | 19–25 oct | Predicciones, justificación y modo simulado. | F03, F04, F09 |
-| S4 | 26 oct–1 nov | Calificación automática e IA. | F05, F06, F10 |
+| S3 | 19–25 oct | Predicciones, justificación, modo simulado y recordatorios. | F03, F04, F09, F11a |
+| S4 | 26 oct–1 nov | Calificación automática, IA y aviso de puntos. | F05, F06, F10, F11b |
 | S5 | 2–8 nov | Grupos, rankings y previa. **Contratar 1 mes de API** (según fecha de la demo) y pasar a temporada 2026. | F07, F08, F21 |
-| S6 | 9–15 nov | Notificaciones (Must, primero), rachas, insignias y QR. | F11, F13, F14, F12 |
+| S6 | 9–15 nov | Rachas, insignias y QR. | F13, F14, F12 |
 | S7 | 16–22 nov | Perfil público, inicio, equipo favorito, compartir; ajustes con datos reales y corrección de errores. | F19, F17, F18, F15, (F20), (F16) |
 | S8 | 23–29 nov | **Congelamiento:** sin features nuevas; estabilizar y ensayar la demo. | — |
+
+### 4.1 Módulos (D66)
+
+| Módulo | Semanas | Features | Qué se puede probar al terminarlo |
+|---|---|---|---|
+| **M1 Base** | S2 | Configuración, F01, F02 | Entrar con Google y ver los partidos |
+| **M2 Predecir** | S3 | F03, F04, F09, F11a | Predecir, justificar y simular un partido |
+| **M3 Calificar** | S4 | F05, F06, F10, F11b | El partido termina y llegan puntos y bono de IA |
+| **M4 Competir** | S5 | F07, F08, F21 | Grupos, rankings y previa |
+| **M5 Gamificación y QR** | S6 | F13, F14, F12 | Rachas, insignias, QR |
+| **M6 Pulido** | S7 | F19, F17, F18, F15, (F20, F16) | Perfil público, inicio, compartir, carta |
+
+Ciclo de cada módulo: specs → revisión → tareas → implementación → pruebas → validación de Jesús → actualizar specs. Las specs del módulo siguiente se escriben mientras Jesús valida el actual.
 
 **Riesgo del plan:** S4 (IA) y S7 (4 Should + datos reales) son las semanas más cargadas. Las semanas tempranas tienen los Should de mayor prioridad, así que un retraso recorta primero los de menor prioridad.
 

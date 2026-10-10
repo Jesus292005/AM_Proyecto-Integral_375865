@@ -20,6 +20,7 @@
 | B08 | **Predicciones de temporada:** campeón, superlíder, goleador. | |
 | B09 | **Quiniela de liguilla** (llaves completas antes de que empiece). | Encaja con el formato de la Liga MX. |
 | B17 | **Más formas de predecir goles** (distintos rangos). | Pedido por Jesús; cuidar que no se parezca a "over/under". |
+| B20 | **Selector de paletas** (Pizarrón, Grafito, Obsidiana) y, a futuro, **paletas como recompensas desbloqueables**. | La arquitectura de temas ya queda lista en el MVP (D65). |
 | B16 | **"Pasa de ronda"** en partidos de liguilla (además del resultado de 90 minutos). | Complementa D43. |
 | B10 | **Eventos por tiempo limitado:** semana de clásico, liguilla, fecha FIFA. | Evitar eventos diarios que generen miedo a perderse algo (FOMO). |
 | B11 | **Liga de aficiones:** suma de puntos por afición de cada club ("¿qué afición sabe más?"). | Usa el equipo favorito (F18). |

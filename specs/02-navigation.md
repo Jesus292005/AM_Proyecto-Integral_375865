@@ -1,6 +1,6 @@
 # 02 — Pantallas y navegación
 
-> **Estado:** Borrador v0.2 — pendiente de aprobación de Jesús
+> **Estado:** ✅ Aprobado v1.0 (2026-10-10, D60)
 > **Última actualización:** 2026-10-03
 > Base: [`01-mvp.md`](./01-mvp.md). Cada pantalla existe porque la necesita al menos una feature; si no, no se construye.
 > Este documento define **qué hay en cada pantalla y cómo se llega**, no cómo se ve (colores, tipografía, estilo): eso se define en la fase de Diseño.
