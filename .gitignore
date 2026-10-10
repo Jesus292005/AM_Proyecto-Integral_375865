@@ -1,0 +1,18 @@
+# Secretos y variables de entorno (nunca se versionan; usar los .env.example)
+.env
+.env*.local
+supabase/functions/.env
+
+# Dependencias
+node_modules/
+
+# Supabase CLI (archivos temporales locales)
+supabase/.temp/
+supabase/.branches/
+
+# Claude Code (copias de trabajo locales)
+.claude/worktrees/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

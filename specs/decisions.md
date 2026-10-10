@@ -1,7 +1,7 @@
 # Registro de decisiones
 
 > Regla: una decisión **cerrada** no se vuelve a discutir salvo que aparezca información nueva; si cambia, se agrega una nueva fila que la reemplaza (no se borra la anterior).
-> Última actualización: 2026-10-03
+> Última actualización: 2026-10-10
 
 ## Decisiones cerradas
 
@@ -79,6 +79,7 @@
 | D70 | 2026-10-10 | `Equipo` agrega `colorPrimario` y `colorTexto` (cargados manualmente: la API no los proporciona); si faltan, se usa un color neutro. | Necesario para el encabezado de partido (D68). |
 | D71 | 2026-10-11 | `05-ui.md` **aprobado** (v1.0). | Aprobación de Jesús. |
 | D72 | 2026-10-11 | El selector de marcador llega hasta **10 goles por equipo**. | Decisión de Jesús (UI-02). |
+| D73 | 2026-10-10 | Tareas de la semana 2 (`tasks/S2.md`) **aprobadas** (v1.0). Lo que Claude propone al planear cada tarea se registra en `tasks/S2-propuestas.md`. | Aprobación de Jesús. |
 
 ## Pendientes
 
