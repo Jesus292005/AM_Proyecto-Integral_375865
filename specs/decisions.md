@@ -80,6 +80,8 @@
 | D71 | 2026-10-11 | `05-ui.md` **aprobado** (v1.0). | Aprobación de Jesús. |
 | D72 | 2026-10-11 | El selector de marcador llega hasta **10 goles por equipo**. | Decisión de Jesús (UI-02). |
 | D73 | 2026-10-10 | Tareas de la semana 2 (`tasks/S2.md`) **aprobadas** (v1.0). Lo que Claude propone al planear cada tarea se registra en `tasks/S2-propuestas.md`. | Aprobación de Jesús. |
+| D74 | 2026-10-10 | El token tipográfico `menu` usa **Archivo 800** (no 700). | Ahorrar tamaño: así solo se incluyen los grosores 400/600/800 de 05-ui §3 (~120 KB menos). Decisión de Jesús. |
+| D75 | 2026-10-10 | **Adaptación a tamaños de pantalla** (05-ui §9): anchos con flex y porcentajes, nunca fijos; texto, espacios y áreas táctiles en dp sin escalar por ancho; lo que no cabe se reduce solo en su componente; revisión en un emulador angosto (320–360 dp) además del teléfono de Jesús. | Pedido de Jesús (la app debe ajustarse a distintos tamaños de teléfono); escalar todo por ancho rompe accesibilidad y áreas táctiles. |
 
 ## Pendientes
 
