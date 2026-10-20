@@ -1,7 +1,7 @@
 # Registro de decisiones
 
 > Regla: una decisión **cerrada** no se vuelve a discutir salvo que aparezca información nueva; si cambia, se agrega una nueva fila que la reemplaza (no se borra la anterior).
-> Última actualización: 2026-10-10
+> Última actualización: 2026-10-19
 
 ## Decisiones cerradas
 
@@ -85,10 +85,10 @@
 | D76 | 2026-10-10 | **Menú inferior visible en los detalles:** S03, S08, S13 y S10 se abren dentro de la pestaña desde la que se llega (cada pestaña tiene su propia pila; las URLs de 02-navigation §3 no cambian). S01, S12, S05, S06 y S07 tapan el menú. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar de pestaña. Un enlace externo (notificación) abre el detalle en la primera pestaña que lo contiene (Inicio). | Pedido de Jesús al probar T03: el menú desaparecía en los detalles. |
 | D77 | 2026-10-10 | La navegación usa un **tema oscuro construido con los tokens** y fondo nativo `fondo`; transición entre pantallas **de desvanecer** (en Android la pila nativa no permite fijar la duración de 05-ui §8, solo el tipo). | Al probar T03 se veía un destello blanco entre pantallas (tema claro por defecto del navegador). |
 | D78 | 2026-10-10 | **Nunca se apila la misma pantalla con los mismos parámetros.** Toda navegación usa `router.navigate` o `<Link>` (que no duplican la pantalla de arriba); `router.push` está prohibido por una regla de lint. Cambiar un filtro de la pantalla actual (jornada en S02, vista en S08) actualiza esa pantalla con `router.setParams` y no agrega historial. Ir a una pantalla **distinta** (p. ej. Grupo → Usuario) sí deja historial. | Al probar T03, Jesús vio que tocar varias veces un botón apilaba copias de la pantalla y obligaba a tocar "Volver" de más. |
+| D79 | 2026-10-19 | **Tope de tamaño de descarga: 30 MB** desde Google Play en `arm64-v8a`, medido con `bundletool get-size total` sobre el AAB de producción (04-tech-stack §7). Resuelve P-20. Se vuelve a medir antes de la demo y al agregar una librería nativa pesada. | Medición 1 (T07): 23.8–24.0 MB sin librerías nativas propias; el margen (~6 MB) cubre las que piden las specs (Google Sign-In, almacenamiento seguro, `expo-image`, notificaciones, cámara, SVG/QR). |
 
 ## Pendientes
 
 | ID | Pregunta | Propuesta de Claude |
 |---|---|---|
 | P-07 | Fecha exacta de la demo (finales de noviembre). | Preguntarle al docente; define cuándo pagar la API. |
-| P-20 | Tamaño máximo de descarga de la app. | Medir el primer development build en S2 y fijar un tope con margen (referencia: ≤ 30 MB). |

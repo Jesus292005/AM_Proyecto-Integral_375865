@@ -1,7 +1,7 @@
 # 04 — Herramientas (fase de Diseño)
 
-> **Estado:** ✅ Aprobado v1.1 (2026-10-04, D50–D54); pendiente P-20 (tope de tamaño, se fija en S2)
-> **Última actualización:** 2026-10-04
+> **Estado:** ✅ Aprobado v1.2 (2026-10-19; v1.2 agrega la medición de tamaño y el tope de D79)
+> **Última actualización:** 2026-10-19
 > Base: specs 00–03 y `decisions.md`. Las herramientas se eligen por los requisitos ya definidos, no al revés.
 
 ---
@@ -86,6 +86,18 @@
 | Dependencias | Cada librería nueva se justifica en la spec que la necesita; nada de librerías pesadas de animación o UI completas "por si acaso". |
 | Formato de publicación | Android App Bundle (Google Play entrega a cada teléfono solo lo que necesita). |
 | Medición | Se mide el tamaño del primer build (S2) y se fija un tope (P-20); se vuelve a medir antes de la demo. |
+| Tope (D79) | **30 MB** de descarga desde Google Play en `arm64-v8a`. |
+
+**Medición 1 (2026-10-19, T07)** — versión 1.0.0 (1), Expo SDK 57, sin librerías nativas propias todavía (solo Expo Router, fuentes y `expo-dev-client`).
+
+| Artefacto | Tamaño | Nota |
+|---|---|---|
+| AAB de producción (EAS, build `44b6620b`) | 70.3 MB | Archivo que se sube a Google Play; no es lo que descarga el usuario. |
+| **Descarga desde Google Play, `arm64-v8a`** | **23.8–24.0 MB** | `bundletool get-size total --dimensions=ABI` (1.18.3). Es el valor que cuenta: casi todos los teléfonos actuales son `arm64-v8a`. |
+| Descarga, otras arquitecturas | 22.9–24.6 MB | `armeabi-v7a` 22.9–23.1 · `x86_64` 24.0–24.2 · `x86` 24.4–24.6. |
+| APK de desarrollo (build `5be9d2b2`) | 258.9 MB | Incluye las 4 arquitecturas y el cliente de desarrollo; **no** representa la descarga. |
+
+Cómo repetirla: `npx eas-cli@24.12.1 build -p android --profile production`, descargar el `.aab` y correr `java -jar bundletool-all-1.18.3.jar build-apks --bundle=<archivo>.aab --output=app.apks` y `java -jar bundletool-all-1.18.3.jar get-size total --apks=app.apks --dimensions=ABI`.
 
 ### App delgada (lógica en el servidor)
 | Medida | Detalle |
@@ -119,6 +131,4 @@
 
 ## 10. Pendientes
 
-| ID | Pregunta |
-|---|---|
-| P-20 | Tope de tamaño de descarga (se fija en S2). |
+Ninguno. Resuelto: P-20 (D79).

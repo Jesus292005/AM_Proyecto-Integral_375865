@@ -1,0 +1,25 @@
+{
+  "cli": {
+    "version": ">= 24.12.1",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "base": {
+      "node": "24.11.1"
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "extends": "base",
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  }
+}

@@ -164,3 +164,27 @@
 - Las funciones de los disparadores son `security definer` con `search_path` vacío, y se les quitó el permiso de ejecución a `public`, `anon` y `authenticated` (solo las usan los disparadores).
 - El disparador de Q1 solo corre si cambian los datos de Google (`raw_user_meta_data`); otros cambios en `auth.users` no tocan `usuario`. Si Google deja de mandar nombre, se conserva el anterior.
 - Validación antes de aplicar: PGlite con un `auth.users` y un `auth.uid()` simulados; 25 comprobaciones (creación, rechazo de cuentas que no son de Google, V2, Q1, V3, V4, CA7, vista pública, `anon`). Los nombres de los campos de Google (`sub`/`provider_id`, `full_name`/`name`, `avatar_url`/`picture`) son los que documenta Supabase; se confirman con una cuenta real en T12 (CA1). Las pruebas automáticas de RLS siguen en T14.
+
+## T07 — Development build y tamaño (2026-10-19)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 0 | Compilar en la nube con **EAS Build** (plan gratis: 15 compilaciones de Android al mes, cola de baja prioridad) y usar Android Studio solo para el emulador y `adb`. El equipo no tenía Android SDK y su Java es 24. Alternativa descartada: todo local (riesgo con las rutas largas de Windows en la compilación nativa). | ✅ Opción A. |
+| 1 | `app.json`: `name` "Campeón de Sillón" (D63), `slug` `campeon-de-sillon`, `android.package` `mx.campeondesillon.app` (D64), `android.versionCode` 1. | ✅ OK. |
+| 2 | `expo-dev-client` instalado con `npx expo install`. | ✅ OK. |
+| 3 | `eas-cli` como dependencia de desarrollo con versión fija. | ✅ Aprobado, pero **reemplazado** (ver ajustes). |
+| 4 | `eas.json`: perfil `development` (cliente de desarrollo, distribución interna, APK). | ✅ OK. |
+| 5 | Jesús crea la cuenta de Expo y corre `login`, `init` y el primer `build`; EAS genera y guarda la llave de firma (su SHA-1 se usa en T10). | ✅ Cuenta personal `jesus_rodriguez`. |
+| 6 | Instalación del APK en el teléfono y `npx expo start` en la misma red. | ✅ Validado por Jesús: abre y navega. |
+| 7 | Medir P-20 con un AAB de producción y `bundletool get-size total` (el development build no representa la descarga). | ✅ OK. |
+| 8 | Tope de descarga de **30 MB** en `arm64-v8a` (medido: ~24 MB). | ✅ Aprobado (D79). |
+| 9 | Ícono y pantalla de carga sin cambios hasta M6 (UI-01). | ✅ OK. |
+
+**Ajustes al implementar:**
+- **`eas-cli` fuera del proyecto** (reemplaza #3): `expo-doctor` indica que no debe instalarse en el proyecto, y EAS reinstalaría la herramienta en cada compilación. Se usa como `npx eas-cli@24.12.1` (24.12.1: última de la serie 24; la 25 acababa de salir) y la versión mínima queda en `eas.json` (`cli.version`).
+- **Parches de Expo alineados** antes de la primera compilación (pendiente desde T03): `npx expo install --fix` actualizó 7 paquetes (`expo` 57.0.20 → 57.0.30). npm dejó `expo-modules-core` anidado dentro de `expo/` y las pruebas fallaban (`jest-expo` no lo encontraba); se movió a la raíz en `package-lock.json` y se reinstaló con `npm ci`. `expo-doctor`: 21/21.
+- **Node fijo en EAS:** la primera compilación falló en `npm ci` porque EAS usa Node 22 / npm 10 y el `package-lock.json` se genera con Node 24 / npm 11 (npm 10 lo veía incompleto: `@emnapi/core`, `@emnapi/runtime`). `eas.json` tiene un perfil `base` con `"node": "24.11.1"` del que heredan `development` y `production`.
+- **Perfil `production`** (AAB) agregado para la medición; `appVersionSource: local` (la versión se lleva en `app.json`).
+- **Emulador de D75:** `Angosto_320dp` (720×1280 a 360 dpi = 320 dp, Android 17 / API 37), creado a partir del "Medium Phone" que instaló Android Studio, sin descargas extra. Variables de usuario `ANDROID_HOME` y `platform-tools` en el `PATH`. El APK de desarrollo se instaló en el emulador y la app abre a 320 dp; el menú inferior cabe, con "PARTIDOS" y "GRUPOS" muy juntos.
+
+**Medición (P-20):** descarga desde Google Play en `arm64-v8a` = **23.8–24.0 MB**; AAB 70.3 MB; APK de desarrollo 258.9 MB. Detalle en `04-tech-stack.md` §7.
