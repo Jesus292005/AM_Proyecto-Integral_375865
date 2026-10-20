@@ -3,7 +3,8 @@
   "private": true,
   "description": "Herramientas de desarrollo del repositorio (CLI de Supabase). La app vive en App/.",
   "scripts": {
-    "supabase": "supabase"
+    "supabase": "supabase",
+    "tipos": "supabase gen types typescript --linked --schema public > App/src/supabase/tipos-db.ts && supabase gen types typescript --linked --schema public > supabase/functions/_shared/tipos-db.ts"
   },
   "devDependencies": {
     "supabase": "2.120.0"

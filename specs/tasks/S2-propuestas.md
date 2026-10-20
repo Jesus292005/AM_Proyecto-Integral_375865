@@ -123,3 +123,24 @@
 **Verificación (2026-10-10):** `npx supabase projects list` → proyecto `ACTIVE_HEALTHY` y `linked: true`; `npx supabase secrets list` → `API_FOOTBALL_KEY` cargado (solo se muestra su resumen). `git status` no muestra secretos: `supabase/functions/.env` y `supabase/.temp/` están ignorados; `config.toml` solo referencia secretos con `env(...)`.
 
 **Riesgo registrado:** el plan gratis de Supabase **pausa el proyecto tras 7 días sin actividad**. Las tareas programadas de T24/T25 deberían mantenerlo activo, pero hay que confirmarlo antes de la demo (P-07); si se pausa, se reactiva desde el panel.
+
+## T05 — Migración de datos de fútbol (2026-10-19)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Tablas y columnas en español y `snake_case`: `liga`, `torneo`, `jornada`, `equipo`, `partido`, `estadistica_partido`, `evento_partido`, `sincronizacion`. | ✅ OK. |
+| 2 | Identificadores `bigint` de identidad. `proveedor_id` único en `liga`, `equipo` y `partido` (R1); jornada única por (torneo, orden); estadística única por (partido, equipo, tipo). | ✅ OK. |
+| 3 | Estados como `enum` de PostgreSQL (`estado_partido`, `fase_jornada`, `tipo_evento`) para que los tipos generados sean uniones (D54). | ✅ OK. |
+| 4 | `Sincronizacion`: `tipo` = `CARGA_INICIAL` · `ACTUALIZACION_DIARIA` · `DETECCION_FINALES` · `DATOS_PARTIDO` (P1–P4); `estado` = `EN_CURSO` · `EXITO` · `ERROR` · `DETENIDA_POR_TOPE` (alerta de R4). | ✅ OK. |
+| 5 | `estadistica_partido.valor` como texto tal como lo manda la API; `null` = sin dato (D29). | ✅ OK. |
+| 6 | `partido.proveedor_id` puede ser nulo **solo** si `es_simulado` (restricción), para F09. | ✅ OK. |
+| 7 | Restricciones: local ≠ visitante, goles ≥ 0, colores `#RRGGBB` (D70), un solo torneo `es_actual` por liga; claves foráneas sin cascada (R7). | ✅ OK. |
+| 8 | RLS en las 8 tablas; `authenticated` solo `SELECT` en las 7 de fútbol; `sincronizacion` cerrada para usuarios; `anon` sin acceso (F01 V6); `service_role` con permisos explícitos. | ✅ OK. |
+| 9 | Índices: partido por (jornada, inicio) para S02 y por (estado, inicio) para P3. | ✅ OK. |
+| 10 | Jesús aplica la migración (`db push` pide la contraseña de la base de datos); tipos generados con `npm run tipos` en la raíz hacia `App/src/supabase/tipos-db.ts` y `supabase/functions/_shared/tipos-db.ts`. | ✅ OK. |
+
+**Ajustes al implementar:**
+- Fechas de torneo y jornada como `timestamptz` (03-data-model: todas las fechas en UTC).
+- Restricción `jornada_fase_segun_orden`: orden 1–17 ⇔ `REGULAR` (A7).
+- Índice `evento_partido (partido_id)` para leer los eventos de un partido (S03).
+- Validación antes de aplicar: la migración se corrió en un PostgreSQL local desechable (PGlite) con los roles de Supabase; 31 comprobaciones de restricciones y permisos por rol (`service_role` escribe; `authenticated` solo lee y no ve `sincronizacion`; `anon` sin acceso). Las pruebas de RLS formales siguen en T27.

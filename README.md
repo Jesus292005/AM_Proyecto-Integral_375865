@@ -47,6 +47,8 @@ npx supabase login              # abre el navegador para autorizar la CLI
 npx supabase link --project-ref <ref-del-proyecto>   # pide la contraseña de la base de datos
 npx supabase secrets set --env-file supabase/functions/.env   # carga los secretos del servidor
 npx supabase secrets list       # verifica (muestra solo un resumen, nunca el valor)
+npx supabase db push            # aplica las migraciones pendientes (pide la contraseña de la base de datos)
+npm run tipos                   # regenera los tipos de la base de datos para la app y el servidor
 ```
 
 ## Verificación (tipos, lint y pruebas)
