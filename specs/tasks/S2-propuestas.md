@@ -144,3 +144,23 @@
 - Restricción `jornada_fase_segun_orden`: orden 1–17 ⇔ `REGULAR` (A7).
 - Índice `evento_partido (partido_id)` para leer los eventos de un partido (S03).
 - Validación antes de aplicar: la migración se corrió en un PostgreSQL local desechable (PGlite) con los roles de Supabase; 31 comprobaciones de restricciones y permisos por rol (`service_role` escribe; `authenticated` solo lee y no ve `sincronizacion`; `anon` sin acceso). Las pruebas de RLS formales siguen en T27.
+
+## T06 — Migración de Usuario (2026-10-19)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Tabla `usuario` con `id` = `auth.users.id` (borrado en cascada); `google_id` único (V2), `nombre`, `correo`, `foto_url`, `equipo_favorito_id` → `equipo`, `rol` (`enum` `USUARIO`/`ADMIN`, por defecto `USUARIO`), `recordatorios_activos` (por defecto `true`, Q2), `creado_en`. | ✅ OK. |
+| 2 | Disparador al crear el usuario en `auth.users`: crea `usuario` con los datos del token de Google validado (V1): `sub`, correo, nombre, foto. | ✅ OK. |
+| 3 | Q1: disparador cuando Supabase actualiza los datos de Google en cada inicio de sesión → copia `nombre` y `foto_url` (no el correo). | ✅ OK. |
+| 4 | Solo cuentas de Google: con otro proveedor la creación de la cuenta falla. El registro por correo se desactiva además en el panel en T10. | ✅ OK. |
+| 5 | Si Google no manda nombre, se usa la parte del correo antes de la @. | ✅ OK. |
+| 6 | RLS: cada usuario lee solo su fila (con correo y `rol`, que S09 usa para S10); `authenticated` no inserta ni borra; `anon` sin acceso. | ✅ OK. |
+| 7 | `UPDATE` por columna solo en `recordatorios_activos` (F11) y `equipo_favorito_id` (F18), y solo en la fila propia; `rol`, correo, nombre y `google_id` sin permiso (V4). | ✅ OK. |
+| 8 | Vista `usuario_publico` (`id`, `nombre`, `foto_url`, `equipo_favorito_id`) con los permisos de su dueño, legible por `authenticated`. El asesor de Supabase la marca como "security definer view"; es intencional y está comentado. | ✅ OK. |
+| 9 | La vista muestra a todos los usuarios autenticados; si se restringe a quienes comparten grupo, se cambia en F07. | ✅ OK. |
+| 10 | Validación en PGlite; Jesús aplica con `db push`; tipos con `npm run tipos`. `ADMIN` se asigna a mano (Q4). | ✅ OK. |
+
+**Ajustes al implementar:**
+- Las funciones de los disparadores son `security definer` con `search_path` vacío, y se les quitó el permiso de ejecución a `public`, `anon` y `authenticated` (solo las usan los disparadores).
+- El disparador de Q1 solo corre si cambian los datos de Google (`raw_user_meta_data`); otros cambios en `auth.users` no tocan `usuario`. Si Google deja de mandar nombre, se conserva el anterior.
+- Validación antes de aplicar: PGlite con un `auth.users` y un `auth.uid()` simulados; 25 comprobaciones (creación, rechazo de cuentas que no son de Google, V2, Q1, V3, V4, CA7, vista pública, `anon`). Los nombres de los campos de Google (`sub`/`provider_id`, `full_name`/`name`, `avatar_url`/`picture`) son los que documenta Supabase; se confirman con una cuenta real en T12 (CA1). Las pruebas automáticas de RLS siguen en T14.

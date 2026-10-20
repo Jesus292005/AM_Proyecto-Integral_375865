@@ -357,9 +357,81 @@ export type Database = {
           },
         ]
       }
+      usuario: {
+        Row: {
+          correo: string
+          creado_en: string
+          equipo_favorito_id: number | null
+          foto_url: string | null
+          google_id: string
+          id: string
+          nombre: string
+          recordatorios_activos: boolean
+          rol: Database["public"]["Enums"]["rol_usuario"]
+        }
+        Insert: {
+          correo: string
+          creado_en?: string
+          equipo_favorito_id?: number | null
+          foto_url?: string | null
+          google_id: string
+          id: string
+          nombre: string
+          recordatorios_activos?: boolean
+          rol?: Database["public"]["Enums"]["rol_usuario"]
+        }
+        Update: {
+          correo?: string
+          creado_en?: string
+          equipo_favorito_id?: number | null
+          foto_url?: string | null
+          google_id?: string
+          id?: string
+          nombre?: string
+          recordatorios_activos?: boolean
+          rol?: Database["public"]["Enums"]["rol_usuario"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_equipo_favorito_id_fkey"
+            columns: ["equipo_favorito_id"]
+            isOneToOne: false
+            referencedRelation: "equipo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      usuario_publico: {
+        Row: {
+          equipo_favorito_id: number | null
+          foto_url: string | null
+          id: string | null
+          nombre: string | null
+        }
+        Insert: {
+          equipo_favorito_id?: number | null
+          foto_url?: string | null
+          id?: string | null
+          nombre?: string | null
+        }
+        Update: {
+          equipo_favorito_id?: number | null
+          foto_url?: string | null
+          id?: string | null
+          nombre?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_equipo_favorito_id_fkey"
+            columns: ["equipo_favorito_id"]
+            isOneToOne: false
+            referencedRelation: "equipo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
@@ -377,6 +449,7 @@ export type Database = {
         | "ERROR"
         | "DETENIDA_POR_TOPE"
       fase_jornada: "REGULAR" | "LIGUILLA"
+      rol_usuario: "USUARIO" | "ADMIN"
       tipo_evento: "GOL" | "TARJETA" | "CAMBIO" | "VAR"
       tipo_sincronizacion:
         | "CARGA_INICIAL"
@@ -524,6 +597,7 @@ export const Constants = {
         "DETENIDA_POR_TOPE",
       ],
       fase_jornada: ["REGULAR", "LIGUILLA"],
+      rol_usuario: ["USUARIO", "ADMIN"],
       tipo_evento: ["GOL", "TARJETA", "CAMBIO", "VAR"],
       tipo_sincronizacion: [
         "CARGA_INICIAL",
