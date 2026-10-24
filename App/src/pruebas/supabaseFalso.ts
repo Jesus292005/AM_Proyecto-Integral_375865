@@ -1,5 +1,6 @@
 // Cliente de Supabase falso para pruebas: controla la sesión guardada y emite eventos de sesión.
 import {
+  AuthApiError,
   AuthRetryableFetchError,
   type AuthChangeEvent,
   type AuthError,
@@ -25,6 +26,7 @@ export const sesionDePrueba: Session = {
 
 let inicial: Promise<ResultadoInicial> = Promise.resolve({ session: null, error: null });
 const oyentes = new Set<Oyente>();
+let respuestaToken: () => Promise<AuthError | null> = async () => null;
 
 export const supabaseFalso = {
   auth: {
@@ -36,6 +38,13 @@ export const supabaseFalso = {
       oyentes.add(oyente);
       return { data: { subscription: { unsubscribe: () => oyentes.delete(oyente) } } };
     },
+    // Como el cliente real: si acepta el token, avisa a los oyentes con SIGNED_IN.
+    signInWithIdToken: jest.fn(async (_credenciales: { provider: 'google'; token: string }) => {
+      const error = await respuestaToken();
+      if (error !== null) return { data: { user: null, session: null }, error };
+      emitirEventoSesion('SIGNED_IN', sesionDePrueba);
+      return { data: { user: sesionDePrueba.user, session: sesionDePrueba }, error: null };
+    }),
   },
 };
 
@@ -57,6 +66,22 @@ export function simularSinConexionConSesionGuardada() {
 /** La lectura de la sesión guardada no termina (pantalla de carga). */
 export function simularLecturaPendiente() {
   inicial = new Promise(() => {});
+}
+
+/** Supabase acepta el token de Google (estado inicial). */
+export function simularTokenAceptado() {
+  respuestaToken = async () => null;
+  supabaseFalso.auth.signInWithIdToken.mockClear();
+}
+
+/** Supabase rechaza el token (p. ej. audiencia incorrecta). */
+export function simularTokenRechazado() {
+  respuestaToken = async () => new AuthApiError('Invalid ID token', 400, 'bad_jwt');
+}
+
+/** Sin internet al validar el token. */
+export function simularSinConexionAlValidarToken() {
+  respuestaToken = async () => new AuthRetryableFetchError('Network request failed', 0);
 }
 
 export function emitirEventoSesion(evento: AuthChangeEvent, sesion: Session | null) {

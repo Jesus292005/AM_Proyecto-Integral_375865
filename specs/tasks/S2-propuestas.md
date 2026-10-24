@@ -228,3 +228,20 @@
 - Los enlaces con grupo explícito de S05/S06 pasan a `/(protegidas)/(tabs)/(grupos)/grupo/1`.
 - Pruebas: 10 del almacenamiento (`almacenSeguro.test.ts`) y 16 de la guardia (`sesion/guardia.test.tsx`) con un cliente de Supabase falso (`src/pruebas/supabaseFalso.ts`); `rutas.test.tsx` corre con sesión guardada (las pruebas de `/login` pasaron a la guardia).
 - **Para T13:** al cerrar sesión, la guardia guarda la pantalla actual como destino (igual que si la sesión expira). T13 debe limpiar el destino al cerrar sesión a propósito, para que el siguiente inicio vaya a Inicio.
+
+## T12 — Pantalla S01 e inicio de sesión con Google (2026-10-24)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | **Sin *config plugin*** de `@react-native-google-signin/google-signin`: en Android funciona con el enlace automático de módulos. El plugin exige un `iosUrlScheme` (cliente OAuth de iOS, que no existe) y sin opciones busca `google-services.json` de Firebase. Para iOS queda en el backlog (B22). Alternativa descartada: crear ya el cliente de iOS. | ✅ Opción A. |
+| 2 | **"Sin conexión" por el tipo de error**, sin librería nueva: error de red de Google en Android (código `7`, `CommonStatusCodes.NETWORK_ERROR`) y `AuthRetryableFetchError` de Supabase. Alternativa descartada: `@react-native-community/netinfo` (nativa, más tamaño, no está en las specs). | ✅ Opción A. |
+| 3 | Diseño de S01 (05-ui no lo define): nombre de la app en `titulo1` + botón primario "Continuar con Google". En error / sin conexión: mensaje en `cuerpo` + "Reintentar" secundario en lugar del primario (05-ui §6). Cargando: el primario en estado `cargando`. | ✅ Opción A. |
+| 4 | Textos de F01 §10 literales; servicios de Google Play: "Necesitas instalar o actualizar los servicios de Google Play para iniciar sesión." más el aviso nativo de actualización (`showPlayServicesUpdateDialog`). Otros errores de Google (p. ej. SHA-1 que no coincide) usan el mensaje genérico. "Se registra el error" = `console.error` (no hay servicio de registros). | ✅ OK. |
+| 5 | Nuevo development build (Google Sign-In y `expo-secure-store` son nativos), alineando antes los parches `expo` 57.0.31 y `expo-router` 57.0.29. | ✅ OK. |
+
+**Ajustes al implementar:**
+- Librería `@react-native-google-signin/google-signin` 16.1.5 (versión gratuita, API "original" de Google Sign-In). `npx expo install` la agregó sola a `plugins` de `app.json`; se quitó (#1).
+- npm volvió a dejar `expo-modules-core` anidado dentro de `expo/` al actualizar `expo` (igual que en T07); se movió a la raíz en `package-lock.json` y se reinstaló con `npm ci`. `expo-doctor`: 21/21.
+- `src/sesion/iniciarSesionGoogle.ts`: servicios de Google Play → selector → `signInWithIdToken({ provider: 'google', token })`; devuelve `exito | cancelado | sinConexion | sinServiciosGoogle | error`. Google se configura con `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` la primera vez que se usa. Al terminar bien no navega: el proveedor de sesión (T11) recibe `SIGNED_IN` y `/login` redirige al destino o a Inicio.
+- Toques repetidos: el botón queda en `cargando` y además una referencia bloquea un segundo intento si dos toques llegan antes de que se deshabilite.
+- Pruebas: simulacro de Google en `__mocks__/@react-native-google-signin/google-signin.ts` (se aplica solo en todas las pruebas) controlado desde `src/pruebas/googleFalso.ts`; `supabaseFalso` agrega `signInWithIdToken`, que emite `SIGNED_IN` como el cliente real. 10 pruebas del flujo y 9 de la pantalla; `guardia.test.tsx` reconoce S01 por su botón. Total de la app: 85.

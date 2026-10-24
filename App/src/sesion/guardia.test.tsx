@@ -14,6 +14,9 @@ import {
 
 jest.mock('../supabase/cliente');
 
+// S01 se reconoce por su botón principal.
+const S01 = 'Continuar con Google';
+
 async function abrir(url: string) {
   process.env.EXPO_ROUTER_IMPORT_MODE = 'sync';
   await render(<ExpoRoot context={getMockContext('src/app')} location={url} />);
@@ -31,14 +34,14 @@ describe('sin sesión', () => {
     async (url) => {
       await abrir(url);
 
-      expect(await screen.findByText('S01')).toBeOnTheScreen();
+      expect(await screen.findByText(S01)).toBeOnTheScreen();
       expect(screen.queryAllByRole('tab')).toHaveLength(0);
     },
   );
 
   it('al iniciar sesión continúa a la ruta original (CA8)', async () => {
     await abrir('/partido/7');
-    expect(await screen.findByText('S01')).toBeOnTheScreen();
+    expect(await screen.findByText(S01)).toBeOnTheScreen();
 
     await iniciarSesion();
 
@@ -50,7 +53,7 @@ describe('sin sesión', () => {
 
   it('la ruta original conserva sus parámetros de consulta (CA8)', async () => {
     await abrir('/partidos?jornada=2');
-    expect(await screen.findByText('S01')).toBeOnTheScreen();
+    expect(await screen.findByText(S01)).toBeOnTheScreen();
 
     await iniciarSesion();
 
@@ -60,7 +63,7 @@ describe('sin sesión', () => {
 
   it('al iniciar sesión desde S01 sin ruta pedida va a Inicio (F01 §5.7)', async () => {
     await abrir('/login');
-    expect(await screen.findByText('S01')).toBeOnTheScreen();
+    expect(await screen.findByText(S01)).toBeOnTheScreen();
 
     await iniciarSesion();
 
@@ -75,14 +78,14 @@ describe('con sesión guardada', () => {
     await abrir('/');
 
     expect(await screen.findByText('S11')).toBeOnTheScreen();
-    expect(screen.queryByText('S01')).not.toBeOnTheScreen();
+    expect(screen.queryByText(S01)).not.toBeOnTheScreen();
   });
 
   it('abrir /login lleva a Inicio', async () => {
     await abrir('/login');
 
     expect(await screen.findByText('S11')).toBeOnTheScreen();
-    expect(screen.queryByText('S01')).not.toBeOnTheScreen();
+    expect(screen.queryByText(S01)).not.toBeOnTheScreen();
   });
 
   it('si la sesión termina estando dentro, va a S01 y al volver regresa a la misma ruta (F01 §6.2)', async () => {
@@ -90,7 +93,7 @@ describe('con sesión guardada', () => {
     expect(await screen.findByText('S08')).toBeOnTheScreen();
 
     await act(async () => emitirEventoSesion('SIGNED_OUT', null));
-    expect(await screen.findByText('S01')).toBeOnTheScreen();
+    expect(await screen.findByText(S01)).toBeOnTheScreen();
     expect(screen.queryByText('S08')).not.toBeOnTheScreen();
 
     await iniciarSesion();
@@ -115,7 +118,7 @@ it('sin internet y con sesión guardada entra a la app (F01 §6.3)', async () =>
   await abrir('/');
 
   expect(await screen.findByText('S11')).toBeOnTheScreen();
-  expect(screen.queryByText('S01')).not.toBeOnTheScreen();
+  expect(screen.queryByText(S01)).not.toBeOnTheScreen();
 });
 
 it('mientras se lee la sesión no se muestra ninguna pantalla', async () => {
@@ -124,6 +127,6 @@ it('mientras se lee la sesión no se muestra ninguna pantalla', async () => {
   await abrir('/inicio');
 
   await waitFor(() => expect(screen.queryByText(/^S\d+$/)).not.toBeOnTheScreen());
-  expect(screen.queryByText('S01')).not.toBeOnTheScreen();
+  expect(screen.queryByText(S01)).not.toBeOnTheScreen();
   expect(screen.queryByText('S11')).not.toBeOnTheScreen();
 });
