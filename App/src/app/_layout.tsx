@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 
 import { useOpcionesPila } from '../navegacion/opcionesPila';
 import { temaNavegacion } from '../navegacion/temaNavegacion';
+import { ProveedorSesion, useSesion } from '../sesion/ProveedorSesion';
 import { ProveedorTema, useFuentesApp, useTema } from '../tema';
 import { temaGrafito } from '../tema/tokens';
 
@@ -17,33 +18,43 @@ function Pila() {
   const tema = useTema();
   const opciones = useOpcionesPila();
 
-  // Pantallas con menú inferior: dentro de (tabs). Fuera, tapando el menú: inicio de sesión,
-  // modales y cámara.
+  // Las pantallas que requieren sesión están en (protegidas), que aplica la guardia (V6).
   return (
     <ThemeProvider value={temaNavegacion(tema)}>
       <Stack screenOptions={opciones}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="equipo" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="grupos/nuevo" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="grupos/unirse" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(protegidas)" />
+        <Stack.Screen name="login" />
       </Stack>
     </ThemeProvider>
   );
 }
 
-export default function LayoutRaiz() {
+function Contenido() {
   const fuentesListas = useFuentesApp();
+  const { estado } = useSesion();
+  // La pantalla de carga sigue hasta saber si hay sesión: con sesión no se ve S01 (F01 §6.1).
+  const listo = fuentesListas && estado.tipo !== 'cargando';
 
   useEffect(() => {
-    if (fuentesListas) SplashScreen.hideAsync();
-  }, [fuentesListas]);
+    if (listo) SplashScreen.hideAsync();
+  }, [listo]);
 
   if (!fuentesListas) return null;
 
   return (
-    <ProveedorTema>
+    <>
       <StatusBar style="light" />
       <Pila />
+    </>
+  );
+}
+
+export default function LayoutRaiz() {
+  return (
+    <ProveedorTema>
+      <ProveedorSesion>
+        <Contenido />
+      </ProveedorSesion>
     </ProveedorTema>
   );
 }

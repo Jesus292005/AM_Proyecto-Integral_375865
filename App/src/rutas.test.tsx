@@ -1,8 +1,15 @@
 // Verifica que cada ruta de 02-navigation §3 existe y abre su pantalla (T03), y el comportamiento
-// del menú inferior (D76).
+// del menú inferior (D76). Corre con una sesión guardada; la guardia y S01 se prueban en
+// `sesion/guardia.test.tsx` (T11).
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
+
+import { simularSesionGuardada } from './pruebas/supabaseFalso';
+
+jest.mock('./supabase/cliente');
+
+beforeEach(simularSesionGuardada);
 
 // `renderRouter` de expo-router llama a `render` de forma síncrona, pero en
 // @testing-library/react-native 14 `render` es asíncrono; se monta `ExpoRoot` igual que él.
@@ -26,7 +33,6 @@ function contar(id: string) {
 }
 
 const rutas = [
-  { url: '/login', id: 'S01', titulo: 'Inicio de sesión' },
   { url: '/inicio', id: 'S11', titulo: 'Inicio' },
   { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
   { url: '/partidos', id: 'S02', titulo: 'Partidos' },
@@ -71,7 +77,7 @@ describe('rutas', () => {
     },
   );
 
-  it.each(['/login', '/equipo', '/grupos/nuevo', '/grupos/unirse', '/grupos/escanear'])(
+  it.each(['/equipo', '/grupos/nuevo', '/grupos/unirse', '/grupos/escanear'])(
     '%s se abre sin menú inferior',
     async (url) => {
       await abrir(url);

@@ -209,3 +209,22 @@
 **Riesgo registrado:** antes de la demo (P-07) hay que confirmar que todas las cuentas que van a iniciar sesión estén en "Test users"; una cuenta fuera de la lista no puede entrar.
 
 **Riesgo registrado:** si la app se publica en Google Play, Google vuelve a firmarla con su propia llave (Play App Signing); habrá que crear un tercer cliente Android con esa SHA-1. No aplica al MVP (se instala con EAS).
+
+## T11 — Cliente de Supabase, sesión y guardia de rutas (2026-10-24)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Sesión en SecureStore **partida en trozos** de hasta 2000 bytes (UTF-8): la sesión pesa ~3–4 KB y SecureStore puede rechazar valores de más de 2048 bytes (iOS, D53). Alternativa descartada: AsyncStorage cifrado con AES (3 librerías más). | ✅ Trozos. |
+| 2 | **Sin internet con sesión guardada** (F01 §6.3): supabase-js 2.118, al abrir sin internet con el token vencido, responde "sin sesión" con un error de red pero conserva la sesión guardada. Ese caso cuenta como `conSesion`; la sesión se renueva sola al volver la conexión. Si el servidor rechaza la renovación (sesión revocada), pasa a `sinSesion` y va a S01 conservando el destino (§6.2). | ✅ OK. |
+| 3 | Sin `react-native-url-polyfill`; se agrega solo si una consulta real falla por `URL` (T12/T26). | ✅ OK. |
+| 4 | `expo-secure-store` es nativo: **no se compila en T11**. T11 se valida con pruebas automáticas y la compilación se hace una sola vez en T12 junto con Google Sign-In. Hasta entonces la app nueva no corre en el development build actual. | ✅ OK. |
+
+**Ajustes al implementar:**
+- Librerías: `@supabase/supabase-js` 2.118 y `expo-secure-store` ~57.0.4 (`npx expo install`, que agregó su plugin en `app.json`).
+- `src/supabase/cliente.ts`: cliente tipado con `Database`, solo variables `EXPO_PUBLIC_` (V5); si faltan, error claro al arrancar. La renovación automática se pausa en segundo plano y se reanuda al volver (`AppState`).
+- `src/supabase/almacenSeguro.ts`: `<clave>.n` guarda cuántos trozos hay y `<clave>.<i>` cada uno; un trozo perdido cuenta como "sin sesión". Las operaciones van en fila para que una escritura y un borrado simultáneos no mezclen trozos.
+- `src/sesion/ProveedorSesion.tsx`: estado `cargando | sinSesion | conSesion` y el destino pendiente (en memoria, sin cambiar las URLs de 02-navigation). La pantalla de carga sigue visible mientras se lee la sesión.
+- **Guardia:** las pantallas que requieren sesión se movieron al grupo `src/app/(protegidas)/` (las URLs no cambian); su `_layout` guarda la ruta pedida (camino + parámetros de consulta) y redirige a `/login`. `/login` con sesión redirige al destino o a `/inicio`. Se usó esto en lugar de `Stack.Protected` porque en SDK 57 este no conserva la ruta pedida (CA8) y `redirectTo` llega hasta SDK 58.
+- Los enlaces con grupo explícito de S05/S06 pasan a `/(protegidas)/(tabs)/(grupos)/grupo/1`.
+- Pruebas: 10 del almacenamiento (`almacenSeguro.test.ts`) y 16 de la guardia (`sesion/guardia.test.tsx`) con un cliente de Supabase falso (`src/pruebas/supabaseFalso.ts`); `rutas.test.tsx` corre con sesión guardada (las pruebas de `/login` pasaron a la guardia).
+- **Para T13:** al cerrar sesión, la guardia guarda la pantalla actual como destino (igual que si la sesión expira). T13 debe limpiar el destino al cerrar sesión a propósito, para que el siguiente inicio vaya a Inicio.
