@@ -188,3 +188,24 @@
 - **Emulador de D75:** `Angosto_320dp` (720×1280 a 360 dpi = 320 dp, Android 17 / API 37), creado a partir del "Medium Phone" que instaló Android Studio, sin descargas extra. Variables de usuario `ANDROID_HOME` y `platform-tools` en el `PATH`. El APK de desarrollo se instaló en el emulador y la app abre a 320 dp; el menú inferior cabe, con "PARTIDOS" y "GRUPOS" muy juntos.
 
 **Medición (P-20):** descarga desde Google Play en `arm64-v8a` = **23.8–24.0 MB**; AAB 70.3 MB; APK de desarrollo 258.9 MB. Detalle en `04-tech-stack.md` §7.
+
+## T10 — Credenciales de Google y proveedor en Supabase (2026-10-20)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Claude da la guía paso a paso; Jesús configura las consolas (Google Cloud, Supabase) y corre `eas credentials`. | ✅ OK. |
+| 2 | SHA-1 de la llave de firma que EAS generó en T07 (la misma para los perfiles `development` y `production`). | ✅ OK. |
+| 3 | Pantalla de consentimiento solo con permisos básicos (`openid`, `email`, `profile`) y **sin logo** (el logo obliga a verificar la marca). | ✅ OK. |
+| 4 | Público de la app: **"In production"** (cualquier cuenta de Google puede entrar; con permisos básicos no requiere verificación). Alternativa descartada: "Testing" (solo cuentas agregadas a mano; riesgo de dejar fuera al docente o a las cuentas de demo). | ✅ "In production", pero **reemplazado** (ver ajustes). |
+| 5 | Dos clientes OAuth: **Android** (paquete `mx.campeondesillon.app` + SHA-1) y **web** (su ID es la audiencia del token que valida Supabase). | ✅ OK. |
+| 6 | Supabase: proveedor Google activado con el ID y el secreto del cliente web; **proveedor de correo desactivado** (pendiente de T06 #4). | ✅ OK. |
+| 7 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` en `App/.env.example` (público). El secreto del cliente web solo vive en el panel de Supabase (D14). `supabase/config.toml` no cambia (solo configura la base local). | ✅ OK. |
+
+**Ajustes al implementar:**
+- **Público en "Testing"** (reemplaza #4): Google no deja pasar a "In production" sin URL de página principal y de política de privacidad, y el MVP no tiene ninguna de las dos. Solo pueden iniciar sesión las cuentas agregadas en **Audience → Test users** (máx. 100): la de Jesús, las de demo y la del docente. Sin efecto en la sesión: la app solo usa el token de identidad de Google al iniciar sesión; después la sesión es de Supabase (el vencimiento de 7 días de "Testing" aplica a los permisos que Google guarda, que no se usan). La página principal y la política de privacidad pasan al backlog como requisito para publicar (B21).
+
+**Verificación (2026-10-24):** `GET /auth/v1/settings` con la clave publishable → `google: true`, `email: false`, `disable_signup: false`. `App/.env` tiene la URL, la clave publishable y el ID del cliente web con formato válido; `App/.env` sigue ignorado por git. Que el token de Google llegue y Supabase lo acepte (audiencia = cliente web, SHA-1 correcta) se comprueba en T12 (CA1).
+
+**Riesgo registrado:** antes de la demo (P-07) hay que confirmar que todas las cuentas que van a iniciar sesión estén en "Test users"; una cuenta fuera de la lista no puede entrar.
+
+**Riesgo registrado:** si la app se publica en Google Play, Google vuelve a firmarla con su propia llave (Play App Signing); habrá que crear un tercer cliente Android con esa SHA-1. No aplica al MVP (se instala con EAS).

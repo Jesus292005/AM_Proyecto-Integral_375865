@@ -1,7 +1,7 @@
 # Backlog — visión a futuro (fuera del MVP escolar)
 
 > **Estado:** Ideas registradas, **no aprobadas para implementar**. Nada de aquí entra al MVP sin pasar por `01-mvp.md` y `decisions.md`.
-> **Última actualización:** 2026-10-04
+> **Última actualización:** 2026-10-20
 > Filtro para cualquier idea: principios P1–P5 de `00-project.md` (sin dinero real, premiar análisis y no riesgo, nunca restar por fallar en el modo casual, sin recompensas aleatorias ni por frecuencia de uso, transparencia).
 
 ---
@@ -40,6 +40,7 @@
 |---|---|---|
 | B18 | **Eliminar cuenta** desde la app y desde la web. | Exigido por Google Play para apps con creación de cuenta (F01-Q3). |
 | B19 | **Iniciar sesión con Apple** (si se publica en iOS con login de Google). | D53. |
+| B21 | **Página principal y política de privacidad** publicadas (URL) y registradas en la pantalla de consentimiento de Google; pasar la app de "Testing" a **"In production"**. | Google lo exige para que cualquier cuenta pueda iniciar sesión; en el MVP solo entran las cuentas de prueba (T10). Google Play también pide la política de privacidad. La política debe describir con verdad los datos que se guardan. |
 
 ## 4. Monetización (para cuando haya usuarios)
 
