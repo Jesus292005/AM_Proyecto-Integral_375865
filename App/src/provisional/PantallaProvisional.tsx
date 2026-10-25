@@ -60,7 +60,7 @@ export function PantallaProvisional({
             {`${nombre}: ${valor ?? '—'}`}
           </Texto>
         ))}
-        {(enlaces.length > 0 || children) && (
+        {enlaces.length > 0 && (
           <View style={{ gap: espacio.s }}>
             <Texto variante="etiqueta" color="textoTenue">
               Rutas (provisional T03)
@@ -73,9 +73,10 @@ export function PantallaProvisional({
                 onPress={() => router.navigate(e.href)}
               />
             ))}
-            {children}
           </View>
         )}
+        {/* Partes reales que ya existen de la pantalla (p. ej. "Cerrar sesión" en S09). */}
+        {children}
       </ScrollView>
     </SafeAreaView>
   );

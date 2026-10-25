@@ -1,4 +1,5 @@
 import { PantallaProvisional } from '../../../../provisional/PantallaProvisional';
+import { BotonCerrarSesion } from '../../../../sesion/BotonCerrarSesion';
 
 export default function Perfil() {
   return (
@@ -10,8 +11,9 @@ export default function Perfil() {
         { titulo: 'Equipo favorito', href: '/equipo' },
         // Solo administrador (D36): la restricción llega con F09.
         { titulo: 'Simulación', href: '/admin/simulacion' },
-        { titulo: 'Inicio de sesión', href: '/login' },
       ]}
-    />
+    >
+      <BotonCerrarSesion />
+    </PantallaProvisional>
   );
 }

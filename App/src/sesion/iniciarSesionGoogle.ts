@@ -16,7 +16,8 @@ const CODIGO_ERROR_RED_GOOGLE = '7';
 
 let configurado = false;
 
-function configurarGoogle() {
+/** También se usa al cerrar sesión: si la app abrió con sesión guardada, Google no se configuró. */
+export function configurarGoogle() {
   if (configurado) return;
   // Público (V5): Google lo usa para emitir el token con la audiencia que valida Supabase.
   const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;

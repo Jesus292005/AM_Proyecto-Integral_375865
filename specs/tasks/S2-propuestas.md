@@ -245,3 +245,22 @@
 - `src/sesion/iniciarSesionGoogle.ts`: servicios de Google Play → selector → `signInWithIdToken({ provider: 'google', token })`; devuelve `exito | cancelado | sinConexion | sinServiciosGoogle | error`. Google se configura con `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` la primera vez que se usa. Al terminar bien no navega: el proveedor de sesión (T11) recibe `SIGNED_IN` y `/login` redirige al destino o a Inicio.
 - Toques repetidos: el botón queda en `cargando` y además una referencia bloquea un segundo intento si dos toques llegan antes de que se deshabilite.
 - Pruebas: simulacro de Google en `__mocks__/@react-native-google-signin/google-signin.ts` (se aplica solo en todas las pruebas) controlado desde `src/pruebas/googleFalso.ts`; `supabaseFalso` agrega `signInWithIdToken`, que emite `SIGNED_IN` como el cliente real. 10 pruebas del flujo y 9 de la pantalla; `guardia.test.tsx` reconoce S01 por su botón. Total de la app: 85.
+
+**Validación en el teléfono (Jesús, 2026-10-24):** development build nuevo (Google Sign-In + `expo-secure-store`); CA1, CA2, CA5 y CA6 ✅.
+
+## T13 — Cerrar sesión (2026-10-24)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Confirmación con el **aviso nativo** (`Alert`): "¿Cerrar sesión?" con "Cancelar" y "Cerrar sesión". 05-ui no define un diálogo propio. Alternativa descartada: modal propio con tokens. | ✅ Opción A. |
+| 2 | **Caché de datos:** se instala TanStack Query (D51) desde ahora, con un cliente único (`src/datos/clienteConsultas.ts`) y `QueryClientProvider` en la raíz; al cerrar sesión se vacía con `clear()`. Alternativa descartada: un punto de limpieza vacío para conectarlo en T26. | ✅ Opción A. |
+| 3 | Cierre en Supabase con `scope: 'local'`: solo este teléfono; los demás dispositivos siguen dentro. Alternativa descartada: `global` (el valor por defecto de Supabase). | ✅ Opción A. |
+| 4 | **Sin internet:** supabase-js 2.118 borra la sesión del teléfono aunque no alcance al servidor, salvo si el token venció y no hay internet para renovarlo; en ese caso se queda en S09 con "Sin conexión. Revisa tu internet e inténtalo de nuevo." y la sesión sigue abierta. Si falla el cierre en Google, se registra y no bloquea. | ✅ Opción A. |
+
+**Ajustes al implementar:**
+- `@tanstack/react-query` **5.104.1** con `npx expo install` (solo JavaScript: no requiere otro development build). `expo-modules-core` no se anidó esta vez; `expo-doctor`: 21/21.
+- `ProveedorSesion` expone `cerrarSesion()` → `exito | sinConexion | error`. `sinSesion` lleva `motivo`: `inicial` · `terminada` · `cerrada` (unión discriminada, D54). Con `cerrada` el destino se limpia y la guardia no guarda la ruta actual (pendiente de T11): el siguiente inicio va a Inicio. Si la sesión termina sola (§6.2) se sigue conservando la ruta.
+- Orden: Supabase → Google (`GoogleSignin.signOut`, para que el selector de cuentas vuelva a aparecer) → caché. Google se configura antes de cerrar, porque si la app abrió con sesión guardada no se había configurado (`configurarGoogle` ahora se exporta desde `iniciarSesionGoogle.ts`).
+- `src/sesion/BotonCerrarSesion.tsx`: botón secundario; mientras se cierra queda en `cargando` y una referencia bloquea una segunda confirmación. Mensaje de otros errores (F01 no lo define): "No pudimos cerrar sesión. Inténtalo de nuevo."; el mismo botón reintenta.
+- S09 sigue siendo provisional: se quitó su enlace a `/login` y `PantallaProvisional` ahora dibuja `children` fuera del bloque "Rutas (provisional T03)".
+- Pruebas: 13 en `sesion/cerrarSesion.test.tsx` (confirmar/cancelar, Supabase `local` + Google, S01 sin pestañas, caché vacía, destino limpio, sesión que termina sola, sin internet en sus dos casos, error, reintento, doble confirmación). `supabaseFalso` agrega `signOut`, que emite `SIGNED_OUT` cuando borra la sesión, como el cliente real. Verificado que las pruebas del destino **fallan** si la guardia guarda la ruta al cerrar sesión. Total de la app: 98.

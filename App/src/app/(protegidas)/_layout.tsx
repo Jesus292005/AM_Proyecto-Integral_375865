@@ -7,14 +7,15 @@ import { useSesion } from '../../sesion/ProveedorSesion';
 
 // Guardia de sesión (V6): todo lo que está en este grupo requiere sesión. Sin sesión se guarda la
 // ruta pedida y se va a S01 (CA8, F01 §6.2); las pantallas protegidas nunca se dibujan sin sesión.
-function IrAInicioSesion() {
+// Al cerrar sesión a propósito no se guarda la ruta: el siguiente inicio va a Inicio (F01 §7).
+function IrAInicioSesion({ guardarRuta }: { guardarRuta: boolean }) {
   // La ruta de cuando se perdió la sesión; al redirigir, la ruta actual pasa a ser /login.
   const [ruta] = useState(useRutaActual());
   const { guardarDestino } = useSesion();
 
   useEffect(() => {
-    guardarDestino(ruta);
-  }, [ruta, guardarDestino]);
+    if (guardarRuta) guardarDestino(ruta);
+  }, [guardarRuta, ruta, guardarDestino]);
 
   return <Redirect href="/login" />;
 }
@@ -25,7 +26,9 @@ export default function LayoutProtegidas() {
 
   // Mientras se lee la sesión guardada sigue visible la pantalla de carga.
   if (estado.tipo === 'cargando') return null;
-  if (estado.tipo === 'sinSesion') return <IrAInicioSesion />;
+  if (estado.tipo === 'sinSesion') {
+    return <IrAInicioSesion guardarRuta={estado.motivo !== 'cerrada'} />;
+  }
 
   // Con menú inferior: dentro de (tabs). Fuera, tapando el menú: modales y cámara.
   return (

@@ -27,6 +27,9 @@ export const sesionDePrueba: Session = {
 let inicial: Promise<ResultadoInicial> = Promise.resolve({ session: null, error: null });
 const oyentes = new Set<Oyente>();
 let respuestaToken: () => Promise<AuthError | null> = async () => null;
+// Al cerrar sesión: si se borra la sesión del teléfono y qué error devuelve.
+type RespuestaCierre = { borraSesion: boolean; error: AuthError | null };
+let respuestaCierre: () => RespuestaCierre = () => ({ borraSesion: true, error: null });
 
 export const supabaseFalso = {
   auth: {
@@ -44,6 +47,12 @@ export const supabaseFalso = {
       if (error !== null) return { data: { user: null, session: null }, error };
       emitirEventoSesion('SIGNED_IN', sesionDePrueba);
       return { data: { user: sesionDePrueba.user, session: sesionDePrueba }, error: null };
+    }),
+    // Como el cliente real: si borra la sesión del teléfono, avisa con SIGNED_OUT.
+    signOut: jest.fn(async (_opciones?: { scope?: 'global' | 'local' | 'others' }) => {
+      const { borraSesion, error } = respuestaCierre();
+      if (borraSesion) emitirEventoSesion('SIGNED_OUT', null);
+      return { error };
     }),
   },
 };
@@ -82,6 +91,36 @@ export function simularTokenRechazado() {
 /** Sin internet al validar el token. */
 export function simularSinConexionAlValidarToken() {
   respuestaToken = async () => new AuthRetryableFetchError('Network request failed', 0);
+}
+
+/** Supabase cierra la sesión sin problema (estado inicial). */
+export function simularCierreAceptado() {
+  respuestaCierre = () => ({ borraSesion: true, error: null });
+  supabaseFalso.auth.signOut.mockClear();
+}
+
+/** Sin internet al avisar al servidor: la sesión se borra del teléfono de todos modos. */
+export function simularCierreSinAvisarAlServidor() {
+  respuestaCierre = () => ({
+    borraSesion: true,
+    error: new AuthRetryableFetchError('Network request failed', 0),
+  });
+}
+
+/** Token vencido y sin internet para renovarlo: Supabase conserva la sesión. */
+export function simularCierreSinConexion() {
+  respuestaCierre = () => ({
+    borraSesion: false,
+    error: new AuthRetryableFetchError('Network request failed', 0),
+  });
+}
+
+/** Supabase no puede leer la sesión para cerrarla (otro error): la conserva. */
+export function simularCierreFallido() {
+  respuestaCierre = () => ({
+    borraSesion: false,
+    error: new AuthApiError('Invalid Refresh Token', 400, 'refresh_token_not_found'),
+  });
 }
 
 export function emitirEventoSesion(evento: AuthChangeEvent, sesion: Session | null) {

@@ -1,9 +1,11 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 
+import { clienteConsultas } from '../datos/clienteConsultas';
 import { useOpcionesPila } from '../navegacion/opcionesPila';
 import { temaNavegacion } from '../navegacion/temaNavegacion';
 import { ProveedorSesion, useSesion } from '../sesion/ProveedorSesion';
@@ -52,9 +54,11 @@ function Contenido() {
 export default function LayoutRaiz() {
   return (
     <ProveedorTema>
-      <ProveedorSesion>
-        <Contenido />
-      </ProveedorSesion>
+      <QueryClientProvider client={clienteConsultas}>
+        <ProveedorSesion>
+          <Contenido />
+        </ProveedorSesion>
+      </QueryClientProvider>
     </ProveedorTema>
   );
 }
