@@ -264,3 +264,20 @@
 - `src/sesion/BotonCerrarSesion.tsx`: botón secundario; mientras se cierra queda en `cargando` y una referencia bloquea una segunda confirmación. Mensaje de otros errores (F01 no lo define): "No pudimos cerrar sesión. Inténtalo de nuevo."; el mismo botón reintenta.
 - S09 sigue siendo provisional: se quitó su enlace a `/login` y `PantallaProvisional` ahora dibuja `children` fuera del bloque "Rutas (provisional T03)".
 - Pruebas: 13 en `sesion/cerrarSesion.test.tsx` (confirmar/cancelar, Supabase `local` + Google, S01 sin pestañas, caché vacía, destino limpio, sesión que termina sola, sin internet en sus dos casos, error, reintento, doble confirmación). `supabaseFalso` agrega `signOut`, que emite `SIGNED_OUT` cuando borra la sesión, como el cliente real. Verificado que las pruebas del destino **fallan** si la guardia guarda la ruta al cerrar sesión. Total de la app: 98.
+
+## T14 — Pruebas automatizadas de RLS de `usuario` (2026-10-31)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Pruebas pgTAP con `supabase test db` contra una **base local en Docker** (`npx supabase db start`, solo Postgres; migraciones con `npx supabase db reset`). Alternativa descartada: correrlas contra el proyecto real (`--linked`), que insertaría usuarios de prueba en producción aunque se deshagan. | ✅ Opción A. |
+| 2 | Además de los permisos (CA7, V3, V4, V6), probar los **disparadores de T06** (CA1, CA2/V2, solo Google, Q1, nombre desde el correo), que en T06 solo se validaron una vez en PGlite. | ✅ Opción A. |
+| 3 | Jesús abre Docker Desktop; Claude corre `db start`, `db reset` y `test db` (son locales y no piden contraseñas). | ✅ Opción A. |
+
+**Ajustes al implementar:**
+- `supabase/tests/usuario_rls.test.sql` (31 pruebas): dos usuarios de Google (A y B) creados en `auth.users`; se actúa como cada uno con `set local role authenticated` y `request.jwt.claims`. Cubre: A solo ve su fila (y lee su correo y rol); no lee el correo de B (CA7); cambia `recordatorios_activos` y `equipo_favorito_id`; no cambia su `rol` (CA7), correo, nombre, foto, `google_id` ni `id` (V4); no modifica ni borra la fila de B (CA7); no inserta ni borra; `usuario_publico` muestra a todos solo con `id`, `nombre`, `foto_url` y `equipo_favorito_id` (V3) y no se puede modificar; `anon` no lee ni modifica nada (V6); al final, como `postgres`, se verifica que en la base solo cambió lo permitido.
+- `supabase/tests/usuario_disparadores.test.sql` (21 pruebas): creación con todos los datos de CA1 y `recordatorios_activos = true` (Q2); variantes `sub`/`name`/`picture`; nombre desde el correo; segunda cuenta con el mismo `googleId` rechazada (V2/CA2); cuentas que no son de Google o sin id rechazadas; Q1 actualiza nombre y foto pero no el correo, conserva el nombre si Google no lo manda y no toca recordatorios ni rol; otros cambios en `auth.users` no tocan `usuario`; borrar la cuenta borra el usuario (B18); `anon` y `authenticated` no ejecutan las funciones de los disparadores.
+- Todo corre en una transacción que se deshace (`rollback`). `supabase test db` activa pgTAP solo; los archivos no lo crean.
+- Script `npm run test:db` en la raíz (`supabase test db --local`). Requiere Docker Desktop abierto y la base local arrancada (`npx supabase db start`; tras una migración nueva, `npx supabase db reset --local`).
+- `db start` descargó también las imágenes de `gotrue` y `pg_prove` (la primera vez tarda unos minutos).
+- **Las pruebas detectan fallas:** se rompieron a propósito los permisos en la base local (políticas abiertas a todos, `UPDATE` de `rol` y `correo`, `SELECT` para `anon`, `INSERT`/`DELETE` para `authenticated`, sin el `UNIQUE` de `google_id`, ejecución de `crear_usuario` para `authenticated`) y fallaron 18 pruebas que cubren cada cambio; tras `db reset` vuelven a pasar las 52.
+- La CLI avisa que hay una versión nueva (2.122.0; el proyecto fija 2.120.0). No se actualizó.
