@@ -1,4 +1,8 @@
 {
+  "imports": {
+    "zod": "npm:zod@4.6.7"
+  },
+  "nodeModulesDir": "auto",
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true

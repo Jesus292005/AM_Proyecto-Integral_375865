@@ -297,3 +297,20 @@
 - Solo hay estados `FT` (338) y `PEN` (2, en reclasificación, con `extratime` en `0-0`); **no hay `AET`**. CA4 (T22) se prueba con un partido `PEN` (`fulltime` 2-2 frente a `penalty` 2-3), que cubre R2.
 - Las estadísticas mezclan números, textos con `%` y `null`.
 - **Diferencia con la spec F02 §A7:** las rondas de liguilla llegan con prefijo (`Apertura - Quarter-finals`, `Clausura - Reclasificacion`), no sin él como dice la tabla. Pendiente de decidir antes de T22.
+
+## T21 — Esquemas Zod de las respuestas de API-Football (2026-10-31)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Zod **4.6.7** (versión exacta) en el servidor como `npm:zod@4.6.7` en el `imports` de `supabase/functions/deno.json`; se versiona `deno.lock`. | ✅ OK. |
+| 2 | Un esquema común de respuesta (`errors` acepta `[]` u objeto de textos) y uno por consulta (fixtures, teams, statistics, events) que **solo valida los campos que se usan** y descarta los demás. Tipos exportados con `z.infer`. | ✅ OK. |
+| 3 | Estado, ronda y tipo de evento como **texto libre**, no enum: un valor desconocido solo afecta a ese partido y se maneja al convertirlo (A6, A7, T22), en vez de rechazar la respuesta entera por R5. | ✅ Como texto. |
+| 4 | Pruebas con los ejemplos de T20 (pasan, con sus conteos y los `null` conservados) y con formas inválidas armadas a partir de ellos (deben fallar). | ✅ OK. |
+
+**Ajustes al implementar:**
+- La parte común de la respuesta solo valida `errors` y `response`; `get`, `parameters`, `results` y `paging` no se usan y se descartan.
+- La respuesta común es un `z.object` que cada consulta extiende con `.extend({ response })`, en vez de una función genérica.
+- **`"nodeModulesDir": "auto"` en `supabase/functions/deno.json`:** con la caché global de npm, `deno check` (Deno 2.9.7, Windows) tomaba los tipos de **cualquier** paquete npm como `any` (probado con Zod 3 y 4 y date-fns), así que la verificación de tipos no servía. Con `node_modules` local sí los lee (se confirmó con errores provocados a propósito). `supabase/functions/node_modules/` ya lo ignora el `node_modules/` del `.gitignore` raíz. **Pendiente para T23:** confirmar que el despliegue con la CLI de Supabase funciona con esta opción.
+- Las aserciones de las pruebas usan `node:assert/strict` (viene con Deno; no agrega dependencias).
+- 17 pruebas en `_shared/api-football/esquemas_test.ts`. **Las pruebas detectan fallas:** con los esquemas rotos a propósito (marcador, `errors`, fecha, valor de estadística y minuto del evento sin validar) fallaron 6 pruebas; restaurados, vuelven a pasar las 17.
+- Cubre R5 y la parte de forma de CA6 (una forma inválida no cumple el esquema; un solo partido inválido rechaza toda la respuesta). Que ningún dato cambie y quede el registro de error se prueba en T23.
