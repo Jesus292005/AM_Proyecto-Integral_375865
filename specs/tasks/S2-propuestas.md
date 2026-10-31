@@ -281,3 +281,19 @@
 - `db start` descargó también las imágenes de `gotrue` y `pg_prove` (la primera vez tarda unos minutos).
 - **Las pruebas detectan fallas:** se rompieron a propósito los permisos en la base local (políticas abiertas a todos, `UPDATE` de `rol` y `correo`, `SELECT` para `anon`, `INSERT`/`DELETE` para `authenticated`, sin el `UNIQUE` de `google_id`, ejecución de `crear_usuario` para `authenticated`) y fallaron 18 pruebas que cubren cada cambio; tras `db reset` vuelven a pasar las 52.
 - La CLI avisa que hay una versión nueva (2.122.0; el proyecto fija 2.120.0). No se actualizó.
+
+## T20 — Ejemplos reales de API-Football (2026-10-31)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Guardar 4 respuestas en `supabase/functions/_shared/ejemplos-api-football/`: `fixtures` y `teams` de la Liga MX 2024 (262), `statistics` y `events` del partido 1206057 (D29). Claude da los comandos (PowerShell + `curl.exe`, la clave se lee de `supabase/functions/.env`), Jesús los corre. | ✅ OK. |
+| 2 | 5ª consulta a `season=2026` para tener una respuesta **real** con `errors` no vacío (R6, CA6) en vez de una escrita a mano. | ✅ OK. |
+| 3 | Versionar los JSON en el repo (las pruebas los usan sin conexión y sin gastar consultas), formateados con sangría; documentar origen y comandos en `LEEME.md`. | ✅ OK. |
+
+**Ajustes al implementar:**
+- 5 consultas usadas. Verificado: `errors` vacío y conteos esperados (340 partidos, 18 equipos, 2 estadísticas, 15 eventos); ningún archivo contiene la clave. El formato con sangría no cambió el contenido (comparado tras volver a leerlo).
+- La temporada 2024 trae el **Apertura 2024 y el Clausura 2025** (170 partidos cada uno: 153 de fase regular, como pide CA1, + 17 de liguilla).
+- `errors` es `[]` cuando no hay error y un objeto cuando lo hay → el esquema de T21 debe aceptar ambas formas.
+- Solo hay estados `FT` (338) y `PEN` (2, en reclasificación, con `extratime` en `0-0`); **no hay `AET`**. CA4 (T22) se prueba con un partido `PEN` (`fulltime` 2-2 frente a `penalty` 2-3), que cubre R2.
+- Las estadísticas mezclan números, textos con `%` y `null`.
+- **Diferencia con la spec F02 §A7:** las rondas de liguilla llegan con prefijo (`Apertura - Quarter-finals`, `Clausura - Reclasificacion`), no sin él como dice la tabla. Pendiente de decidir antes de T22.
