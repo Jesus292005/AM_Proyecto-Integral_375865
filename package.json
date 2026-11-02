@@ -5,7 +5,8 @@
   "scripts": {
     "supabase": "supabase",
     "test:db": "supabase test db --local",
-    "tipos": "supabase gen types typescript --linked --schema public > App/src/supabase/tipos-db.ts && supabase gen types typescript --linked --schema public > supabase/functions/_shared/tipos-db.ts"
+    "tipos": "supabase gen types typescript --linked --schema public > App/src/supabase/tipos-db.ts && supabase gen types typescript --linked --schema public > supabase/functions/_shared/tipos-db.ts",
+    "revisar:secretos": "node scripts/revisar-secretos.mjs"
   },
   "devDependencies": {
     "supabase": "2.120.0"

@@ -72,6 +72,11 @@ cd supabase/functions && deno task test:bd   # carga inicial (P1) contra la base
 
 - Los archivos `.env` **nunca** se versionan; solo los `.env.example` sin valores.
 - La app solo contiene la clave **pública** de Supabase. Las claves secretas (servicio de Supabase, API-Football, Anthropic) viven únicamente en el servidor como secretos de Supabase.
+- Revisión automática (F01 CA9, F02 CA13): exporta el paquete real de la app y busca en él, y en los archivos versionados, la clave de API-Football (su valor real, sin imprimirlo) y claves secretas. Correrla antes de cada entrega:
+
+```bash
+npm run revisar:secretos
+```
 
 ## Especificaciones
 

@@ -436,3 +436,21 @@
 - Quedan 2 avisos de React "not wrapped in act" que vienen de las actualizaciones internas de `SectionList`; no afectan los resultados.
 - Migración aplicada en el proyecto real; los tipos regenerados coinciden con la firma agregada a mano.
 - **Validada por Jesús (2026-11-02)** en su teléfono y en el emulador `Angosto_320dp`, con la development build nueva (con `expo-image`): **CA9** (agrupación por día, orden y hora local), **CA10** (anterior/siguiente y flechas deshabilitadas en los extremos) y **CA11** (modo avión con y sin datos previos, "Reintentar").
+
+## T27 — Permisos de los datos de fútbol y revisión de secretos (2026-11-02)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | CA12 con **pgTAP** (`supabase/tests/`, `npm run test:db`), como T14. | ✅ OK. |
+| 2 | CA13 con un **script repetible** `npm run revisar:secretos`: exporta el paquete real de la app, busca en él el valor real de la clave de API-Football (sin imprimirlo), claves secretas y rastros de API-Football, y busca la clave en los archivos versionados. | ✅ OK. |
+| 3 | Límite anotado: no revisa el APK nativo (solo las variables `EXPO_PUBLIC_` llegan a la app y ninguna es secreta). | ✅ OK. |
+
+**Ajustes al implementar:**
+- `supabase/tests/datos_futbol_rls.test.sql` (45 pruebas): RLS activado en las 8 tablas; `authenticated` lee las 7 de fútbol (B-R2) y **no crea, modifica ni borra** en ninguna (CA12, error 42501); no lee ni escribe `sincronizacion`; no tiene permiso de ejecutar `guardar_carga_inicial`, `actualizar_estados_partidos`, `guardar_datos_partido` ni `partidos_pendientes_de_final`, y sí `jornada_actual`; `anon` no lee ninguna de las 8 (F01 V6); al final, una huella (md5) de las 8 tablas demuestra que nada cambió. 106 pruebas pgTAP en total.
+- **Las pruebas detectan fallas:** con los permisos rotos a propósito en la base local (escritura de `authenticated` en partido, equipo y jornada; lectura de `sincronizacion`; `anon` leyendo liga; ejecución de `guardar_carga_inicial`; RLS desactivado en `evento_partido`) fallan 14 pruebas; tras `db reset`, pasan las 106. Al hacerlo se corrigió la prueba de las funciones, que pasaba aunque `authenticated` pudiera ejecutar `guardar_carga_inicial` (la tabla negaba el acceso de todos modos, como en T23); ahora revisa `has_function_privilege`.
+- Revisión estática: la app solo usa `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_KEY` y `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (`EXPO_ROUTER_IMPORT_MODE` solo en pruebas); `eas.json` no inyecta variables; el único `.env` versionado de la app es `.env.example`.
+- `scripts/revisar-secretos.mjs` (Node, sin dependencias): exporta con `expo export --platform android --no-bytecode` a una carpeta temporal fuera del repo y la borra al terminar. **Control positivo:** la URL pública de Supabase debe aparecer en el paquete; si no, falla. Revisa también que `EXPO_PUBLIC_SUPABASE_KEY` sea `sb_publishable_…` (F01 CA9). Nunca imprime valores. Termina con código 1 si encuentra algo.
+- **Falso positivo resuelto:** la primera versión revisaba el bytecode de Hermes y marcó una "clave secreta de Supabase". Se inspeccionó sin imprimir el valor: era `startsWith("sb_secret_")` de supabase-js, que en el bytecode queda pegado al texto siguiente (los textos van uno tras otro, sin comillas). Por eso se exporta sin bytecode: mismos textos, pero entre comillas.
+- Se comprobó que el script sí detecta: con una copia temporal que buscaba un texto que está en la app, reportó el hallazgo en el paquete y en los archivos versionados.
+- **Resultado (2026-11-02):** sin secretos — la clave de API-Football no está en el paquete ni versionada, no hay claves secretas ni llamadas a API-Football en la app, y la clave de Supabase de la app es la pública → **CA13** y **F01 CA9**.
+- README: cómo correr la revisión de secretos.
