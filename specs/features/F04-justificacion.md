@@ -1,10 +1,8 @@
 # F04 — Justificación en texto
-> **Estado:** Borrador · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F03 · **Pantallas:** S03 · **Decisiones:** D08, D22, D35, D46, D52, D82
+> **Estado:** ✅ Aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F03 · **Pantallas:** S03 · **Decisiones:** D08, D22, D35, D46, D52, D82
 
-## Decisiones para Jesús
-| # | Pregunta | A (recomendada) | B | Consecuencia |
-|---|---|---|---|---|
-| 5 | Para M4: ¿desde cuándo ven los del grupo predicciones y justificaciones (R04)? | Desde `cierrePredicciones` (D82). | Desde `inicio`, como dice hoy 03-data-model R04. | Solo difieren si el partido se pospone después de empezar: con B, lo ya revelado se vuelve a ocultar hasta la nueva hora, contra D46 ("bloqueadas y visibles"). A cambia el texto de R04 y se registra en `decisions.md`. |
+## Decisiones (D90)
+5. En M4, quienes comparten grupo ven predicciones y justificaciones desde `cierrePredicciones` (03-data-model R04).
 
 ## Objetivo
 Que el usuario explique por qué cree lo que predijo. Es opcional y solo puede sumar bono (D08, lo evalúa F06 en M3). En M2 nadie más que su autor la lee; mostrarla a quienes comparten grupo desde el cierre llega en M4.
@@ -14,8 +12,8 @@ Que el usuario explique por qué cree lo que predijo. Es opcional y solo puede s
 |---|---|---|
 | R1 | Opcional, **máximo 500 caracteres** después de quitar espacios al inicio y al final. Vacía o solo espacios = sin justificación (`null`). El servidor recorta y valida (restricción de la tabla, creada en el lote de F03, F03 R7); la app muestra el contador y no deja pasar del límite. | D52 |
 | R2 | Es una columna de `prediccion`: solo existe junto con una predicción válida (R02). No se puede guardar justificación sin elegir algo en el formulario. | 03-data-model |
-| R3 | Se edita y se quita con las mismas reglas de cierre que la predicción (F03 R1, mismo disparador). Quitar la predicción (F03, decisión 1 = A) la quita. | D21, D82 |
-| R4 | Oculta: en M2 solo la lee su autor (F03 R5, mismos permisos). Desde cuándo la ven los del grupo en M4 lo fija la decisión 5. | D35 |
+| R3 | Se edita y se quita con las mismas reglas de cierre que la predicción (F03 R1, mismo disparador). Quitar la predicción (F03) la quita. | D21, D82 |
+| R4 | Oculta: en M2 solo la lee su autor (F03 R5, mismos permisos). En M4 la ven quienes comparten grupo desde `cierrePredicciones` (D90, 03-data-model R04). | D35 |
 | R5 | La pantalla no muestra puntos: el texto de ayuda es "Opcional. Si tu análisis se parece a lo que pase, ganas bono aunque falles." | D08, D52 |
 | R6 | Se guarda con el **mismo botón** que la predicción, en una sola escritura (F03 Flujo 3). Cambiar solo la justificación habilita "Actualizar". | — |
 | R7 | Se escribe con el teclado del sistema (dictado incluido, D22); campo multilínea `CampoTexto` con texto `cuerpo`. | 05-ui §5 |

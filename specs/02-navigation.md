@@ -1,6 +1,6 @@
 # 02 — Pantallas y navegación
 
-> **Estado:** ✅ Aprobado v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
+> **Estado:** ✅ Aprobado v1.3 (2026-11-02, D90: recordatorio agrupado abre S02) · v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
 > **Última actualización:** 2026-10-10
 > Base: [`01-mvp.md`](./01-mvp.md). Cada pantalla existe porque la necesita al menos una feature; si no, no se construye.
 > Este documento define **qué hay en cada pantalla y cómo se llega**, no cómo se ve (colores, tipografía, estilo): eso se define en la fase de Diseño.
@@ -81,7 +81,7 @@ Inicio de sesión (S01)
 | Entrada | Destino | Caso negativo |
 |---|---|---|
 | Notificación "tus puntos están listos" | S03 del partido calificado | Partido no encontrado → S02 con mensaje |
-| Notificación "recordatorio: el partido empieza pronto" | S03 del partido | Si ya empezó, S03 muestra la predicción bloqueada |
+| Notificación "recordatorio: el partido cierra pronto" (F11a, D90) | S03 del partido; si agrupa varios partidos, S02 de su jornada | Si ya cerró, S03 muestra la predicción bloqueada |
 | Cualquier ruta sin sesión iniciada | S01; después de iniciar sesión, continuar al destino original | — |
 
 ## 5. Pendientes

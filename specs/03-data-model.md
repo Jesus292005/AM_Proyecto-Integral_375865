@@ -1,6 +1,6 @@
 # 03 — Modelo de datos (conceptual)
 
-> **Estado:** ✅ Aprobado v1.4 (2026-11-02; v1.4: `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
+> **Estado:** ✅ Aprobado v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
 > **Última actualización:** 2026-10-04
 > Base: [`01-mvp.md`](./01-mvp.md), [`02-navigation.md`](./02-navigation.md), [`decisions.md`](./decisions.md).
 > Este documento describe **qué datos existen y cómo se relacionan**. No decide dónde viven (base de datos, tablas, colecciones): eso es la fase de Diseño.
@@ -107,8 +107,8 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 |---|---|---|
 | R01 | Una sola `Prediccion` por par (usuario, partido); cuenta para todos sus grupos. | D20 |
 | R02 | Una predicción tiene al menos uno de: resultado, rango de goles o marcador. Si tiene marcador, **no** tiene resultado ni rango por separado (se deducen). | D19, D48 |
-| R03 | Solo se crea o edita una predicción si la hora del servidor es anterior a `Partido.inicio`. | D21 |
-| R04 | Las predicciones de otros solo se entregan a quien comparte un grupo con su autor y a partir de `Partido.inicio`. Lo aplica el backend. | D35 |
+| R03 | Solo se crea, edita o quita una predicción si la hora del servidor es anterior a `Partido.cierrePredicciones`. | D21, D82 |
+| R04 | Las predicciones de otros solo se entregan a quien comparte un grupo con su autor y a partir de `Partido.cierrePredicciones`. Lo aplica el backend. | D35, D46, D90 |
 | R05 | Puntos: resultado 100, rango de goles 150, marcador exacto 350; marcador fallado = suma de las partes deducidas acertadas (máx. 250). Fallar = 0. Se usa el resultado de 90 minutos. | D18, D26, D27, D43, D48 |
 | R06 | Una predicción se califica **una sola vez**, cuando su partido está `TERMINADO`. | F05 |
 | R07 | La justificación solo suma bono (0–100); nunca resta. | D08 |

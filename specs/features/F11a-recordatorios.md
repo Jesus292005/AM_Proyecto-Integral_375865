@@ -1,10 +1,8 @@
 # F11a — Notificaciones: permiso, registro del dispositivo y recordatorio
-> **Estado:** Borrador · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F01, F02, F03 · **Pantallas:** S09 (ajuste), S03/S02 (destino) · **Decisiones:** D14, D32, D51, D52, D53, D69, D76, D79, D83, D85
+> **Estado:** ✅ Aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F01, F02, F03 · **Pantallas:** S09 (ajuste), S03/S02 (destino) · **Decisiones:** D14, D32, D51, D52, D53, D69, D76, D79, D83, D85
 
-## Decisiones para Jesús
-| # | Pregunta | A (recomendada) | B | Consecuencia |
-|---|---|---|---|---|
-| 4 | ¿A quién y cómo se manda el recordatorio? | **1 h antes del cierre, solo a quien no ha predicho** ese partido; un solo aviso por usuario y ejecución que agrupa los partidos que cierran en esa hora. Con un partido abre su S03; con varios, S02 de su jornada. | Un aviso por partido a todos los que tienen recordatorios, hayan predicho o no. | Con B, una jornada de 9 partidos son hasta 9 avisos por persona y llegan aunque ya no haya nada que hacer. A ajusta 02-navigation §4 (varios partidos → S02). |
+## Decisiones (D90)
+4. Recordatorio 1 h antes del cierre, solo a quien no ha predicho ese partido; un aviso por usuario y ejecución que agrupa los partidos que cierran en esa hora. Con un partido abre su S03; con varios, S02 de su jornada (02-navigation §4).
 
 ## Objetivo
 Primera funcionalidad nativa visible (D69): pedir permiso de notificaciones con contexto, registrar el dispositivo y avisar antes del cierre de los partidos que el usuario aún no predice, sin que nadie abra la app. F11b (M3) reutiliza el registro y el envío.
@@ -16,7 +14,7 @@ Primera funcionalidad nativa visible (D69): pedir permiso de notificaciones con 
 | R2 | Con permiso concedido, la app obtiene el token de push de Expo y lo registra; lo vuelve a registrar en cada inicio de la app (el token puede cambiar). | D51 |
 | R3 | Un token pertenece a un solo usuario: registrarlo con otra cuenta lo pasa a esa cuenta. **Cerrar sesión borra el token** del usuario que sale (complementa F01 §7). | F01 |
 | R4 | Ajuste "Recordatorios" en S09 = `Usuario.recordatoriosActivos` (ya existe, F01 Q2), con un componente nuevo `Interruptor` (el `Switch` de React Native con colores de tokens: activo `acento`, inactivo `linea`) que se agrega a 05-ui §5. Si el permiso está negado, el ajuste lo dice y ofrece "Abrir ajustes" del sistema. | F01 Q2 |
-| R5 | **Selección** (servidor, decisión 4 = A): partidos `PROGRAMADO`/`POSPUESTO` (incluye simulados) con `cierrePredicciones` en (ahora, ahora + 60 min]; usuarios con `recordatoriosActivos`, al menos un dispositivo, **sin** predicción en ese partido y sin `NotificacionEnviada` (`RECORDATORIO`, partido). | D21, D82 |
+| R5 | **Selección** (servidor, D90): partidos `PROGRAMADO`/`POSPUESTO` (incluye simulados) con `cierrePredicciones` en (ahora, ahora + 60 min]; usuarios con `recordatoriosActivos`, al menos un dispositivo, **sin** predicción en ese partido y sin `NotificacionEnviada` (`RECORDATORIO`, partido). | D21, D82 |
 | R6 | **Envío:** un aviso por usuario y ejecución, a todos sus dispositivos, por el servicio de push de Expo. La `NotificacionEnviada` se escribe **antes** de enviar (nunca se manda dos veces; si el envío falla, ese recordatorio se pierde y se registra). Un token que Expo marca `DeviceNotRegistered` se borra. La respuesta de Expo se valida con Zod. | D54, 03-data-model |
 | R7 | **Tarea programada** cada 15 min con `pg_cron` + `pg_net` y los secretos de Vault de D83; solo llama a la función si hay pendientes (patrón de D85). Por la frecuencia, el aviso llega entre 45 y 60 min antes del cierre. | D83, D85 |
 | R8 | Texto: título "Cierra en menos de 1 h"; cuerpo "América vs Pumas: aún no lo predices." o "América vs Pumas y 2 partidos más: aún no los predices." La notificación lleva la ruta destino (`/partido/:id` o `/partidos?jornada=n`); la app la valida con Zod y navega con `router.navigate` (D78). Abre en la pestaña Inicio (D76); sin sesión, pasa por S01 y continúa (F01 CA8). | D76, D78 |

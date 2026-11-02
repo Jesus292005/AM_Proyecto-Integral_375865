@@ -1,11 +1,9 @@
 # F09 — Modo de partidos simulados
-> **Estado:** Borrador · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F02 (y F03 para predecir los simulados) · **Pantallas:** S10, S09 (acceso), S02 y S03 (etiqueta) · **Decisiones:** D15, D36, D40, D43, D52, D84, D85
+> **Estado:** ✅ Aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F02 (y F03 para predecir los simulados) · **Pantallas:** S10, S09 (acceso), S02 y S03 (etiqueta) · **Decisiones:** D15, D36, D40, D43, D52, D84, D85
 
-## Decisiones para Jesús
-| # | Pregunta | A (recomendada) | B | Consecuencia |
-|---|---|---|---|---|
-| 2 | ¿Quién ve los partidos simulados? | Todos los usuarios autenticados, con la etiqueta "Simulado" en S02 y S03. | Solo administradores y cuentas marcadas como de demo. | A no cambia permisos (los partidos ya se leen todos). B agrega una marca de demo a `Usuario` y cambia la RLS de `partido`, `prediccion` y los rankings de M4. |
-| 3 | Al terminar un simulado, ¿qué marcador lleva? | Siempre el **real** del partido de origen (90 min, D43), con sus estadísticas y eventos. | El administrador puede escribir otro marcador. | Con B, la IA de F06 evaluaría contra estadísticas que no corresponden al marcador. |
+## Decisiones (D90)
+2. Los simulados los ven todos los usuarios autenticados, con la etiqueta "Simulado" en S02 y S03.
+3. Al terminar, un simulado lleva siempre el marcador real de 90 min del partido de origen, con sus estadísticas y eventos.
 
 ## Objetivo
 Que el administrador "juegue" un partido real ya terminado como si fuera de hoy: los usuarios lo predicen (F03, F04), el administrador cierra y termina el partido cuando quiere, y la calificación de M3 corre igual que con uno real (D15, D36, D40). Es la forma de probar F05/F06 y de hacer la demo sin esperar partidos.
@@ -57,4 +55,4 @@ Que el administrador "juegue" un partido real ya terminado como si fuera de hoy:
 | CA10 | Una cuenta sin rol `ADMIN` no ve el acceso a S10. | [teléfono] |
 
 ## Fuera de alcance
-Calificar el simulado (F05, M3), cancelar o posponer simulados, borrar simulados (R8), elegir el marcador (decisión 3 = A), grupo y cuentas de demo (se crean en M4 con F07, D40).
+Calificar el simulado (F05, M3), cancelar o posponer simulados, borrar simulados (R8), elegir el marcador (D90), grupo y cuentas de demo (se crean en M4 con F07, D40).
