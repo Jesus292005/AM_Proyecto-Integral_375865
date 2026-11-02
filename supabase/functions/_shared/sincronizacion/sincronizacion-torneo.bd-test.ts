@@ -1,66 +1,25 @@
 import { deepStrictEqual, equal, ok, rejects } from 'node:assert/strict';
-import postgres from 'postgres';
 
-import { esquemaRespuestaEquipos, esquemaRespuestaPartidos } from '../api-football/esquemas.ts';
-import partidos2024 from '../ejemplos-api-football/fixtures-262-2024.json' with { type: 'json' };
-import equipos2024 from '../ejemplos-api-football/teams-262-2024.json' with { type: 'json' };
-import { armarCargaTorneo, type CargaTorneo, type ParametrosCarga } from './sincronizacion-torneo.ts';
+import {
+  apertura,
+  cargaDe,
+  comoPostgres,
+  enTransaccion,
+  guardar,
+  type Sql,
+} from './pruebas-bd.ts';
+import type { CargaTorneo } from './sincronizacion-torneo.ts';
 
-// Pruebas de `guardar_carga_inicial` contra la base LOCAL de Docker (CA1, CA2, R7). No corren con
-// `deno task test`: requieren `npx supabase db start` (y `db reset --local` tras una migración).
-// Se corren con `deno task test:bd`. Cada prueba trabaja en una transacción que se deshace.
+// Pruebas de `guardar_carga_inicial` contra la base LOCAL de Docker (CA1, CA2, R7, R9). No corren
+// con `deno task test`: se corren con `deno task test:bd` (ver pruebas-bd.ts). Cada prueba trabaja
+// en una transacción que se deshace.
 
-const URL_BD_LOCAL = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
-
-const equipos = esquemaRespuestaEquipos.parse(equipos2024).response;
-const partidos = esquemaRespuestaPartidos.parse(partidos2024).response;
-
-function cargaDe(parametros: ParametrosCarga): CargaTorneo {
-  const armado = armarCargaTorneo(parametros, equipos, partidos, new Date('2026-11-01T13:00:00Z'));
-  if (armado.tipo === 'error') throw new Error(armado.mensaje);
-  return armado.carga;
-}
-
-const apertura = cargaDe({
-  temporada: 2024,
-  prefijoRondas: 'Apertura',
-  nombre: 'Apertura 2024',
-  esActual: true,
-});
 const clausura = cargaDe({
   temporada: 2024,
   prefijoRondas: 'Clausura',
   nombre: 'Clausura 2025',
   esActual: true,
 });
-
-type Sql = postgres.TransactionSql;
-
-class Deshacer extends Error {}
-
-/** Corre `prueba` como `service_role` dentro de una transacción que siempre se deshace. */
-async function enTransaccion(prueba: (sql: Sql) => Promise<void>) {
-  const sql = postgres(URL_BD_LOCAL, { max: 1, onnotice: () => {} });
-  try {
-    await sql.begin(async (tx) => {
-      await tx`set local role service_role`;
-      await prueba(tx);
-      throw new Deshacer();
-    });
-  } catch (error) {
-    if (!(error instanceof Deshacer)) throw error;
-  } finally {
-    await sql.end();
-  }
-}
-
-async function guardar(sql: Sql, carga: CargaTorneo) {
-  // Como texto y convertido en SQL: con `::jsonb` directo, `postgres` lo serializa dos veces.
-  const [fila] = await sql`
-    select public.guardar_carga_inicial((${JSON.stringify(carga)}::text)::jsonb) as resumen
-  `;
-  return fila?.resumen;
-}
 
 /** Lo que hay en la base del torneo de `carga`, con los ids (para ver que no cambian). */
 async function foto(sql: Sql, carga: CargaTorneo) {
@@ -304,8 +263,7 @@ Deno.test('BD: una ronda de liguilla publicada después crea su jornada y sus pa
 
 Deno.test('BD: la actualización diaria está programada a las 14:00 UTC y lee la clave de Vault (D83)', async () => {
   // `cron.job` solo la lee `postgres`; esta prueba no cambia nada.
-  const sql = postgres(URL_BD_LOCAL, { max: 1, onnotice: () => {} });
-  try {
+  await comoPostgres(async (sql) => {
     const [tarea] = await sql<{ schedule: string; command: string; active: boolean }[]>`
       select schedule, command, active from cron.job where jobname = 'actualizacion-diaria'
     `;
@@ -315,7 +273,5 @@ Deno.test('BD: la actualización diaria está programada a las 14:00 UTC y lee l
     ok(tarea.command.includes("'/functions/v1/actualizacion-diaria'"));
     ok(tarea.command.includes("name = 'clave_secreta'"));
     equal(tarea.command.includes('sb_secret_'), false);
-  } finally {
-    await sql.end();
-  }
+  });
 });

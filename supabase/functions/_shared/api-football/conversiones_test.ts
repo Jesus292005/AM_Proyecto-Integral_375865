@@ -4,6 +4,7 @@ import partidos2024 from '../ejemplos-api-football/fixtures-262-2024.json' with 
 import {
   convertirEstado,
   convertirRonda,
+  convertirTipoEvento,
   marcadorDePartido,
   normalizarNombre,
 } from './conversiones.ts';
@@ -198,4 +199,19 @@ Deno.test('marcador: un partido sin jugar no tiene marcador', () => {
     goles_local_medio_tiempo: null,
     goles_visitante_medio_tiempo: null,
   });
+});
+
+// --- Tipos de evento (P4) ---
+
+Deno.test('eventos: cada tipo de la API se convierte', () => {
+  const tabla = [['Goal', 'GOL'], ['Card', 'TARJETA'], ['subst', 'CAMBIO'], ['Var', 'VAR']] as const;
+  for (const [tipoApi, evento] of tabla) {
+    deepStrictEqual(convertirTipoEvento(tipoApi), { tipo: 'ok', evento }, tipoApi);
+  }
+});
+
+Deno.test('eventos: un tipo que no está en la tabla es desconocido', () => {
+  for (const tipoApi of ['goal', 'Penalty', '', 'toString']) {
+    deepStrictEqual(convertirTipoEvento(tipoApi), { tipo: 'desconocido', valor: tipoApi }, tipoApi);
+  }
 });

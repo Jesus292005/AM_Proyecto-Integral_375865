@@ -1,8 +1,8 @@
 # F02 — Partidos de la Liga MX: sincronización y lista por jornada
 
-> **Estado:** ✅ Aprobada v1.2 (2026-11-02, D82–D83: cierre de predicciones propio y hora de P2) · v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
+> **Estado:** ✅ Aprobada v1.3 (2026-11-02, D84–D85: marca de listo para calificar y ventanas de P3/P4) · v1.2 (2026-11-02, D82–D83: cierre de predicciones propio y hora de P2) · v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
 > **Prioridad:** Must · **Semana:** S2 · **Depende de:** F01 (para ver la lista) · **Pantallas:** S02
-> **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54, D80, D82, D83
+> **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54, D80, D82, D83, D84, D85
 
 Esta feature tiene dos partes: **(A) sincronización en el servidor** (actor: sistema) y **(B) lista de partidos en la app** (actor: usuario).
 
@@ -25,8 +25,8 @@ Sistema (tareas programadas). Administrador para la carga inicial.
 |---|---|---|---|
 | **P1. Carga inicial** | Manual (administrador), una vez por torneo | Crea/actualiza liga, torneo, equipos, jornadas y todos los partidos del torneo. | 2–3 |
 | **P2. Actualización diaria** | 1 vez al día (Q1) | Vuelve a traer los partidos del torneo para detectar cambios de horario, pospuestos y cancelados. | 1 |
-| **P3. Detección de finales** | Cada 15 min, **solo** si hay partidos que ya debieron terminar (inicio + 115 min) y no están `TERMINADO` | Consulta el estado de esos partidos (hasta 20 por consulta). | 0–10 por día de partidos |
-| **P4. Datos del partido terminado** | Cuando P3 detecta un partido `TERMINADO` | Descarga estadísticas y eventos y los guarda. Marca el partido como listo para calificar (F05). | 2 por partido |
+| **P3. Detección de finales** | Cada 15 min, **solo** si hay partidos que ya debieron terminar (inicio + 115 min) y no están `TERMINADO`, dentro de las 6 h siguientes al inicio (D85) | Consulta el estado de esos partidos (hasta 20 por consulta). | 0–10 por día de partidos |
+| **P4. Datos del partido terminado** | Cuando P3 (o P2) deja un partido `TERMINADO` sin datos, en los 3 días siguientes a su inicio; máximo 5 partidos por ejecución (D85) | Descarga estadísticas y eventos y los guarda. Marca el partido como listo para calificar (F05; `Partido.listoParaCalificarEn`, D84). El administrador puede forzarlo para partidos concretos. | 2 por partido |
 
 Estimado de un día con jornada completa (9 partidos): ~30 consultas (límite: 100).
 

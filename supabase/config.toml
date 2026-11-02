@@ -395,6 +395,10 @@ verify_jwt = false
 [functions.actualizacion-diaria]
 verify_jwt = false
 
+# F02 P3/P4 (T25): la invoca la tarea programada de `pg_cron` cada 15 min (solo si hay pendientes).
+[functions.detectar-finales]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

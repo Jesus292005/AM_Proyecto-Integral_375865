@@ -208,6 +208,7 @@ export type Database = {
           id: number
           inicio: string
           jornada_id: number
+          listo_para_calificar_en: string | null
           partido_origen_id: number | null
           proveedor_id: number | null
           sincronizado_en: string
@@ -227,6 +228,7 @@ export type Database = {
           id?: never
           inicio: string
           jornada_id: number
+          listo_para_calificar_en?: string | null
           partido_origen_id?: number | null
           proveedor_id?: number | null
           sincronizado_en: string
@@ -246,6 +248,7 @@ export type Database = {
           id?: never
           inicio?: string
           jornada_id?: number
+          listo_para_calificar_en?: string | null
           partido_origen_id?: number | null
           proveedor_id?: number | null
           sincronizado_en?: string
@@ -437,7 +440,16 @@ export type Database = {
       }
     }
     Functions: {
+      actualizar_estados_partidos: { Args: { datos: Json }; Returns: number }
       guardar_carga_inicial: { Args: { carga: Json }; Returns: Json }
+      guardar_datos_partido: { Args: { datos: Json }; Returns: Json }
+      partidos_pendientes_de_final: {
+        Args: { ahora: string }
+        Returns: {
+          estado: Database["public"]["Enums"]["estado_partido"]
+          proveedor_id: number
+        }[]
+      }
     }
     Enums: {
       estado_partido:

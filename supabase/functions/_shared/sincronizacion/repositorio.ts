@@ -1,12 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '../tipos-db.ts';
+import { type DependenciasFinales, esquemaResumenDatos } from './datos-partido.ts';
 import { type DependenciasActualizacion, esquemaResumenCarga } from './sincronizacion-torneo.ts';
 
-type Repositorio = Omit<DependenciasActualizacion, 'consultarApi' | 'ahora'>;
+type Repositorio = Omit<DependenciasActualizacion & DependenciasFinales, 'consultarApi' | 'ahora'>;
 
 // Acceso a la base para la sincronización, con el cliente de la clave secreta (`service_role`):
-// `sincronizacion` está cerrada para los usuarios y solo `service_role` guarda la carga.
+// `sincronizacion` está cerrada para los usuarios y solo `service_role` ejecuta las funciones que
+// guardan.
 export function crearRepositorioSincronizacion(cliente: SupabaseClient<Database>): Repositorio {
   return {
     async contarConsultasDelDia(desde) {
@@ -61,6 +63,26 @@ export function crearRepositorioSincronizacion(cliente: SupabaseClient<Database>
       const { data, error } = await cliente.rpc('guardar_carga_inicial', { carga });
       if (error) throw new Error(`No se pudo guardar la carga: ${error.message}`);
       return esquemaResumenCarga.parse(data);
+    },
+
+    async buscarPendientesDeFinal(ahora) {
+      const { data, error } = await cliente.rpc('partidos_pendientes_de_final', {
+        ahora: ahora.toISOString(),
+      });
+      if (error) throw new Error(`No se pudieron leer los partidos pendientes: ${error.message}`);
+      return data;
+    },
+
+    async actualizarEstados(datos) {
+      const { data, error } = await cliente.rpc('actualizar_estados_partidos', { datos });
+      if (error) throw new Error(`No se pudieron actualizar los estados: ${error.message}`);
+      return data;
+    },
+
+    async guardarDatosPartido(datos) {
+      const { data, error } = await cliente.rpc('guardar_datos_partido', { datos });
+      if (error) throw new Error(`No se pudieron guardar los datos del partido: ${error.message}`);
+      return esquemaResumenDatos.parse(data);
     },
   };
 }

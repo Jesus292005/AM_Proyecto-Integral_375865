@@ -97,6 +97,27 @@ export function convertirRonda(rondaApi: string, prefijoRondas: string): Resulta
   return jornada === undefined ? desconocida : { tipo: 'ok', jornada };
 }
 
+// --- Tipos de evento (P4) ---
+
+type TipoEvento = Database['public']['Enums']['tipo_evento'];
+
+const tiposEventoApi: ReadonlyMap<string, TipoEvento> = new Map([
+  ['Goal', 'GOL'],
+  ['Card', 'TARJETA'],
+  ['subst', 'CAMBIO'],
+  ['Var', 'VAR'],
+]);
+
+export type ResultadoTipoEvento =
+  | { tipo: 'ok'; evento: TipoEvento }
+  | { tipo: 'desconocido'; valor: string };
+
+/** Convierte `type` de `/fixtures/events`. Uno desconocido se omite y se anota (como A6). */
+export function convertirTipoEvento(tipoApi: string): ResultadoTipoEvento {
+  const evento = tiposEventoApi.get(tipoApi);
+  return evento === undefined ? { tipo: 'desconocido', valor: tipoApi } : { tipo: 'ok', evento };
+}
+
 // --- Marcador (F02 R2) ---
 
 export type MarcadorPartido = Pick<

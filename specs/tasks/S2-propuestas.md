@@ -385,3 +385,27 @@
 - **Despliegue (2026-11-02, Jesús):** secretos `url_proyecto` y `clave_secreta` en Vault (desde la pantalla de Vault, para que la clave no quede en el historial del SQL Editor); migración aplicada (aparece en remoto); `actualizacion-diaria` v1 y `carga-inicial` v2 desplegadas (`verify_jwt=false`; `carga-inicial` se volvió a desplegar porque cambió el código compartido).
 - **Ejecución manual de P2 (verificada por Jesús):** `HTTP 200`, `EXITO`, 1 consulta, resumen 18/21/170 (**CA8** en el proyecto real: P2 corre sobre el torneo actual sin duplicar nada); los 170 partidos con `cierre_predicciones = inicio`; registro `ACTUALIZACION_DIARIA` · `EXITO` · 1 consulta · sin error; `cron.job`: `actualizacion-diaria` · `0 14 * * *` · activa.
 - **Pendiente:** revisar la primera ejecución programada (06:00 en Tijuana del 2026-11-02) en `cron.job_run_details` y `sincronizacion`.
+
+## T25 — Detección de finales P3 y datos del partido P4 (2026-11-02)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | **`partido.listo_para_calificar_en`** (null = P4 pendiente), que F05 usará para saber qué calificar. | ✅ OK (D84, 03-data-model v1.4). |
+| 2 | **Ventanas**: P3 entre 115 min y 6 h después del inicio; P4 terminados de los últimos 3 días, máximo 5 por ejecución. | Jesús comentó que la cuota dejará de importar con el plan Pro; se conservan porque, sin ellas, al desplegar con el plan gratis P4 intentaría bajar los 170 partidos de 2024 (340 consultas) y agotaría la cuota ese día. ✅ OK (D85). |
+| 3 | Tarea **cada 15 min** que solo llama a la función si hay pendientes (condición en `partidos_pendientes_de_final`, compartida con la función); sin pendientes no hay llamada ni registro. | ✅ OK (D85). |
+| 4 | Cuerpo opcional **`{ "partidos": [...] }`** para forzar P4 (administrador), sin ventanas; sirve para verificar CA7 en el proyecto real y para bajar los datos de 2024 cuando haya plan Pro. | ✅ OK (D85). |
+| 5 | Eventos `Goal`/`Card`/`subst`/`Var` → `GOL`/`TARJETA`/`CAMBIO`/`VAR` (desconocido se omite y se anota); eventos reemplazados en cada P4; estadísticas por (partido, equipo, tipo) como texto, null = sin dato; sin estadísticas también se marca listo. | ✅ OK (D85). |
+
+**Ajustes al implementar:**
+- Edge Function `detectar-finales` (clave secreta, `verify_jwt = false`). Primero P3 de los pendientes sin terminar (registro `DETECCION_FINALES`, `/fixtures?ids=` de 20 en 20), luego vuelve a pedir los pendientes y hace P4 de los terminados (un registro `DATOS_PARTIDO` por partido, `/fixtures/statistics` y `/fixtures/events`). Un partido con error en P4 no impide los demás. Responde 502 si alguna ejecución terminó en `ERROR`.
+- Migración `20261102072849_detectar_finales.sql`: columna, `partidos_pendientes_de_final(ahora)` (excluye simulados), `actualizar_estados_partidos(datos)` (P3: estado y marcador; estado desconocido no cambia), `guardar_datos_partido(datos)` (P4; rechaza partidos que no existen o que no están `TERMINADO`) y la tarea `detectar-finales` (`*/15 * * * *`, `select net.http_post(...) where exists (...)`). Las tres funciones solo para `service_role`.
+- P3 solo actualiza estado y marcador (no el horario; eso es de P2).
+- **Núcleo común** `_shared/sincronizacion/ejecucion.ts` (`ejecutarConRegistro`): abre y cierra el registro, cuenta las consultas (el total del día se lee en la primera consulta), aplica R4/R5/R6 y convierte excepciones en `ERROR`; P1/P2 se pasaron a usarlo sin cambiar su comportamiento (sus 65 pruebas pasaron igual). Los errores de P4 llevan el prefijo `Partido <id>:`.
+- Utilidades de las pruebas de base en `_shared/sincronizacion/pruebas-bd.ts` (conexión, transacción que se deshace, `llamar` a funciones `jsonb`), usadas por los dos `*.bd-test.ts`; `deno task test:bd` corre ambos.
+- Tipos: columna y funciones agregadas a mano en los dos `tipos-db.ts`; se confirman con `npm run tipos` tras `db push`.
+- Pruebas: 16 nuevas sin base (81 en total) — tipos de evento, armado con los ejemplos reales del 1206057 (36 estadísticas, `Red Cards` null, 15 eventos con el 45+1), evento desconocido, sin estadísticas, estados de P3, y la ejecución (sin pendientes, grupos de 20, P4 tras P3, máximo 5, error aislado, base que rechaza, partido que la API no devuelve, sin tope, modo forzado); 8 nuevas contra la base (19 en total) — **CA7**, repetir P4, partido no terminado o inexistente, P3, ventana de 6 h, ventana de 3 días y una sola vez, permisos y la tarea en `cron.job`.
+- **Las pruebas detectan fallas:** con 9 cambios a propósito (ventanas de 12 h y 5 días, sin borrar eventos, estadísticas sin actualizar, sin revisar `TERMINADO`, 7 por ejecución, grupos de 25, null guardado como "0", `subst` como gol) fallan 5 pruebas de base y 5 sin base; restaurado, todo pasa.
+- F02 v1.3 (filas de P3/P4).
+- Tipos: tras `db push`, `npm run tipos` generó exactamente las líneas agregadas a mano.
+- **Despliegue (2026-11-02, Jesús):** migración aplicada (aparece en remoto); `detectar-finales` v1, `actualizacion-diaria` v2 y `carga-inicial` v3 desplegadas (`verify_jwt=false`; las dos últimas de nuevo porque cambió el código compartido).
+- **P4 forzado del 1206057 (verificado por Jesús):** `HTTP 200`, `EXITO`, 36 estadísticas y 15 eventos; en la base real, 36 estadísticas, `Red Cards` sin dato en ambos equipos, 15 eventos (3 goles) y el partido marcado como listo para calificar → **CA7**. Registro `DATOS_PARTIDO` · `EXITO` · 2 consultas · sin error. `cron.job`: `actualizacion-diaria` (`0 14 * * *`) y `detectar-finales` (`*/15 * * * *`), activas.

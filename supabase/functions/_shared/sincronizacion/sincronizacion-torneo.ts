@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-import type { ConsultarApi } from '../api-football/cliente.ts';
 import {
   convertirEstado,
   convertirRonda,
@@ -10,7 +9,6 @@ import {
 } from '../api-football/conversiones.ts';
 import {
   type EquipoApi,
-  type ErroresApi,
   esquemaRespuestaEquipos,
   esquemaRespuestaPartidos,
   type PartidoApi,
@@ -18,10 +16,12 @@ import {
 import { nombreCortoDeEquipo } from '../datos-equipos.ts';
 import type { Database, Tables } from '../tipos-db.ts';
 import {
-  inicioDelDiaDeConsultas,
-  puedeConsultar,
-  TOPE_CONSULTAS_DIARIAS,
-} from './tope-consultas.ts';
+  type DependenciasEjecucion,
+  desenlaceDeFallo,
+  ejecutarConRegistro,
+  type ResultadoConsulta,
+  type ResultadoEjecucion,
+} from './ejecucion.ts';
 
 // Sincronización de un torneo completo con API-Football (F02):
 // - P1 carga inicial (manual, una vez por torneo): `/teams` y `/fixtures`.
@@ -32,8 +32,6 @@ import {
 // (`guardar_carga_inicial`, que ambos procesos usan).
 
 type EstadoPartido = Database['public']['Enums']['estado_partido'];
-type EstadoSincronizacion = Database['public']['Enums']['estado_sincronizacion'];
-type TipoSincronizacion = Database['public']['Enums']['tipo_sincronizacion'];
 
 /** Liga MX en API-Football (03-data-model). */
 export const ID_LIGA_MX = 262;
@@ -210,19 +208,8 @@ export type ResumenCarga = z.infer<typeof esquemaResumenCarga>;
 
 export type TorneoActual = Pick<Tables<'torneo'>, 'nombre' | 'temporada_proveedor' | 'prefijo_rondas'>;
 
-/** Lo que la ejecución necesita de afuera; se reemplaza por dobles en las pruebas. */
-export type DependenciasSincronizacion = {
-  consultarApi: ConsultarApi;
-  /** Suma de `consultas_usadas` de los registros de `sincronizacion` desde `desde` (R4). */
-  contarConsultasDelDia: (desde: Date) => Promise<number>;
-  iniciarRegistro: (tipo: TipoSincronizacion) => Promise<number>;
-  anotarConsultas: (idRegistro: number, consultas: number) => Promise<void>;
-  terminarRegistro: (
-    idRegistro: number,
-    final: { estado: EstadoSincronizacion; error: string | null },
-  ) => Promise<void>;
+export type DependenciasSincronizacion = DependenciasEjecucion & {
   guardarCarga: (carga: CargaTorneo) => Promise<ResumenCarga>;
-  ahora: () => Date;
 };
 
 export type DependenciasActualizacion = DependenciasSincronizacion & {
@@ -230,27 +217,7 @@ export type DependenciasActualizacion = DependenciasSincronizacion & {
   buscarTorneoActual: (proveedorIdLiga: number) => Promise<TorneoActual | null>;
 };
 
-export type ResultadoSincronizacion = {
-  estado: EstadoSincronizacion;
-  consultas: number;
-  error: string | null;
-  resumen: ResumenCarga | null;
-};
-
-type ResultadoConsulta<T> =
-  | { tipo: 'ok'; elementos: T[] }
-  | { tipo: 'tope' }
-  | { tipo: 'error'; mensaje: string };
-
-const LARGO_MAXIMO_ERROR = 2000;
-
-function recortar(texto: string): string {
-  return texto.length <= LARGO_MAXIMO_ERROR ? texto : `${texto.slice(0, LARGO_MAXIMO_ERROR)}…`;
-}
-
-function tieneErrores(errores: ErroresApi): boolean {
-  return !Array.isArray(errores) && Object.keys(errores).length > 0;
-}
+export type ResultadoSincronizacion = ResultadoEjecucion<ResumenCarga>;
 
 type ConfiguracionSincronizacion = {
   tipo: 'CARGA_INICIAL' | 'ACTUALIZACION_DIARIA';
@@ -259,80 +226,29 @@ type ConfiguracionSincronizacion = {
   obtenerParametros: () => Promise<ParametrosCarga | null>;
 };
 
-/** Núcleo de P1 y P2, con su registro en `sincronizacion` (R8). */
-async function sincronizarTorneo(
+/** Núcleo de P1 y P2. */
+function sincronizarTorneo(
   configuracion: ConfiguracionSincronizacion,
   dependencias: DependenciasSincronizacion,
 ): Promise<ResultadoSincronizacion> {
-  const idRegistro = await dependencias.iniciarRegistro(configuracion.tipo);
-  let consultas = 0;
-
-  const terminar = async (
-    estado: EstadoSincronizacion,
-    error: string | null,
-    resumen: ResumenCarga | null = null,
-  ): Promise<ResultadoSincronizacion> => {
-    const errorRecortado = error === null ? null : recortar(error);
-    await dependencias.terminarRegistro(idRegistro, { estado, error: errorRecortado });
-    return { estado, consultas, error: errorRecortado, resumen };
-  };
-
-  try {
+  return ejecutarConRegistro(configuracion.tipo, dependencias, async (consultar) => {
     const parametros = await configuracion.obtenerParametros();
     if (parametros === null) {
-      return await terminar(
-        'ERROR',
-        'No hay torneo actual de la Liga MX (`es_actual`); primero se corre la carga inicial (P1).',
-      );
+      return {
+        estado: 'ERROR',
+        error:
+          'No hay torneo actual de la Liga MX (`es_actual`); primero se corre la carga inicial (P1).',
+        resumen: null,
+      };
     }
 
-    const consultasPrevias = await dependencias.contarConsultasDelDia(
-      inicioDelDiaDeConsultas(dependencias.ahora()),
-    );
-
-    // R4 antes de cada consulta; la consulta se cuenta aunque falle.
-    const consultar = async <T>(
-      ruta: string,
-      esquema: z.ZodType<{ errors: ErroresApi; response: T[] }>,
-    ): Promise<ResultadoConsulta<T>> => {
-      if (!puedeConsultar(consultasPrevias + consultas, configuracion.tipo)) return { tipo: 'tope' };
-      consultas++;
-      await dependencias.anotarConsultas(idRegistro, consultas);
-
-      const parametrosRuta = { league: String(ID_LIGA_MX), season: String(parametros.temporada) };
-      const respuesta = await dependencias.consultarApi(ruta, parametrosRuta);
-      if (respuesta.tipo === 'error') return respuesta;
-
-      const datos = esquema.safeParse(respuesta.cuerpo);
-      if (!datos.success) {
-        return {
-          tipo: 'error',
-          mensaje: `Respuesta con forma inesperada de ${ruta} (R5):\n${z.prettifyError(datos.error)}`,
-        };
-      }
-      if (tieneErrores(datos.data.errors)) {
-        return {
-          tipo: 'error',
-          mensaje: `API-Football respondió con errores en ${ruta} (R6): ${JSON.stringify(datos.data.errors)}`,
-        };
-      }
-      return { tipo: 'ok', elementos: datos.data.response };
-    };
-
-    const fallo = (resultado: { tipo: 'tope' } | { tipo: 'error'; mensaje: string }) =>
-      resultado.tipo === 'tope'
-        ? terminar(
-          'DETENIDA_POR_TOPE',
-          `Tope de ${TOPE_CONSULTAS_DIARIAS} consultas diarias alcanzado (R4); se reintenta mañana.`,
-        )
-        : terminar('ERROR', resultado.mensaje);
-
+    const parametrosRuta = { league: String(ID_LIGA_MX), season: String(parametros.temporada) };
     const equipos: ResultadoConsulta<EquipoApi> = configuracion.consultarEquipos
-      ? await consultar('/teams', esquemaRespuestaEquipos)
+      ? await consultar('/teams', parametrosRuta, esquemaRespuestaEquipos)
       : { tipo: 'ok', elementos: [] };
-    if (equipos.tipo !== 'ok') return await fallo(equipos);
-    const partidos = await consultar('/fixtures', esquemaRespuestaPartidos);
-    if (partidos.tipo !== 'ok') return await fallo(partidos);
+    if (equipos.tipo !== 'ok') return desenlaceDeFallo(equipos);
+    const partidos = await consultar('/fixtures', parametrosRuta, esquemaRespuestaPartidos);
+    if (partidos.tipo !== 'ok') return desenlaceDeFallo(partidos);
 
     const armado = armarCargaTorneo(
       parametros,
@@ -340,15 +256,12 @@ async function sincronizarTorneo(
       partidos.elementos,
       dependencias.ahora(),
     );
-    if (armado.tipo === 'error') return await terminar('ERROR', armado.mensaje);
+    if (armado.tipo === 'error') return { estado: 'ERROR', error: armado.mensaje, resumen: null };
 
     const resumen = await dependencias.guardarCarga(armado.carga);
     const omitidos = armado.omitidos.length > 0 ? armado.omitidos.join('\n') : null;
-    return await terminar('EXITO', omitidos, resumen);
-  } catch (error) {
-    const motivo = error instanceof Error ? error.message : String(error);
-    return await terminar('ERROR', `Error inesperado: ${motivo}`);
-  }
+    return { estado: 'EXITO', error: omitidos, resumen };
+  });
 }
 
 /** P1: carga inicial del torneo indicado. */
