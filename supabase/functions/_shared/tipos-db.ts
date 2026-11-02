@@ -196,6 +196,7 @@ export type Database = {
       partido: {
         Row: {
           calificado_en: string | null
+          cierre_predicciones: string
           equipo_local_id: number
           equipo_visitante_id: number
           es_simulado: boolean
@@ -214,6 +215,7 @@ export type Database = {
         }
         Insert: {
           calificado_en?: string | null
+          cierre_predicciones: string
           equipo_local_id: number
           equipo_visitante_id: number
           es_simulado?: boolean
@@ -232,6 +234,7 @@ export type Database = {
         }
         Update: {
           calificado_en?: string | null
+          cierre_predicciones?: string
           equipo_local_id?: number
           equipo_visitante_id?: number
           es_simulado?: boolean

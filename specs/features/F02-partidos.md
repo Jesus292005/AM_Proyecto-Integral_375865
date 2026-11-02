@@ -1,8 +1,8 @@
 # F02 — Partidos de la Liga MX: sincronización y lista por jornada
 
-> **Estado:** ✅ Aprobada v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
+> **Estado:** ✅ Aprobada v1.2 (2026-11-02, D82–D83: cierre de predicciones propio y hora de P2) · v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
 > **Prioridad:** Must · **Semana:** S2 · **Depende de:** F01 (para ver la lista) · **Pantallas:** S02
-> **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54, D80
+> **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54, D80, D82, D83
 
 Esta feature tiene dos partes: **(A) sincronización en el servidor** (actor: sistema) y **(B) lista de partidos en la app** (actor: usuario).
 
@@ -41,7 +41,7 @@ Estimado de un día con jornada completa (9 partidos): ~30 consultas (límite: 1
 | R6 | Si la respuesta trae `errors` no vacío (p. ej. plan sin acceso a la temporada), se trata como falla. |
 | R7 | Una falla **nunca** borra ni altera datos ya guardados. |
 | R8 | Cada ejecución deja un registro en `Sincronizacion` (tipo, inicio, fin, estado, consultas usadas, error). |
-| R9 | Si un partido cambia de horario **antes** de su inicio original, se actualiza `inicio` (nuevo cierre de predicciones). Si cambia **después**, se actualiza `inicio` pero las predicciones siguen bloqueadas (D46). |
+| R9 | Si un partido cambia de horario **antes** de su inicio original, se actualiza `inicio` (nuevo cierre de predicciones). Si cambia **después**, se actualiza `inicio` pero las predicciones siguen bloqueadas (D46). El cierre se guarda aparte en `Partido.cierrePredicciones` (D82); "antes" y "después" se miden con la hora de la sincronización. |
 
 ### A6. Conversión de estados de la API
 | Estado en API-Football | Estado en la app |
@@ -146,7 +146,7 @@ Marcador en vivo, tabla general y previa (F21), indicador de predicción (F03), 
 ## Decisiones de esta spec (D56)
 | ID | Decisión |
 |---|---|
-| Q1 | Actualización diaria a las 06:00 hora de Tijuana. |
+| Q1 | Actualización diaria a las 06:00 hora de Tijuana (programada a las 14:00 UTC, D83). |
 | Q2 | `AWD`/`WO` → `TERMINADO` con el marcador que reporte la API. |
 | Q3 | Rondas verificadas (A7). Las rondas finales se muestran como **"Liguilla"**; el play-in ya no existe en 2026. |
 | Q4 | Jornada actual = la del próximo partido por jugar; si el torneo terminó, la última. |

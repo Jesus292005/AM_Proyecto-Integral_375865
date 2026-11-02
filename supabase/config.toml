@@ -391,6 +391,10 @@ deno_version = 2
 [functions.carga-inicial]
 verify_jwt = false
 
+# F02 P2 (T24): la invoca la tarea programada de `pg_cron` con la clave secreta de Vault en `apikey`.
+[functions.actualizacion-diaria]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

@@ -1,7 +1,7 @@
 # Registro de decisiones
 
 > Regla: una decisión **cerrada** no se vuelve a discutir salvo que aparezca información nueva; si cambia, se agrega una nueva fila que la reemplaza (no se borra la anterior).
-> Última actualización: 2026-11-01
+> Última actualización: 2026-11-02
 
 ## Decisiones cerradas
 
@@ -88,6 +88,8 @@
 | D79 | 2026-10-19 | **Tope de tamaño de descarga: 30 MB** desde Google Play en `arm64-v8a`, medido con `bundletool get-size total` sobre el AAB de producción (04-tech-stack §7). Resuelve P-20. Se vuelve a medir antes de la demo y al agregar una librería nativa pesada. | Medición 1 (T07): 23.8–24.0 MB sin librerías nativas propias; el margen (~6 MB) cubre las que piden las specs (Google Sign-In, almacenamiento seguro, `expo-image`, notificaciones, cámara, SVG/QR). |
 | D80 | 2026-11-01 | **F02 v1.1 (A7, R4):** las rondas llegan **todas** con el prefijo del torneo (`Apertura - Quarter-finals`); se quita el prefijo y se compara el resto normalizado. Una ronda del **otro torneo** de la temporada se ignora sin registrar error. El `orden` de la liguilla es **fijo por ronda** (play-in 18, cuartos 19, semifinales 20, final 21). El **día de consultas** de R4 va de 00:00 a 00:00 UTC. | Datos reales de T20; aprobado por Jesús al planear T22. El orden fijo evita que una jornada cambie de `orden` al repetir la carga; el día UTC coincide con el reinicio del límite diario de API-Football. |
 | D81 | 2026-11-01 | `Equipo.nombreCorto` se carga **a mano en el servidor** (`supabase/functions/_shared/datos-equipos.ts`) por `proveedorId`; un equipo sin registro usa el nombre de la API (A8). Incluye a **Atlante** (2312), que entra en 2026 en lugar de Mazatlán (este se queda para los datos de 2024). 03-data-model v1.2. | El `code` de API-Football se repite (`CLU` para Tijuana, América y León) o llega vacío (Juárez, Mazatlán), y la columna no admite vacíos. Atlante: indicación de Jesús al planear T23; su id se consultó a la API. |
+| D82 | 2026-11-02 | `Partido` agrega **`cierrePredicciones`** (03-data-model v1.3): nace igual a `inicio`; si el horario cambia **antes** del cierre, el nuevo inicio es el nuevo cierre; si cambia **después**, el cierre no se mueve (F02 R9, D46). La comparación usa la hora de la sincronización. Es la hora límite de D21 para F03. | Con solo `inicio`, un partido pospuesto después de empezar recibe una fecha nueva y sus predicciones se reabrirían, lo que D46 prohíbe. Aprobado por Jesús al planear T24. |
+| D83 | 2026-11-02 | La actualización diaria (P2) se programa a las **14:00 UTC** (`0 14 * * *`) con `pg_cron` + `pg_net`; la URL del proyecto y la clave secreta se leen de **Vault** (`url_proyecto`, `clave_secreta`). Reemplaza las 13:00 UTC de la nota de S2. En horario de verano (desde el 14 de marzo de 2027) corre a las 07:00 en Tijuana. | Desde el 1 de noviembre, 13:00 UTC son las 05:00 en Tijuana; 14:00 UTC da las 06:00 de Q1 el resto del semestre, incluida la demo. Aprobado por Jesús al planear T24. |
 
 ## Pendientes
 

@@ -362,3 +362,26 @@
 - Tipos: tras `db push`, `npm run tipos` generó exactamente la firma agregada a mano.
 - **Ejecución real (2026-11-02, Jesús):** migración aplicada, función desplegada (`verify_jwt: false`) y carga del Apertura 2024 ejecutada **dos veces**. `sincronizacion`: dos registros `CARGA_INICIAL` · `EXITO` · 2 consultas · sin error (R8). Conteos en la base real: 18 equipos, 21 jornadas (17 regulares), 170 partidos (153 de fase regular), 1 torneo actual → **CA1** y **CA2** (la segunda carga no duplicó nada).
 - Al invocarla: pegar la clave en `Read-Host` no funciona en la terminal de la app (solo llega el carácter de Ctrl+V y la puerta de Supabase responde 400 sin cuerpo). Se lee con `Get-Clipboard -Raw`, comprobando que empiece con `sb_secret_` antes de usarla; el comando se pega en la terminal **antes** de copiar la clave.
+
+## T24 — Actualización diaria P2 y tarea programada (2026-11-02)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | **`partido.cierre_predicciones`**: nace igual a `inicio`; un cambio de horario antes del cierre lo mueve, uno después no (R9, D46). Sin él, un partido pospuesto después de empezar reabriría sus predicciones. | ✅ OK (D82, 03-data-model v1.3). |
+| 2 | Tarea a las **14:00 UTC** (06:00 en Tijuana en horario de invierno) en vez de las 13:00 de la nota de S2. | ✅ OK (D83). |
+| 3 | Tarea programada en una **migración** con `pg_cron` + `pg_net`; la URL del proyecto y la clave secreta, en **Vault** (las carga Jesús, no van al repo). | ✅ OK (D83). |
+
+**Ajustes al implementar:**
+- P2 = Edge Function `actualizacion-diaria` (clave secreta, `verify_jwt = false`, sin cuerpo): busca el torneo con `es_actual` de la Liga MX, hace **1 consulta** (`/fixtures`), arma con el mismo armado de P1 (equipos tomados de los partidos, A8) y guarda con la misma `guardar_carga_inicial`; registro `ACTUALIZACION_DIARIA`. Sin torneo actual → `ERROR` sin consultar la API. Como reutiliza la carga, también crea las jornadas y partidos de liguilla cuando la API los publica.
+- P2 manda `es_actual: false` (no cambia la marca del torneo, T23).
+- Refactor: `carga-inicial.ts` → **`sincronizacion-torneo.ts`** con un núcleo común (`sincronizarTorneo`) y dos entradas, `ejecutarCargaInicial` (P1) y `ejecutarActualizacionDiaria` (P2). Renombres: `CargaInicial` → `CargaTorneo`, `armarCargaInicial` → `armarCargaTorneo`, `DependenciasCarga` → `DependenciasSincronizacion` (+ `DependenciasActualizacion` con `buscarTorneoActual`). Las pruebas de P1 pasaron igual antes y después del refactor. La función SQL conserva su nombre (`guardar_carga_inicial`) porque ya está en el proyecto real.
+- Migración `20261102070648_actualizacion_diaria.sql`: agrega la columna (llena con `inicio` en los partidos ya cargados), reemplaza `guardar_carga_inicial` (`create or replace`; se repiten `revoke`/`grant`), activa `pg_cron` y `pg_net` y programa `actualizacion-diaria` con `net.http_post` (`apikey` desde Vault, `timeout_milliseconds = 60000`), como en la guía de Supabase. En la base local la tarea existe pero falla al correr porque Vault está vacío; no afecta.
+- El "ahora" de R9 es `sincronizado_en` de la carga (lo manda el servidor), para poder probarlo con fechas fijas. Si la sincronización ocurre justo a la hora del cierre, ya cuenta como cerrado.
+- Tipos: `cierre_predicciones` agregado a mano en los dos `tipos-db.ts`; se confirma con `npm run tipos` tras `db push`.
+- Pruebas: 6 nuevas sin base (65 en total) — P2 con una consulta y sin `/teams`, torneo y equipos guardados, **CA8** (el nuevo horario llega a lo que se guarda), sin torneo actual, tope y `errors`; 5 nuevas contra la base (11 en total) — cierre igual a inicio, **R9 antes** (se mueve) y **después** (no se mueve), liguilla publicada después y la tarea en `cron.job` (`0 14 * * *`, activa, lee `clave_secreta` de Vault, sin clave escrita).
+- **Las pruebas detectan fallas:** con el cierre siempre movido, la tarea a las 13:00 y P2 consultando `/teams`, fallan exactamente las 5 pruebas correspondientes; restaurado, todo pasa.
+- F02 v1.2 (R9 y Q1 apuntan a D82/D83); nota de S2 sobre la hora marcada como reemplazada por D83.
+- Tipos: tras `db push`, `npm run tipos` generó exactamente las líneas de `cierre_predicciones` agregadas a mano.
+- **Despliegue (2026-11-02, Jesús):** secretos `url_proyecto` y `clave_secreta` en Vault (desde la pantalla de Vault, para que la clave no quede en el historial del SQL Editor); migración aplicada (aparece en remoto); `actualizacion-diaria` v1 y `carga-inicial` v2 desplegadas (`verify_jwt=false`; `carga-inicial` se volvió a desplegar porque cambió el código compartido).
+- **Ejecución manual de P2 (verificada por Jesús):** `HTTP 200`, `EXITO`, 1 consulta, resumen 18/21/170 (**CA8** en el proyecto real: P2 corre sobre el torneo actual sin duplicar nada); los 170 partidos con `cierre_predicciones = inicio`; registro `ACTUALIZACION_DIARIA` · `EXITO` · 1 consulta · sin error; `cron.job`: `actualizacion-diaria` · `0 14 * * *` · activa.
+- **Pendiente:** revisar la primera ejecución programada (06:00 en Tijuana del 2026-11-02) en `cron.job_run_details` y `sincronizacion`.

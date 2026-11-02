@@ -8,13 +8,15 @@ import errorTemporada2026 from '../ejemplos-api-football/error-temporada-2026.js
 import partidos2024 from '../ejemplos-api-football/fixtures-262-2024.json' with { type: 'json' };
 import equipos2024 from '../ejemplos-api-football/teams-262-2024.json' with { type: 'json' };
 import {
-  armarCargaInicial,
-  type CargaInicial,
-  type DependenciasCarga,
+  armarCargaTorneo,
+  type CargaTorneo,
+  type DependenciasActualizacion,
+  ejecutarActualizacionDiaria,
   ejecutarCargaInicial,
   type ParametrosCarga,
   type ResumenCarga,
-} from './carga-inicial.ts';
+  type TorneoActual,
+} from './sincronizacion-torneo.ts';
 
 const equipos = esquemaRespuestaEquipos.parse(equipos2024).response;
 const partidos = esquemaRespuestaPartidos.parse(partidos2024).response;
@@ -28,7 +30,7 @@ const apertura: ParametrosCarga = {
 const AHORA = new Date('2026-11-01T13:00:00Z');
 
 function armar(parametros = apertura, equiposApi = equipos, partidosApi = partidos) {
-  const resultado = armarCargaInicial(parametros, equiposApi, partidosApi, AHORA);
+  const resultado = armarCargaTorneo(parametros, equiposApi, partidosApi, AHORA);
   if (resultado.tipo === 'error') throw new Error(resultado.mensaje);
   return resultado;
 }
@@ -166,7 +168,7 @@ Deno.test('armado: un partido con estado desconocido se guarda sin estado y qued
 });
 
 Deno.test('armado: sin partidos del torneo es un error', () => {
-  const resultado = armarCargaInicial(
+  const resultado = armarCargaTorneo(
     { ...apertura, prefijoRondas: 'Guardianes' },
     equipos,
     partidos,
@@ -182,21 +184,35 @@ Deno.test('armado: sin partidos del torneo es un error', () => {
 
 type Final = { estado: string; error: string | null };
 
+const torneoApertura2024: TorneoActual = {
+  nombre: 'Apertura 2024',
+  temporada_proveedor: 2024,
+  prefijo_rondas: 'Apertura',
+};
+
 function crearDobles(opciones: {
   respuestas: Record<string, RespuestaHttp>;
   consultasPrevias?: number;
   guardarFalla?: boolean;
+  torneoActual?: TorneoActual | null;
 }) {
   const registro = {
     consultasApi: [] as { ruta: string; parametros: Readonly<Record<string, string>> }[],
     contadoDesde: [] as Date[],
     tiposIniciados: [] as string[],
     consultasAnotadas: [] as number[],
-    cargasGuardadas: [] as CargaInicial[],
+    cargasGuardadas: [] as CargaTorneo[],
     finales: [] as Final[],
+    ligasBuscadas: [] as number[],
   };
   const resumen: ResumenCarga = { equipos: 18, jornadas: 21, partidos: 170 };
-  const dependencias: DependenciasCarga = {
+  const dependencias: DependenciasActualizacion = {
+    buscarTorneoActual: (proveedorIdLiga) => {
+      registro.ligasBuscadas.push(proveedorIdLiga);
+      return Promise.resolve(
+        opciones.torneoActual === undefined ? torneoApertura2024 : opciones.torneoActual,
+      );
+    },
     consultarApi: (ruta, parametros) => {
       registro.consultasApi.push({ ruta, parametros });
       const respuesta = opciones.respuestas[ruta];
@@ -373,6 +389,93 @@ Deno.test('ejecución: sin partidos del torneo no guarda nada y registra ERROR',
     { ...apertura, prefijoRondas: 'Guardianes' },
     dependencias,
   );
+
+  equal(resultado.estado, 'ERROR');
+  equal(registro.cargasGuardadas.length, 0);
+});
+
+// --- P2: actualización diaria (CA8, R4–R8) ---
+
+const soloPartidos: Record<string, RespuestaHttp> = {
+  '/fixtures': { tipo: 'ok', cuerpo: partidos2024 },
+};
+
+Deno.test('P2: actualiza el torneo actual con una sola consulta, sin /teams', async () => {
+  const { dependencias, registro, resumen } = crearDobles({ respuestas: soloPartidos });
+
+  const resultado = await ejecutarActualizacionDiaria(dependencias);
+
+  deepStrictEqual(resultado, { estado: 'EXITO', consultas: 1, error: null, resumen });
+  deepStrictEqual(registro.tiposIniciados, ['ACTUALIZACION_DIARIA']);
+  deepStrictEqual(registro.ligasBuscadas, [262]);
+  deepStrictEqual(registro.consultasApi, [
+    { ruta: '/fixtures', parametros: { league: '262', season: '2024' } },
+  ]);
+  deepStrictEqual(registro.finales, [{ estado: 'EXITO', error: null }]);
+});
+
+Deno.test('P2: guarda el torneo actual sin cambiar su marca y con los equipos de los partidos', async () => {
+  const { dependencias, registro } = crearDobles({ respuestas: soloPartidos });
+
+  await ejecutarActualizacionDiaria(dependencias);
+
+  const carga = registro.cargasGuardadas[0];
+  if (carga === undefined) throw new Error('No se guardó la carga');
+  equal(carga.torneo.nombre, 'Apertura 2024');
+  equal(carga.torneo.prefijo_rondas, 'Apertura');
+  equal(carga.torneo.es_actual, false); // `false` no desmarca el torneo (T23).
+  equal(carga.partidos.length, 170);
+  equal(carga.equipos.length, 18);
+  equal(carga.equipos.find((e) => e.proveedor_id === 2287)?.nombre_corto, 'América');
+});
+
+Deno.test('P2: un cambio de horario en la API llega a lo que se guarda (CA8)', async () => {
+  const [primero, ...resto] = partidos2024.response;
+  if (primero === undefined) throw new Error('El ejemplo no trae partidos');
+  const cambiado = { ...primero, fixture: { ...primero.fixture, date: '2024-07-06T03:00:00+00:00' } };
+  const { dependencias, registro } = crearDobles({
+    respuestas: {
+      '/fixtures': { tipo: 'ok', cuerpo: { ...partidos2024, response: [cambiado, ...resto] } },
+    },
+  });
+
+  await ejecutarActualizacionDiaria(dependencias);
+
+  const partido = registro.cargasGuardadas[0]?.partidos.find(
+    (p) => p.proveedor_id === primero.fixture.id,
+  );
+  equal(partido?.inicio, '2024-07-06T03:00:00.000Z');
+});
+
+Deno.test('P2: sin torneo actual no consulta la API y registra ERROR', async () => {
+  const { dependencias, registro } = crearDobles({ respuestas: soloPartidos, torneoActual: null });
+
+  const resultado = await ejecutarActualizacionDiaria(dependencias);
+
+  equal(resultado.estado, 'ERROR');
+  ok(resultado.error?.includes('No hay torneo actual'), resultado.error ?? '');
+  equal(resultado.consultas, 0);
+  equal(registro.consultasApi.length, 0);
+  equal(registro.cargasGuardadas.length, 0);
+  deepStrictEqual(registro.tiposIniciados, ['ACTUALIZACION_DIARIA']);
+});
+
+Deno.test('P2: con 90 consultas en el día no consulta y registra la alerta (R4, CA5)', async () => {
+  const { dependencias, registro } = crearDobles({ respuestas: soloPartidos, consultasPrevias: 90 });
+
+  const resultado = await ejecutarActualizacionDiaria(dependencias);
+
+  equal(resultado.estado, 'DETENIDA_POR_TOPE');
+  equal(registro.consultasApi.length, 0);
+  equal(registro.cargasGuardadas.length, 0);
+});
+
+Deno.test('P2: una respuesta con `errors` no guarda nada y registra ERROR (R6, CA6)', async () => {
+  const { dependencias, registro } = crearDobles({
+    respuestas: { '/fixtures': { tipo: 'ok', cuerpo: errorTemporada2026 } },
+  });
+
+  const resultado = await ejecutarActualizacionDiaria(dependencias);
 
   equal(resultado.estado, 'ERROR');
   equal(registro.cargasGuardadas.length, 0);

@@ -4,7 +4,7 @@ import postgres from 'postgres';
 import { esquemaRespuestaEquipos, esquemaRespuestaPartidos } from '../api-football/esquemas.ts';
 import partidos2024 from '../ejemplos-api-football/fixtures-262-2024.json' with { type: 'json' };
 import equipos2024 from '../ejemplos-api-football/teams-262-2024.json' with { type: 'json' };
-import { armarCargaInicial, type CargaInicial, type ParametrosCarga } from './carga-inicial.ts';
+import { armarCargaTorneo, type CargaTorneo, type ParametrosCarga } from './sincronizacion-torneo.ts';
 
 // Pruebas de `guardar_carga_inicial` contra la base LOCAL de Docker (CA1, CA2, R7). No corren con
 // `deno task test`: requieren `npx supabase db start` (y `db reset --local` tras una migración).
@@ -15,8 +15,8 @@ const URL_BD_LOCAL = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 const equipos = esquemaRespuestaEquipos.parse(equipos2024).response;
 const partidos = esquemaRespuestaPartidos.parse(partidos2024).response;
 
-function cargaDe(parametros: ParametrosCarga): CargaInicial {
-  const armado = armarCargaInicial(parametros, equipos, partidos, new Date('2026-11-01T13:00:00Z'));
+function cargaDe(parametros: ParametrosCarga): CargaTorneo {
+  const armado = armarCargaTorneo(parametros, equipos, partidos, new Date('2026-11-01T13:00:00Z'));
   if (armado.tipo === 'error') throw new Error(armado.mensaje);
   return armado.carga;
 }
@@ -54,7 +54,7 @@ async function enTransaccion(prueba: (sql: Sql) => Promise<void>) {
   }
 }
 
-async function guardar(sql: Sql, carga: CargaInicial) {
+async function guardar(sql: Sql, carga: CargaTorneo) {
   // Como texto y convertido en SQL: con `::jsonb` directo, `postgres` lo serializa dos veces.
   const [fila] = await sql`
     select public.guardar_carga_inicial((${JSON.stringify(carga)}::text)::jsonb) as resumen
@@ -63,7 +63,7 @@ async function guardar(sql: Sql, carga: CargaInicial) {
 }
 
 /** Lo que hay en la base del torneo de `carga`, con los ids (para ver que no cambian). */
-async function foto(sql: Sql, carga: CargaInicial) {
+async function foto(sql: Sql, carga: CargaTorneo) {
   const ids = carga.equipos.map((e) => e.proveedor_id);
   const [torneo] = await sql<{ id: number; es_actual: boolean }[]>`
     select t.id::int, t.es_actual
@@ -167,7 +167,7 @@ Deno.test('BD: una carga que falla no deja nada a medias (R5, R7)', async () => 
     if (primero === undefined) throw new Error('Faltan partidos');
 
     // Liga renombrada (se escribe primero) + un partido con un equipo que no existe (falla al final).
-    const invalida: CargaInicial = {
+    const invalida: CargaTorneo = {
       ...apertura,
       liga: { ...apertura.liga, nombre: 'Liga cambiada' },
       partidos: [...resto, { ...primero, equipo_local_proveedor_id: 999999 }],
@@ -212,5 +212,110 @@ Deno.test('BD: los usuarios no pueden ejecutar la carga', async () => {
       await sql.unsafe(`set local role ${rol}`);
       await rejects(guardar(sql, apertura), /permission denied for function/);
     });
+  }
+});
+
+// --- T24: cierre de predicciones (R9, D46, D82), liguilla nueva y tarea programada ---
+
+/** Inicio y cierre de predicciones de un partido. */
+async function horario(sql: Sql, proveedorId: number) {
+  const [fila] = await sql<{ inicio: Date; cierre_predicciones: Date }[]>`
+    select inicio, cierre_predicciones from public.partido where proveedor_id = ${proveedorId}
+  `;
+  if (fila === undefined) throw new Error(`No existe el partido ${proveedorId}`);
+  return { inicio: fila.inicio.toISOString(), cierre: fila.cierre_predicciones.toISOString() };
+}
+
+function primeroYResto(carga: CargaTorneo) {
+  const [primero, ...resto] = carga.partidos;
+  if (primero === undefined) throw new Error('Faltan partidos');
+  return { primero, resto };
+}
+
+// Una carga "anterior" al torneo: todas sus predicciones siguen abiertas.
+const aperturaAntes: CargaTorneo = { ...apertura, sincronizado_en: '2024-07-01T00:00:00.000Z' };
+
+Deno.test('BD: el cierre de predicciones nace igual al inicio (D82)', async () => {
+  await enTransaccion(async (sql) => {
+    await guardar(sql, aperturaAntes);
+    const [distintos] = await sql`
+      select count(*)::int as total from public.partido where cierre_predicciones <> inicio
+    `;
+    equal(distintos?.total, 0);
+  });
+});
+
+Deno.test('BD: un cambio de horario ANTES del cierre mueve también el cierre (R9)', async () => {
+  await enTransaccion(async (sql) => {
+    await guardar(sql, aperturaAntes);
+    const { primero, resto } = primeroYResto(aperturaAntes);
+    const nuevaHora = '2024-07-06T03:00:00.000Z';
+
+    // Primer partido: 2024-07-05 22:45 UTC; se sincroniza el 2 de julio, con todo abierto.
+    await guardar(sql, {
+      ...aperturaAntes,
+      sincronizado_en: '2024-07-02T00:00:00.000Z',
+      partidos: [{ ...primero, inicio: nuevaHora }, ...resto],
+    });
+
+    deepStrictEqual(await horario(sql, primero.proveedor_id), {
+      inicio: nuevaHora,
+      cierre: nuevaHora,
+    });
+  });
+});
+
+Deno.test('BD: un cambio de horario DESPUÉS del cierre no reabre las predicciones (R9, D46)', async () => {
+  await enTransaccion(async (sql) => {
+    await guardar(sql, aperturaAntes);
+    const { primero, resto } = primeroYResto(aperturaAntes);
+    const nuevaHora = '2024-07-08T02:00:00.000Z';
+
+    // Se sincroniza el 6 de julio, ya pasado el inicio original (5 de julio, 22:45 UTC).
+    await guardar(sql, {
+      ...aperturaAntes,
+      sincronizado_en: '2024-07-06T00:00:00.000Z',
+      partidos: [{ ...primero, inicio: nuevaHora, estado: 'POSPUESTO' }, ...resto],
+    });
+
+    deepStrictEqual(await horario(sql, primero.proveedor_id), {
+      inicio: nuevaHora,
+      cierre: primero.inicio,
+    });
+  });
+});
+
+Deno.test('BD: una ronda de liguilla publicada después crea su jornada y sus partidos', async () => {
+  await enTransaccion(async (sql) => {
+    // Antes de que se publique la final (jornada 21).
+    await guardar(sql, {
+      ...apertura,
+      jornadas: apertura.jornadas.filter((j) => j.orden !== 21),
+      partidos: apertura.partidos.filter((p) => p.jornada_orden !== 21),
+    });
+    equal((await foto(sql, apertura)).jornadas.length, 20);
+
+    await guardar(sql, apertura);
+    const guardado = await foto(sql, apertura);
+    equal(guardado.jornadas.length, 21);
+    equal(guardado.partidos.length, 170);
+  });
+});
+
+Deno.test('BD: la actualización diaria está programada a las 14:00 UTC y lee la clave de Vault (D83)', async () => {
+  // `cron.job` solo la lee `postgres`; esta prueba no cambia nada.
+  const sql = postgres(URL_BD_LOCAL, { max: 1, onnotice: () => {} });
+  try {
+    const [tarea] = await sql<{ schedule: string; command: string; active: boolean }[]>`
+      select schedule, command, active from cron.job where jobname = 'actualizacion-diaria'
+    `;
+    if (tarea === undefined) throw new Error('No está programada la actualización diaria');
+    equal(tarea.schedule, '0 14 * * *');
+    equal(tarea.active, true);
+    ok(tarea.command.includes("'/functions/v1/actualizacion-diaria'"));
+    ok(tarea.command.includes("name = 'clave_secreta'"));
+    equal(tarea.command.includes('sb_secret_'), false);
+  } finally {
+    await sql.end();
   }
 });

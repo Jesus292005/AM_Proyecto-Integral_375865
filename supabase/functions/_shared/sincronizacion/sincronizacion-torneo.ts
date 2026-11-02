@@ -23,9 +23,13 @@ import {
   TOPE_CONSULTAS_DIARIAS,
 } from './tope-consultas.ts';
 
-// F02 P1: carga inicial de un torneo (manual, una vez por torneo). Dos consultas: `/teams` y
-// `/fixtures`. Si alguna falla, no se guarda nada (R5–R7); lo que sí se guarda va en una sola
-// transacción (`guardar_carga_inicial`).
+// Sincronización de un torneo completo con API-Football (F02):
+// - P1 carga inicial (manual, una vez por torneo): `/teams` y `/fixtures`.
+// - P2 actualización diaria del torneo actual: solo `/fixtures` (horarios, pospuestos, cancelados,
+//   marcadores y los partidos de liguilla que se publican después); los equipos salen de los
+//   partidos (A8).
+// Si una consulta falla no se guarda nada (R5–R7); lo que sí se guarda va en una sola transacción
+// (`guardar_carga_inicial`, que ambos procesos usan).
 
 type EstadoPartido = Database['public']['Enums']['estado_partido'];
 type EstadoSincronizacion = Database['public']['Enums']['estado_sincronizacion'];
@@ -34,7 +38,7 @@ type TipoSincronizacion = Database['public']['Enums']['tipo_sincronizacion'];
 /** Liga MX en API-Football (03-data-model). */
 export const ID_LIGA_MX = 262;
 
-/** Cuerpo de la petición a la función del servidor (D54). */
+/** Cuerpo de la petición de P1 (D54). */
 export const esquemaParametrosCarga = z.object({
   temporada: z.int().min(2000).max(2100),
   prefijoRondas: z.string().trim().min(1),
@@ -48,7 +52,7 @@ export type ParametrosCarga = z.infer<typeof esquemaParametrosCarga>;
 // --- Armado (puro) ---
 
 /** Lo que recibe `guardar_carga_inicial`, con los nombres de las columnas. */
-export type CargaInicial = {
+export type CargaTorneo = {
   liga: Pick<Tables<'liga'>, 'proveedor_id' | 'nombre' | 'pais'>;
   torneo: Pick<
     Tables<'torneo'>,
@@ -60,6 +64,7 @@ export type CargaInicial = {
     'orden' | 'nombre' | 'nombres_proveedor' | 'fase' | 'fecha_inicio' | 'fecha_fin'
   >[];
   partidos: PartidoDeCarga[];
+  /** También es el "ahora" con el que la base decide si mueve el cierre de predicciones (R9). */
   sincronizado_en: string;
 };
 
@@ -74,7 +79,7 @@ type PartidoDeCarga = MarcadorPartido & {
 };
 
 export type ResultadoArmado =
-  | { tipo: 'ok'; carga: CargaInicial; omitidos: string[] }
+  | { tipo: 'ok'; carga: CargaTorneo; omitidos: string[] }
   | { tipo: 'error'; mensaje: string };
 
 /** Fecha de la API en UTC con formato ISO (R3). */
@@ -82,7 +87,7 @@ function enUtc(fecha: string): string {
   return new Date(fecha).toISOString();
 }
 
-export function armarCargaInicial(
+export function armarCargaTorneo(
   parametros: ParametrosCarga,
   equiposApi: readonly EquipoApi[],
   partidosApi: readonly PartidoApi[],
@@ -112,7 +117,7 @@ export function armarCargaInicial(
   }
 
   // Equipos de `/teams` y, si un partido trae uno que no está ahí, se crea con sus datos (A8).
-  const equipos = new Map<number, CargaInicial['equipos'][number]>();
+  const equipos = new Map<number, CargaTorneo['equipos'][number]>();
   const agregarEquipo = (proveedorId: number, nombre: string, escudoUrl: string) => {
     if (equipos.has(proveedorId)) return;
     equipos.set(proveedorId, {
@@ -124,7 +129,7 @@ export function armarCargaInicial(
   };
   for (const { team } of equiposApi) agregarEquipo(team.id, team.name, team.logo);
 
-  const jornadas = new Map<number, CargaInicial['jornadas'][number]>();
+  const jornadas = new Map<number, CargaTorneo['jornadas'][number]>();
   const partidos: PartidoDeCarga[] = [];
   for (const { partido, jornada } of delTorneo) {
     const { home, away } = partido.teams;
@@ -203,8 +208,10 @@ export const esquemaResumenCarga = z.object({
 
 export type ResumenCarga = z.infer<typeof esquemaResumenCarga>;
 
+export type TorneoActual = Pick<Tables<'torneo'>, 'nombre' | 'temporada_proveedor' | 'prefijo_rondas'>;
+
 /** Lo que la ejecución necesita de afuera; se reemplaza por dobles en las pruebas. */
-export type DependenciasCarga = {
+export type DependenciasSincronizacion = {
   consultarApi: ConsultarApi;
   /** Suma de `consultas_usadas` de los registros de `sincronizacion` desde `desde` (R4). */
   contarConsultasDelDia: (desde: Date) => Promise<number>;
@@ -214,11 +221,16 @@ export type DependenciasCarga = {
     idRegistro: number,
     final: { estado: EstadoSincronizacion; error: string | null },
   ) => Promise<void>;
-  guardarCarga: (carga: CargaInicial) => Promise<ResumenCarga>;
+  guardarCarga: (carga: CargaTorneo) => Promise<ResumenCarga>;
   ahora: () => Date;
 };
 
-export type ResultadoCarga = {
+export type DependenciasActualizacion = DependenciasSincronizacion & {
+  /** Torneo con `es_actual` de la liga indicada, o null si no hay. */
+  buscarTorneoActual: (proveedorIdLiga: number) => Promise<TorneoActual | null>;
+};
+
+export type ResultadoSincronizacion = {
   estado: EstadoSincronizacion;
   consultas: number;
   error: string | null;
@@ -240,25 +252,40 @@ function tieneErrores(errores: ErroresApi): boolean {
   return !Array.isArray(errores) && Object.keys(errores).length > 0;
 }
 
-/** P1 completo, con su registro en `sincronizacion` (R8). */
-export async function ejecutarCargaInicial(
-  parametros: ParametrosCarga,
-  dependencias: DependenciasCarga,
-): Promise<ResultadoCarga> {
-  const idRegistro = await dependencias.iniciarRegistro('CARGA_INICIAL');
+type ConfiguracionSincronizacion = {
+  tipo: 'CARGA_INICIAL' | 'ACTUALIZACION_DIARIA';
+  consultarEquipos: boolean;
+  /** Torneo a sincronizar; null = no hay (se registra como error). */
+  obtenerParametros: () => Promise<ParametrosCarga | null>;
+};
+
+/** Núcleo de P1 y P2, con su registro en `sincronizacion` (R8). */
+async function sincronizarTorneo(
+  configuracion: ConfiguracionSincronizacion,
+  dependencias: DependenciasSincronizacion,
+): Promise<ResultadoSincronizacion> {
+  const idRegistro = await dependencias.iniciarRegistro(configuracion.tipo);
   let consultas = 0;
 
   const terminar = async (
     estado: EstadoSincronizacion,
     error: string | null,
     resumen: ResumenCarga | null = null,
-  ): Promise<ResultadoCarga> => {
+  ): Promise<ResultadoSincronizacion> => {
     const errorRecortado = error === null ? null : recortar(error);
     await dependencias.terminarRegistro(idRegistro, { estado, error: errorRecortado });
     return { estado, consultas, error: errorRecortado, resumen };
   };
 
   try {
+    const parametros = await configuracion.obtenerParametros();
+    if (parametros === null) {
+      return await terminar(
+        'ERROR',
+        'No hay torneo actual de la Liga MX (`es_actual`); primero se corre la carga inicial (P1).',
+      );
+    }
+
     const consultasPrevias = await dependencias.contarConsultasDelDia(
       inicioDelDiaDeConsultas(dependencias.ahora()),
     );
@@ -268,7 +295,7 @@ export async function ejecutarCargaInicial(
       ruta: string,
       esquema: z.ZodType<{ errors: ErroresApi; response: T[] }>,
     ): Promise<ResultadoConsulta<T>> => {
-      if (!puedeConsultar(consultasPrevias + consultas, 'CARGA_INICIAL')) return { tipo: 'tope' };
+      if (!puedeConsultar(consultasPrevias + consultas, configuracion.tipo)) return { tipo: 'tope' };
       consultas++;
       await dependencias.anotarConsultas(idRegistro, consultas);
 
@@ -300,12 +327,14 @@ export async function ejecutarCargaInicial(
         )
         : terminar('ERROR', resultado.mensaje);
 
-    const equipos = await consultar('/teams', esquemaRespuestaEquipos);
+    const equipos: ResultadoConsulta<EquipoApi> = configuracion.consultarEquipos
+      ? await consultar('/teams', esquemaRespuestaEquipos)
+      : { tipo: 'ok', elementos: [] };
     if (equipos.tipo !== 'ok') return await fallo(equipos);
     const partidos = await consultar('/fixtures', esquemaRespuestaPartidos);
     if (partidos.tipo !== 'ok') return await fallo(partidos);
 
-    const armado = armarCargaInicial(
+    const armado = armarCargaTorneo(
       parametros,
       equipos.elementos,
       partidos.elementos,
@@ -320,4 +349,42 @@ export async function ejecutarCargaInicial(
     const motivo = error instanceof Error ? error.message : String(error);
     return await terminar('ERROR', `Error inesperado: ${motivo}`);
   }
+}
+
+/** P1: carga inicial del torneo indicado. */
+export function ejecutarCargaInicial(
+  parametros: ParametrosCarga,
+  dependencias: DependenciasSincronizacion,
+): Promise<ResultadoSincronizacion> {
+  return sincronizarTorneo(
+    {
+      tipo: 'CARGA_INICIAL',
+      consultarEquipos: true,
+      obtenerParametros: () => Promise.resolve(parametros),
+    },
+    dependencias,
+  );
+}
+
+/** P2: actualización diaria del torneo actual (sin cambiar su marca de actual). */
+export function ejecutarActualizacionDiaria(
+  dependencias: DependenciasActualizacion,
+): Promise<ResultadoSincronizacion> {
+  return sincronizarTorneo(
+    {
+      tipo: 'ACTUALIZACION_DIARIA',
+      consultarEquipos: false,
+      obtenerParametros: async () => {
+        const torneo = await dependencias.buscarTorneoActual(ID_LIGA_MX);
+        if (torneo === null) return null;
+        return {
+          temporada: torneo.temporada_proveedor,
+          prefijoRondas: torneo.prefijo_rondas,
+          nombre: torneo.nombre,
+          esActual: false,
+        };
+      },
+    },
+    dependencias,
+  );
 }

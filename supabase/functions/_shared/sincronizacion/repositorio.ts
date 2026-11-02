@@ -1,9 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '../tipos-db.ts';
-import { type DependenciasCarga, esquemaResumenCarga } from './carga-inicial.ts';
+import { type DependenciasActualizacion, esquemaResumenCarga } from './sincronizacion-torneo.ts';
 
-type Repositorio = Omit<DependenciasCarga, 'consultarApi' | 'ahora'>;
+type Repositorio = Omit<DependenciasActualizacion, 'consultarApi' | 'ahora'>;
 
 // Acceso a la base para la sincronización, con el cliente de la clave secreta (`service_role`):
 // `sincronizacion` está cerrada para los usuarios y solo `service_role` guarda la carga.
@@ -42,6 +42,19 @@ export function crearRepositorioSincronizacion(cliente: SupabaseClient<Database>
         .update({ estado, error: mensaje, fin: new Date().toISOString() })
         .eq('id', idRegistro);
       if (error) throw new Error(`No se pudo cerrar el registro de sincronización: ${error.message}`);
+    },
+
+    async buscarTorneoActual(proveedorIdLiga) {
+      const { data, error } = await cliente
+        .from('torneo')
+        .select('nombre, temporada_proveedor, prefijo_rondas, liga!inner(proveedor_id)')
+        .eq('es_actual', true)
+        .eq('liga.proveedor_id', proveedorIdLiga)
+        .maybeSingle();
+      if (error) throw new Error(`No se pudo leer el torneo actual: ${error.message}`);
+      if (data === null) return null;
+      const { nombre, temporada_proveedor, prefijo_rondas } = data;
+      return { nombre, temporada_proveedor, prefijo_rondas };
     },
 
     async guardarCarga(carga) {

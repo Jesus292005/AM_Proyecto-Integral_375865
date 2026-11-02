@@ -5,7 +5,7 @@ import { crearClienteApi } from '../_shared/api-football/cliente.ts';
 import {
   ejecutarCargaInicial,
   esquemaParametrosCarga,
-} from '../_shared/sincronizacion/carga-inicial.ts';
+} from '../_shared/sincronizacion/sincronizacion-torneo.ts';
 import { crearRepositorioSincronizacion } from '../_shared/sincronizacion/repositorio.ts';
 import type { Database } from '../_shared/tipos-db.ts';
 
