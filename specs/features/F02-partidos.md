@@ -1,8 +1,8 @@
 # F02 — Partidos de la Liga MX: sincronización y lista por jornada
 
-> **Estado:** ✅ Aprobada v1.0 (2026-10-04, D56–D57)
+> **Estado:** ✅ Aprobada v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
 > **Prioridad:** Must · **Semana:** S2 · **Depende de:** F01 (para ver la lista) · **Pantallas:** S02
-> **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54
+> **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54, D80
 
 Esta feature tiene dos partes: **(A) sincronización en el servidor** (actor: sistema) y **(B) lista de partidos en la app** (actor: usuario).
 
@@ -36,7 +36,7 @@ Estimado de un día con jornada completa (9 partidos): ~30 consultas (límite: 1
 | R1 | La sincronización es **idempotente**: se identifica todo por `proveedorId`; repetirla no duplica nada. |
 | R2 | El marcador guardado es el de **90 minutos** (`score.fulltime` de la API), nunca el que incluye tiempo extra o penales (D43). |
 | R3 | Las fechas se piden y guardan en **UTC**. |
-| R4 | **Tope de consultas:** antes de cada consulta se revisa el total del día (registros de `Sincronizacion`); al llegar a **90** se detiene todo excepto P3/P4 de partidos ya terminados, y se registra la alerta. |
+| R4 | **Tope de consultas:** antes de cada consulta se revisa el total del día (registros de `Sincronizacion`); al llegar a **90** se detiene todo excepto P3/P4 de partidos ya terminados, y se registra la alerta. El día va de 00:00 a 00:00 **UTC**, cuando API-Football reinicia el límite diario (en Tijuana, 17:00 en horario de verano y 16:00 en el de invierno). |
 | R5 | Toda respuesta de la API se valida con un esquema (Zod) antes de guardar; si no cumple, no se guarda nada de esa respuesta y se registra el error (D54). |
 | R6 | Si la respuesta trae `errors` no vacío (p. ej. plan sin acceso a la temporada), se trata como falla. |
 | R7 | Una falla **nunca** borra ni altera datos ya guardados. |
@@ -55,20 +55,21 @@ Estimado de un día con jornada completa (9 partidos): ~30 consultas (límite: 1
 | Cualquier otro | Se registra como error y el partido no cambia de estado |
 
 ### A7. Conversión de jornadas
-Nombres reales de rondas en API-Football (verificado con la temporada 2024):
+Nombres reales de rondas en API-Football (verificado con la temporada 2024, ejemplos de T20). **Todas** las rondas, también las de liguilla, llegan con el prefijo del torneo (`Torneo.prefijoRondas`) seguido de ` - `: `Apertura - 10`, `Apertura - Quarter-finals`.
 
-| Nombre en la API | En la app |
-|---|---|
-| `Apertura - 1` … `Apertura - 17` (igual con `Clausura`) | Jornada 1 … 17, fase `REGULAR` |
-| `Reclasificación` / `Reclasificacion` y `Play-offs` | Una jornada **"Liguilla · Play-in"**, fase `LIGUILLA` (solo existe en datos 2024; el play-in se eliminó para 2026) |
-| `Quarter-finals` | Jornada **"Liguilla · Cuartos"** (ida y vuelta), fase `LIGUILLA` |
-| `Semi-finals` | Jornada **"Liguilla · Semifinales"** (ida y vuelta), fase `LIGUILLA` |
-| `Final` | Jornada **"Liguilla · Final"** (ida y vuelta), fase `LIGUILLA` |
+| Ronda en la API (sin el prefijo) | En la app | `orden` |
+|---|---|---|
+| `1` … `17` | Jornada 1 … 17, fase `REGULAR` | 1–17 |
+| `Reclasificación` / `Reclasificacion` y `Play-offs` | Una jornada **"Liguilla · Play-in"**, fase `LIGUILLA` (solo existe en datos 2024; el play-in se eliminó para 2026) | 18 |
+| `Quarter-finals` | Jornada **"Liguilla · Cuartos"** (ida y vuelta), fase `LIGUILLA` | 19 |
+| `Semi-finals` | Jornada **"Liguilla · Semifinales"** (ida y vuelta), fase `LIGUILLA` | 20 |
+| `Final` | Jornada **"Liguilla · Final"** (ida y vuelta), fase `LIGUILLA` | 21 |
 
-Las jornadas se ordenan por `orden`: 1–17 para la fase regular y 18 en adelante para las rondas de liguilla, en orden cronológico.
+Las jornadas se ordenan por `orden`. El de la liguilla es **fijo por ronda** para que nunca cambie al repetir la carga; en 2026, sin play-in, la liguilla empieza en 19.
 
-- La API **no es consistente con los acentos** ("Reclasificación" en Apertura, "Reclasificacion" en Clausura): se comparan los nombres normalizados (sin acentos, minúsculas).
-- Un nombre de ronda que no esté en la tabla se registra como error y el partido no se guarda.
+- Se quita el prefijo del torneo y se compara el resto **normalizado** (sin acentos, minúsculas): la API no es consistente con los acentos ("Reclasificación" en Apertura, "Reclasificacion" en Clausura).
+- La temporada de la API trae los dos torneos (Apertura y Clausura): una ronda con el prefijo del **otro torneo** se ignora sin registrar error.
+- Una ronda con el prefijo del torneo que no esté en la tabla se registra como error y el partido no se guarda.
 
 ### A8. Casos de error
 | Caso | Comportamiento |

@@ -296,7 +296,7 @@
 - `errors` es `[]` cuando no hay error y un objeto cuando lo hay → el esquema de T21 debe aceptar ambas formas.
 - Solo hay estados `FT` (338) y `PEN` (2, en reclasificación, con `extratime` en `0-0`); **no hay `AET`**. CA4 (T22) se prueba con un partido `PEN` (`fulltime` 2-2 frente a `penalty` 2-3), que cubre R2.
 - Las estadísticas mezclan números, textos con `%` y `null`.
-- **Diferencia con la spec F02 §A7:** las rondas de liguilla llegan con prefijo (`Apertura - Quarter-finals`, `Clausura - Reclasificacion`), no sin él como dice la tabla. Pendiente de decidir antes de T22.
+- **Diferencia con la spec F02 §A7:** las rondas de liguilla llegan con prefijo (`Apertura - Quarter-finals`, `Clausura - Reclasificacion`), no sin él como decía la tabla. Resuelto en T22 (D80).
 
 ## T21 — Esquemas Zod de las respuestas de API-Football (2026-10-31)
 
@@ -310,7 +310,28 @@
 **Ajustes al implementar:**
 - La parte común de la respuesta solo valida `errors` y `response`; `get`, `parameters`, `results` y `paging` no se usan y se descartan.
 - La respuesta común es un `z.object` que cada consulta extiende con `.extend({ response })`, en vez de una función genérica.
-- **`"nodeModulesDir": "auto"` en `supabase/functions/deno.json`:** con la caché global de npm, `deno check` (Deno 2.9.7, Windows) tomaba los tipos de **cualquier** paquete npm como `any` (probado con Zod 3 y 4 y date-fns), así que la verificación de tipos no servía. Con `node_modules` local sí los lee (se confirmó con errores provocados a propósito). `supabase/functions/node_modules/` ya lo ignora el `node_modules/` del `.gitignore` raíz. **Pendiente para T23:** confirmar que el despliegue con la CLI de Supabase funciona con esta opción.
+- **`"nodeModulesDir": "auto"` en `supabase/functions/deno.json` (✅ aprobado por Jesús):** con la caché global de npm, `deno check` (Deno 2.9.7, Windows) tomaba los tipos de **cualquier** paquete npm como `any` (probado con Zod 3 y 4 y date-fns), así que la verificación de tipos no servía. Con `node_modules` local sí los lee (se confirmó con errores provocados a propósito). `supabase/functions/node_modules/` ya lo ignora el `node_modules/` del `.gitignore` raíz. **Pendiente para T23:** confirmar que el despliegue con la CLI de Supabase funciona con esta opción.
 - Las aserciones de las pruebas usan `node:assert/strict` (viene con Deno; no agrega dependencias).
 - 17 pruebas en `_shared/api-football/esquemas_test.ts`. **Las pruebas detectan fallas:** con los esquemas rotos a propósito (marcador, `errors`, fecha, valor de estadística y minuto del evento sin validar) fallaron 6 pruebas; restaurados, vuelven a pasar las 17.
 - Cubre R5 y la parte de forma de CA6 (una forma inválida no cumple el esquema; un solo partido inválido rechaza toda la respuesta). Que ningún dato cambie y quede el registro de error se prueba en T23.
+
+## T22 — Conversiones y tope de consultas (2026-11-01)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | `convertirEstado` (A6, Q2) y `convertirRonda` (A7) devuelven uniones discriminadas (`ok` / `desconocido(a)`); registrar el error le toca a quien llama (T23–T25). Los estados y fases usan los tipos generados de la base. | ✅ OK. |
+| 2 | Las rondas llegan todas con prefijo: se quita `prefijoRondas` y se compara el resto normalizado; la tabla A7 de F02 se corrige con los nombres reales. | ✅ Sí, en T22 (D80). |
+| 3 | Una ronda del **otro torneo** de la temporada devuelve `otroTorneo` (P1 la ignora sin error) en vez de "desconocida", que daría 170 errores falsos. | ✅ OK (D80). |
+| 4 | `orden` **fijo** de la liguilla: play-in 18, cuartos 19, semifinales 20, final 21 (en 2026 empieza en 19). Alternativa descartada: numerarlas seguidas en P1 según las rondas que existan. | ✅ OK (D80). |
+| 5 | Día de consultas de R4 en **UTC** (00:00–00:00), cuando API-Football reinicia el límite diario. | ✅ OK (D80). |
+| 6 | `marcadorDePartido` (R2) toma `score.fulltime` y `score.halftime`; `TOPE_CONSULTAS_DIARIAS = 90` y el tope solo detiene P1/P2. | ✅ OK. |
+
+**Ajustes al implementar:**
+- Archivos: `_shared/api-football/conversiones.ts` (estado, ronda, marcador) y `_shared/sincronizacion/tope-consultas.ts` (`puedeConsultar`, `inicioDelDiaDeConsultas`), con sus pruebas.
+- La función del tope se llama `puedeConsultar(consultasDelDia, proceso)` y devuelve `boolean` (se había propuesto como `revisarTope`).
+- `marcadorDePartido` devuelve los nombres de las columnas de `partido` (`goles_local`, `goles_local_medio_tiempo`…), tipados con `Tables<'partido'>`.
+- Los estados se guardan en un `Map` y no en un objeto, para que claves heredadas como `toString` no pasen por un estado válido (hay prueba).
+- El prefijo se separa solo por ` - ` con espacios, para que el guion de `Play-offs` no lo corte. Una ronda sin prefijo (`Final`) es desconocida.
+- 18 pruebas nuevas (35 en total en el servidor): CA3 con toda la tabla A6; A7 con las rondas reales de 2024 (el Apertura da 17 jornadas de 9 partidos, play-in 3, cuartos 8, semifinales 4 y final 2; los 170 del Clausura son `otroTorneo`); CA4 con el partido real con penales 1315387 y uno con tiempo extra armado a partir del 1206004; CA5 con 89/90/91 consultas por proceso; día UTC con horario de verano e invierno de Tijuana.
+- **Las pruebas detectan fallas:** con el código roto a propósito (sin `WO`, cuartos con orden 18, marcador de medio tiempo en vez de 90 min, otro torneo como desconocida, tope con `<=`) fallan 8 pruebas, y sin quitar los acentos (prueba aparte) fallan 4; restaurado, vuelven a pasar las 35.
+- Registrar la alerta de R4 y que ningún dato cambie ante errores (CA5, CA6 completos) se prueba en T23 junto con la base.

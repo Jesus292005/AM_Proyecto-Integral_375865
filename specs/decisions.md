@@ -1,7 +1,7 @@
 # Registro de decisiones
 
 > Regla: una decisión **cerrada** no se vuelve a discutir salvo que aparezca información nueva; si cambia, se agrega una nueva fila que la reemplaza (no se borra la anterior).
-> Última actualización: 2026-10-19
+> Última actualización: 2026-11-01
 
 ## Decisiones cerradas
 
@@ -86,6 +86,7 @@
 | D77 | 2026-10-10 | La navegación usa un **tema oscuro construido con los tokens** y fondo nativo `fondo`; transición entre pantallas **de desvanecer** (en Android la pila nativa no permite fijar la duración de 05-ui §8, solo el tipo). | Al probar T03 se veía un destello blanco entre pantallas (tema claro por defecto del navegador). |
 | D78 | 2026-10-10 | **Nunca se apila la misma pantalla con los mismos parámetros.** Toda navegación usa `router.navigate` o `<Link>` (que no duplican la pantalla de arriba); `router.push` está prohibido por una regla de lint. Cambiar un filtro de la pantalla actual (jornada en S02, vista en S08) actualiza esa pantalla con `router.setParams` y no agrega historial. Ir a una pantalla **distinta** (p. ej. Grupo → Usuario) sí deja historial. | Al probar T03, Jesús vio que tocar varias veces un botón apilaba copias de la pantalla y obligaba a tocar "Volver" de más. |
 | D79 | 2026-10-19 | **Tope de tamaño de descarga: 30 MB** desde Google Play en `arm64-v8a`, medido con `bundletool get-size total` sobre el AAB de producción (04-tech-stack §7). Resuelve P-20. Se vuelve a medir antes de la demo y al agregar una librería nativa pesada. | Medición 1 (T07): 23.8–24.0 MB sin librerías nativas propias; el margen (~6 MB) cubre las que piden las specs (Google Sign-In, almacenamiento seguro, `expo-image`, notificaciones, cámara, SVG/QR). |
+| D80 | 2026-11-01 | **F02 v1.1 (A7, R4):** las rondas llegan **todas** con el prefijo del torneo (`Apertura - Quarter-finals`); se quita el prefijo y se compara el resto normalizado. Una ronda del **otro torneo** de la temporada se ignora sin registrar error. El `orden` de la liguilla es **fijo por ronda** (play-in 18, cuartos 19, semifinales 20, final 21). El **día de consultas** de R4 va de 00:00 a 00:00 UTC. | Datos reales de T20; aprobado por Jesús al planear T22. El orden fijo evita que una jornada cambie de `orden` al repetir la carga; el día UTC coincide con el reinicio del límite diario de API-Football. |
 
 ## Pendientes
 
