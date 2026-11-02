@@ -384,7 +384,7 @@
 - Tipos: tras `db push`, `npm run tipos` generó exactamente las líneas de `cierre_predicciones` agregadas a mano.
 - **Despliegue (2026-11-02, Jesús):** secretos `url_proyecto` y `clave_secreta` en Vault (desde la pantalla de Vault, para que la clave no quede en el historial del SQL Editor); migración aplicada (aparece en remoto); `actualizacion-diaria` v1 y `carga-inicial` v2 desplegadas (`verify_jwt=false`; `carga-inicial` se volvió a desplegar porque cambió el código compartido).
 - **Ejecución manual de P2 (verificada por Jesús):** `HTTP 200`, `EXITO`, 1 consulta, resumen 18/21/170 (**CA8** en el proyecto real: P2 corre sobre el torneo actual sin duplicar nada); los 170 partidos con `cierre_predicciones = inicio`; registro `ACTUALIZACION_DIARIA` · `EXITO` · 1 consulta · sin error; `cron.job`: `actualizacion-diaria` · `0 14 * * *` · activa.
-- **Pendiente:** revisar la primera ejecución programada (06:00 en Tijuana del 2026-11-02) en `cron.job_run_details` y `sincronizacion`.
+- **Primera ejecución programada (verificada por Jesús):** `sincronizacion` registro 5, `ACTUALIZACION_DIARIA` · `EXITO` · 1 consulta · sin error, con inicio **2026-11-02 14:00:07 UTC** (06:00 en Tijuana, D83).
 
 ## T25 — Detección de finales P3 y datos del partido P4 (2026-11-02)
 
@@ -406,6 +406,7 @@
 - Pruebas: 16 nuevas sin base (81 en total) — tipos de evento, armado con los ejemplos reales del 1206057 (36 estadísticas, `Red Cards` null, 15 eventos con el 45+1), evento desconocido, sin estadísticas, estados de P3, y la ejecución (sin pendientes, grupos de 20, P4 tras P3, máximo 5, error aislado, base que rechaza, partido que la API no devuelve, sin tope, modo forzado); 8 nuevas contra la base (19 en total) — **CA7**, repetir P4, partido no terminado o inexistente, P3, ventana de 6 h, ventana de 3 días y una sola vez, permisos y la tarea en `cron.job`.
 - **Las pruebas detectan fallas:** con 9 cambios a propósito (ventanas de 12 h y 5 días, sin borrar eventos, estadísticas sin actualizar, sin revisar `TERMINADO`, 7 por ejecución, grupos de 25, null guardado como "0", `subst` como gol) fallan 5 pruebas de base y 5 sin base; restaurado, todo pasa.
 - F02 v1.3 (filas de P3/P4).
+- **Tarea cada 15 min en el proyecto real (verificada por Jesús, 2026-11-02):** en `cron.job_run_details` las corridas de las 19:00 a las 20:00 UTC salen `succeeded` con "0 rows": sin partidos pendientes (datos de 2024) la condición no llama a la función, sin gastar consultas ni dejar registros vacíos (D85).
 - Tipos: tras `db push`, `npm run tipos` generó exactamente las líneas agregadas a mano.
 - **Despliegue (2026-11-02, Jesús):** migración aplicada (aparece en remoto); `detectar-finales` v1, `actualizacion-diaria` v2 y `carga-inicial` v3 desplegadas (`verify_jwt=false`; las dos últimas de nuevo porque cambió el código compartido).
 - **P4 forzado del 1206057 (verificado por Jesús):** `HTTP 200`, `EXITO`, 36 estadísticas y 15 eventos; en la base real, 36 estadísticas, `Red Cards` sin dato en ambos equipos, 15 eventos (3 goles) y el partido marcado como listo para calificar → **CA7**. Registro `DATOS_PARTIDO` · `EXITO` · 2 consultas · sin error. `cron.job`: `actualizacion-diaria` (`0 14 * * *`) y `detectar-finales` (`*/15 * * * *`), activas.
@@ -454,3 +455,35 @@
 - Se comprobó que el script sí detecta: con una copia temporal que buscaba un texto que está en la app, reportó el hallazgo en el paquete y en los archivos versionados.
 - **Resultado (2026-11-02):** sin secretos — la clave de API-Football no está en el paquete ni versionada, no hay claves secretas ni llamadas a API-Football en la app, y la clave de Supabase de la app es la pública → **CA13** y **F01 CA9**.
 - README: cómo correr la revisión de secretos.
+
+## T30 — Cierre de la semana (2026-11-02)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Corrida completa de verificaciones (app, servidor, base local, pgTAP, secretos). | ✅ OK. |
+| 2 | Lista de criterios de F01 y F02 con su evidencia; validar en el teléfono los que no tenían registro (F01 CA3, CA4, CA8) y repasar CA1, CA5, CA6 con la build de `expo-image`. | ✅ OK. |
+| 3 | Con su aprobación: F01 y F02 "Terminada", tareas de S2 marcadas, D87. | ✅ OK. |
+| 4 | Aviso: el plan semanal va atrasado (S2 era del 12 al 18 de octubre); replantearlo justo después de T30. | ✅ OK (siguiente paso). |
+
+**Corrida completa (2026-11-02):** app — typecheck y lint sin errores, Jest 128/128; servidor — typecheck y lint sin errores, `deno task test` 81/81, `deno task test:bd` 19/19; pgTAP 106/106; `npm run revisar:secretos` sin hallazgos (151 archivos versionados).
+
+**Criterios y evidencia:**
+
+| Feature | Criterio | Evidencia |
+|---|---|---|
+| F01 | CA1, CA2, CA5, CA6 | Validados por Jesús en T12 (2026-10-24); CA1, CA5 y CA6 repasados en T30 con la build nueva |
+| F01 | CA3, CA4, CA8 | Validados por Jesús en T30 (2026-11-02); CA8 también en `guardia.test.tsx` |
+| F01 | CA7 | pgTAP `usuario_rls.test.sql` (T14) |
+| F01 | CA9 | Revisión de secretos (T27) |
+| F01 | CA10 | Typecheck estricto sin `any` |
+| F02 | CA1, CA2 | Pruebas contra la base (T23) y carga real del Apertura 2024 dos veces |
+| F02 | CA3, CA4, CA5 | Pruebas unitarias (T22) |
+| F02 | CA6 | Esquemas y ejecución con dobles (T21, T23–T25) |
+| F02 | CA7 | Pruebas contra la base (T25) y P4 forzado del 1206057 en el proyecto real |
+| F02 | CA8 | Pruebas (T24), P2 manual y la ejecución programada de las 06:00 en el proyecto real |
+| F02 | CA9, CA10, CA11 | Validados por Jesús en T26 (teléfono y emulador angosto) |
+| F02 | CA12 | pgTAP `datos_futbol_rls.test.sql` (T27) |
+| F02 | CA13 | Revisión de secretos (T27) |
+| F02 | CA14 | Typecheck estricto sin `any` |
+
+**Resultado:** Jesús aprobó F01 y F02 en su teléfono → **F01 y F02 terminadas, M1 Base terminado, S2 cerrada (D87)**. Pendiente heredado: P-26 (aviso del asesor de Supabase sobre `usuario_publico`, se revisa en F07).

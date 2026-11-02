@@ -1,6 +1,6 @@
 # F02 — Partidos de la Liga MX: sincronización y lista por jornada
 
-> **Estado:** ✅ Aprobada v1.4 (2026-11-02, D86: jornada actual en el servidor, parámetro `jornada` y aviso sin conexión de S02) · v1.3 (2026-11-02, D84–D85: marca de listo para calificar y ventanas de P3/P4) · v1.2 (2026-11-02, D82–D83: cierre de predicciones propio y hora de P2) · v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
+> **Estado:** ✅ **Terminada** (2026-11-02, D87: cumple CA1–CA14 y Jesús la aprobó en su teléfono) · spec aprobada v1.4 (2026-11-02, D86: jornada actual en el servidor, parámetro `jornada` y aviso sin conexión de S02) · v1.3 (2026-11-02, D84–D85: marca de listo para calificar y ventanas de P3/P4) · v1.2 (2026-11-02, D82–D83: cierre de predicciones propio y hora de P2) · v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
 > **Prioridad:** Must · **Semana:** S2 · **Depende de:** F01 (para ver la lista) · **Pantallas:** S02
 > **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54, D80, D82, D83, D84, D85, D86
 

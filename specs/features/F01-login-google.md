@@ -1,6 +1,6 @@
 # F01 — Inicio de sesión con Google y perfil básico
 
-> **Estado:** ✅ Aprobada v1.0 (2026-10-04, D55)
+> **Estado:** ✅ **Terminada** (2026-11-02, D87: cumple CA1–CA10 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-10-04, D55)
 > **Prioridad:** Must · **Semana:** S2 · **Depende de:** — · **Pantallas:** S01, S09 (parcial)
 > **Decisiones:** D11, D14, D50, D51, D53, D54
 
