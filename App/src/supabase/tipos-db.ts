@@ -443,6 +443,7 @@ export type Database = {
       actualizar_estados_partidos: { Args: { datos: Json }; Returns: number }
       guardar_carga_inicial: { Args: { carga: Json }; Returns: Json }
       guardar_datos_partido: { Args: { datos: Json }; Returns: Json }
+      jornada_actual: { Args: { ahora?: string }; Returns: number }
       partidos_pendientes_de_final: {
         Args: { ahora: string }
         Returns: {

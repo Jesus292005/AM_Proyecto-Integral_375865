@@ -1,8 +1,8 @@
 # F02 — Partidos de la Liga MX: sincronización y lista por jornada
 
-> **Estado:** ✅ Aprobada v1.3 (2026-11-02, D84–D85: marca de listo para calificar y ventanas de P3/P4) · v1.2 (2026-11-02, D82–D83: cierre de predicciones propio y hora de P2) · v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
+> **Estado:** ✅ Aprobada v1.4 (2026-11-02, D86: jornada actual en el servidor, parámetro `jornada` y aviso sin conexión de S02) · v1.3 (2026-11-02, D84–D85: marca de listo para calificar y ventanas de P3/P4) · v1.2 (2026-11-02, D82–D83: cierre de predicciones propio y hora de P2) · v1.1 (2026-11-01, D80: nombres reales de rondas, `orden` de la liguilla y día de consultas) · antes v1.0 (2026-10-04, D56–D57)
 > **Prioridad:** Must · **Semana:** S2 · **Depende de:** F01 (para ver la lista) · **Pantallas:** S02
-> **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54, D80, D82, D83, D84, D85
+> **Decisiones:** D03, D04, D14, D24, D29, D43, D46, D50, D52, D54, D80, D82, D83, D84, D85, D86
 
 Esta feature tiene dos partes: **(A) sincronización en el servidor** (actor: sistema) y **(B) lista de partidos en la app** (actor: usuario).
 
@@ -91,7 +91,7 @@ Que el usuario vea los partidos de una jornada con su hora y estado para decidir
 Usuario con sesión iniciada.
 
 ### B3. Datos de entrada
-`jornada?` (parámetro de ruta). Si no viene, la **jornada actual** (Q4).
+`jornada?` (parámetro de ruta): el `orden` de la jornada (1–17 fase regular, 18+ liguilla). Si no viene o no existe en el torneo, la **jornada actual** (Q4), que calcula el servidor (`jornada_actual`, D52, D86).
 
 ### B4. Flujo principal
 1. El usuario abre la pestaña Partidos.
@@ -118,7 +118,7 @@ Usuario con sesión iniciada.
 | Con datos | La lista. |
 | Jornada sin partidos | "No hay partidos en esta jornada." |
 | Error / sin conexión **sin** datos previos | Mensaje + botón reintentar. |
-| Error / sin conexión **con** datos previos | Se muestran los datos guardados + aviso "Sin conexión; datos no actualizados". |
+| Error / sin conexión **con** datos previos | Se muestran los datos guardados + franja de aviso como en 05-ui §6: "Sin conexión · datos de [hora]" (o "No se pudo actualizar · datos de [hora]" si el servidor respondió con error). Los datos previos son los cargados mientras la app está abierta (caché en memoria, D86). |
 
 ---
 
@@ -149,6 +149,6 @@ Marcador en vivo, tabla general y previa (F21), indicador de predicción (F03), 
 | Q1 | Actualización diaria a las 06:00 hora de Tijuana (programada a las 14:00 UTC, D83). |
 | Q2 | `AWD`/`WO` → `TERMINADO` con el marcador que reporte la API. |
 | Q3 | Rondas verificadas (A7). Las rondas finales se muestran como **"Liguilla"**; el play-in ya no existe en 2026. |
-| Q4 | Jornada actual = la del próximo partido por jugar; si el torneo terminó, la última. |
+| Q4 | Jornada actual = la del próximo partido por jugar (no cancelado, con inicio a partir de ahora); si el torneo terminó, la última. La calcula el servidor (D86). |
 | Q5 | Los partidos terminados muestran su marcador de 90 minutos. |
 | Q6 | La liguilla se divide en **una jornada por ronda** (cuartos, semifinales, final), cada una con su ranking de jornada (D57). |

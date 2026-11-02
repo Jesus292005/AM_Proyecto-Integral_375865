@@ -129,6 +129,8 @@ export const medidas = {
   barraActiva: 3,
   areaTactil: 44,
   altoBoton: 54,
+  // Escudo de equipo en listas (S02).
+  escudoLista: 28,
   // Tamaño de letra del sistema respetado hasta 1.3× (05-ui §3, accesibilidad).
   escalaTextoMaxima: 1.3,
   // Teko deja los números altos en su caja (ascendente 958, descendente 475, mayúsculas 642 por

@@ -13,6 +13,19 @@ import {
 } from '../pruebas/supabaseFalso';
 
 jest.mock('../supabase/cliente');
+// S02 ya es real (T26): sus lecturas se simulan.
+jest.mock('../partidos/datos', () => ({
+  ...jest.requireActual<typeof import('../partidos/datos')>('../partidos/datos'),
+  obtenerTorneoActual: jest.fn(async () => ({
+    nombre: 'Apertura 2024',
+    jornadas: [
+      { id: 1, orden: 1, nombre: 'Jornada 1' },
+      { id: 2, orden: 2, nombre: 'Jornada 2' },
+    ],
+    ordenActual: 1,
+  })),
+  obtenerPartidosDeJornada: jest.fn(async () => []),
+}));
 
 // S01 se reconoce por su botón principal.
 const S01 = 'Continuar con Google';
@@ -57,8 +70,8 @@ describe('sin sesión', () => {
 
     await iniciarSesion();
 
-    expect(await screen.findByText('S02')).toBeOnTheScreen();
-    expect(screen.getByText('jornada: 2')).toBeOnTheScreen();
+    // La jornada actual es la 1: llegar a la 2 confirma que se conservó `?jornada=2`.
+    expect(await screen.findByRole('header', { name: 'Jornada 2' })).toBeOnTheScreen();
   });
 
   it('al iniciar sesión desde S01 sin ruta pedida va a Inicio (F01 §5.7)', async () => {

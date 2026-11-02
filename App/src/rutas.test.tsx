@@ -5,11 +5,43 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 
+import { clienteConsultas } from './datos/clienteConsultas';
 import { simularSesionGuardada } from './pruebas/supabaseFalso';
 
 jest.mock('./supabase/cliente');
+// S02 ya es real (T26): sus lecturas se simulan con una jornada de un partido.
+jest.mock('./partidos/datos', () => ({
+  ...jest.requireActual<typeof import('./partidos/datos')>('./partidos/datos'),
+  obtenerTorneoActual: jest.fn(async () => ({
+    nombre: 'Apertura 2024',
+    jornadas: [
+      { id: 1, orden: 1, nombre: 'Jornada 1' },
+      { id: 2, orden: 2, nombre: 'Jornada 2' },
+    ],
+    ordenActual: 1,
+  })),
+  obtenerPartidosDeJornada: jest.fn(async () => [
+    {
+      id: 1,
+      inicio: '2024-07-13T20:00:00Z',
+      estado: 'TERMINADO',
+      goles_local: 1,
+      goles_visitante: 0,
+      local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png' },
+      visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png' },
+    },
+  ]),
+}));
 
-beforeEach(simularSesionGuardada);
+const PARTIDO_S02 = 'Puebla 1, Santos 0. Terminado';
+
+beforeEach(() => {
+  simularSesionGuardada();
+  clienteConsultas.clear();
+  clienteConsultas.setDefaultOptions({ queries: { retry: false, gcTime: Infinity } });
+});
+
+afterEach(() => clienteConsultas.clear());
 
 // `renderRouter` de expo-router llama a `render` de forma síncrona, pero en
 // @testing-library/react-native 14 `render` es asíncrono; se monta `ExpoRoot` igual que él.
@@ -35,7 +67,6 @@ function contar(id: string) {
 const rutas = [
   { url: '/inicio', id: 'S11', titulo: 'Inicio' },
   { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
-  { url: '/partidos', id: 'S02', titulo: 'Partidos' },
   { url: '/partido/7', id: 'S03', titulo: 'Partido' },
   { url: '/grupos', id: 'S04', titulo: 'Grupos' },
   { url: '/grupos/nuevo', id: 'S05', titulo: 'Crear grupo' },
@@ -53,6 +84,12 @@ describe('rutas', () => {
 
     expect(await screen.findByRole('header', { name: titulo })).toBeOnTheScreen();
     expect(screen.getByText(id)).toBeOnTheScreen();
+  });
+
+  it('/partidos abre S02 en la jornada actual', async () => {
+    await abrir('/partidos');
+
+    expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
   });
 
   it('la raíz redirige a Inicio', async () => {
@@ -113,18 +150,18 @@ describe('menú inferior', () => {
   it('tocar la pestaña activa desde un detalle regresa a su primera pantalla', async () => {
     await abrir('/partidos');
 
-    await tocar('Partido 1');
+    await tocar(PARTIDO_S02);
     expect(await screen.findByText('S03')).toBeOnTheScreen();
 
     await tocar('Partidos', 'tab');
     await seCerro('S03');
-    expect(screen.getByText('S02')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
   });
 
   it('cada pestaña recuerda dónde se quedó', async () => {
     await abrir('/partidos');
 
-    await tocar('Partido 1');
+    await tocar(PARTIDO_S02);
     expect(await screen.findByText('S03')).toBeOnTheScreen();
 
     await tocar('Grupos', 'tab');
@@ -151,11 +188,12 @@ describe('menú inferior', () => {
   it('cambiar la jornada actualiza Partidos sin agregar historial (D78)', async () => {
     await abrir('/partidos');
 
-    await tocar('Jornada 2');
-    await tocar('Jornada 2');
+    await tocar('Jornada siguiente');
 
-    expect(await screen.findByText('jornada: 2')).toBeOnTheScreen();
-    expect(contar('S02')).toBe(1);
+    expect(await screen.findByRole('header', { name: 'Jornada 2' })).toBeOnTheScreen();
+    expect(
+      screen.queryAllByRole('button', { name: 'Jornada anterior', includeHiddenElements: true }),
+    ).toHaveLength(1);
   });
 
   it('cambiar la vista del grupo actualiza el grupo sin agregar historial (D78)', async () => {

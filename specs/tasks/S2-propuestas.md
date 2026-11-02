@@ -409,3 +409,30 @@
 - Tipos: tras `db push`, `npm run tipos` generó exactamente las líneas agregadas a mano.
 - **Despliegue (2026-11-02, Jesús):** migración aplicada (aparece en remoto); `detectar-finales` v1, `actualizacion-diaria` v2 y `carga-inicial` v3 desplegadas (`verify_jwt=false`; las dos últimas de nuevo porque cambió el código compartido).
 - **P4 forzado del 1206057 (verificado por Jesús):** `HTTP 200`, `EXITO`, 36 estadísticas y 15 eventos; en la base real, 36 estadísticas, `Red Cards` sin dato en ambos equipos, 15 eventos (3 goles) y el partido marcado como listo para calificar → **CA7**. Registro `DATOS_PARTIDO` · `EXITO` · 2 consultas · sin error. `cron.job`: `actualizacion-diaria` (`0 14 * * *`) y `detectar-finales` (`*/15 * * * *`), activas.
+
+## T26 — Pantalla S02: partidos por jornada (2026-11-02)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | Escudos con **`expo-image`** (B-R4): librería nativa → **development build nueva** (EAS). | ✅ OK (D86). |
+| 2 | **Jornada actual** (Q4) calculada en el servidor con una función SQL `jornada_actual()` (D52). | ✅ OK (D86). |
+| 3 | Aviso con datos previos con el formato de 05-ui §6 ("Sin conexión · datos de [hora]") en vez del texto de F02 B6. | ✅ OK (D86). |
+| 4 | Caché **solo en memoria** (sin AsyncStorage); los "datos previos" son los cargados con la app abierta. | ✅ OK (D86). |
+| 5 | Fechas y horas en `es-MX` con la zona del teléfono (a. m./p. m.); `?jornada=` es el `orden`, uno inválido abre la actual. | ✅ OK (D86). |
+
+**Ajustes al implementar:**
+- Migración `20261102074824_jornada_actual.sql`: `jornada_actual(ahora default now())` devuelve el `orden` (próximo partido no cancelado con inicio ≥ ahora del torneo actual; si no hay, la última jornada; null sin torneo actual). Con los permisos de quien llama; la ejecutan `authenticated` y `service_role`, no `anon`. Prueba pgTAP `supabase/tests/jornada_actual.test.sql` (9 casos: antes del torneo, a media jornada, partido que empieza justo ahora, jornada terminada, cancelado que no cuenta, torneo terminado, sin argumento, `anon` sin permiso).
+- `expo-image` 57.0.5 con `npx expo install` (agregó su plugin a `app.json`). Es nativa: hay que **compilar una development build nueva** para probar S02 en el teléfono.
+- Pantalla en `App/src/partidos/` (`PantallaPartidos`, `SelectorJornada`, `FilaPartido`, `datos.ts`, `agruparPorDia.ts`); la ruta `(partidos)/partidos.tsx` solo la exporta. Componentes genéricos nuevos de 05-ui §5–6 en `App/src/componentes/`: `BotonIcono` (flechas de texto hasta tener íconos SVG), `Esqueleto`, `EstadoPantalla` y `AvisoSinConexion`; formatos de fecha en `App/src/formato/fechas.ts`.
+- La fila es de líneas, no tarjeta (U1): escudo y nombre corto de cada equipo, en el centro la hora o el marcador de 90 min en Teko si terminó (Q5; en juego nunca, aunque la API traiga goles, B-R3), y el estado en texto. Queda marcado en el código dónde entra el indicador de F03 y los puntos de F10.
+- **Token nuevo `escudoLista` = 28** (05-ui v1.3): 05-ui no tenía tamaño para el escudo en listas y no se usan valores sueltos.
+- Sin red, supabase-js no lanza: devuelve el error con `status` 0; así se distingue "sin conexión" de una falla del servidor (`ErrorDatos.sinConexion`). Mensajes sin datos: los de F01 §10 ("Sin conexión. Revisa tu internet e inténtalo de nuevo." / "No pudimos cargar los partidos. Inténtalo de nuevo.") con "Reintentar". Sin torneo actual se muestra el estado vacío de la jornada.
+- La consulta de partidos usa un solo literal en el `select` para que supabase-js deduzca los tipos (con concatenación los pierde).
+- El encabezado de día se arma por partes ("sáb 13 jul"): el formato completo de Intl cambia entre versiones ("sáb, 13 jul" en una, "sáb 13 de jul" en Node).
+- `clienteConsultas` con **1 reintento** por defecto (en vez de 3), para que sin conexión el error aparezca en ~1 s y no en ~7 s.
+- Pruebas (Jest): 9 de formato, agrupación por día con zona fija y elección de jornada; 6 de la capa de datos (filtros pedidos, `status` 0 = sin conexión, sin torneo, falla parcial); 15 de la pantalla con la app completa (jornada actual del servidor, CA9 agrupación y orden, marcador solo al terminar, jornada de ruta e inválida, tocar → S03, CA10 flechas y extremos, sin historial (D78), esqueletos, vacío, sin torneo, sin conexión con "Reintentar", falla del servidor, aviso con datos previos y su hora, deslizar para recargar). Se adaptaron `rutas.test.tsx` y `guardia.test.tsx`, que usaban los botones provisionales de S02. App: 128 pruebas.
+- En las pruebas de pantalla la caché va sin temporizador de limpieza (`gcTime: Infinity`) y se vacía tras cada prueba: con el `gcTime` de 5 min, Jest no terminaba.
+- **Las pruebas detectan fallas:** con 5 cambios a propósito (marcador en juego, flecha anterior siempre activa, sin aviso, sin ordenar por hora, sin jornada actual) fallan 12 pruebas; restaurado, todo pasa. Al hacerlo se reforzó la prueba de B-R3 (el partido en juego del ejemplo no traía goles).
+- Quedan 2 avisos de React "not wrapped in act" que vienen de las actualizaciones internas de `SectionList`; no afectan los resultados.
+- Migración aplicada en el proyecto real; los tipos regenerados coinciden con la firma agregada a mano.
+- **Validada por Jesús (2026-11-02)** en su teléfono y en el emulador `Angosto_320dp`, con la development build nueva (con `expo-image`): **CA9** (agrupación por día, orden y hora local), **CA10** (anterior/siguiente y flechas deshabilitadas en los extremos) y **CA11** (modo avión con y sin datos previos, "Reintentar").
