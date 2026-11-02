@@ -1,4 +1,54 @@
 {
   "includeCoAuthoredBy": false,
-  "attribution": { "commit": "", "pr": "" }
+  "attribution": { "commit": "", "pr": "" },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint)",
+      "Bash(npm test)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run tipos)",
+      "Bash(npm run revisar:secretos)",
+      "Bash(npx jest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx expo lint:*)",
+      "Bash(npx expo customize:*)",
+      "Bash(deno task:*)",
+      "Bash(deno check:*)",
+      "Bash(deno lint:*)",
+      "Bash(deno test:*)",
+      "Bash(deno fmt:*)",
+      "Bash(npx supabase db start)",
+      "Bash(npx supabase db reset --local)",
+      "Bash(npx supabase test db --local)",
+      "Bash(npx supabase migration new:*)",
+      "Bash(npx supabase status)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
+    ],
+    "ask": [
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx expo install:*)"
+    ],
+    "deny": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(npx supabase db push:*)",
+      "Bash(npx supabase secrets:*)",
+      "Bash(npx supabase link:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(npx eas-cli:*)",
+      "Read(./.env)",
+      "Read(./App/.env)",
+      "Read(./supabase/functions/.env)"
+    ]
+  }
 }
