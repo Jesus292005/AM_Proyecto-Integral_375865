@@ -434,7 +434,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      guardar_carga_inicial: { Args: { carga: Json }; Returns: Json }
     }
     Enums: {
       estado_partido:

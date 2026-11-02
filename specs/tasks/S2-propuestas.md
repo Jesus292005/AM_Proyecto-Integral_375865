@@ -335,3 +335,30 @@
 - 18 pruebas nuevas (35 en total en el servidor): CA3 con toda la tabla A6; A7 con las rondas reales de 2024 (el Apertura da 17 jornadas de 9 partidos, play-in 3, cuartos 8, semifinales 4 y final 2; los 170 del Clausura son `otroTorneo`); CA4 con el partido real con penales 1315387 y uno con tiempo extra armado a partir del 1206004; CA5 con 89/90/91 consultas por proceso; día UTC con horario de verano e invierno de Tijuana.
 - **Las pruebas detectan fallas:** con el código roto a propósito (sin `WO`, cuartos con orden 18, marcador de medio tiempo en vez de 90 min, otro torneo como desconocida, tope con `<=`) fallan 8 pruebas, y sin quitar los acentos (prueba aparte) fallan 4; restaurado, vuelven a pasar las 35.
 - Registrar la alerta de R4 y que ningún dato cambie ante errores (CA5, CA6 completos) se prueba en T23 junto con la base.
+
+## T23 — Carga inicial P1 (2026-11-01)
+
+| # | Propuesta | Respuesta de Jesús |
+|---|---|---|
+| 1 | `nombre_corto` desde una **tabla fija en el servidor** por `proveedorId`; sin registro, el nombre de la API (A8). | ✅ OK, y agregar a **Atlante** para 2026 (reemplaza a Mazatlán) → D81. |
+| 2 | Guardado en **una sola transacción** con la función SQL `guardar_carga_inicial(carga jsonb)`, ejecutable solo por `service_role`; ahí también se desmarca el `es_actual` anterior. Alternativa descartada: varios `upsert` sueltos con `supabase-js` (una falla a la mitad dejaría datos a medias, contra R5/R7). | ✅ OK. |
+| 3 | La Edge Function `carga-inicial` solo acepta la **clave secreta** (`withSupabase({ auth: 'secret' })` de `@supabase/server`, `verify_jwt = false`); Jesús la invoca desde su terminal, sin pantalla en la app. | ✅ OK. |
+| 4 | CA1/CA2 con una prueba de Deno contra la **base local de Docker** (`deno task test:bd`, fuera de `deno task test`); CA6 con dobles de prueba, sin base. | ✅ OK. |
+| 5 | Errores parciales: ronda desconocida → el partido no se guarda (A7); estado desconocido → nuevo como `PROGRAMADO`, existente conserva el suyo (A6); se guarda el resto y el registro cierra `EXITO` con la lista en `error`. | ✅ OK. |
+
+**Ajustes al implementar:**
+- Atlante FC = `proveedorId` **2312** (consulta `/teams?search=Atlante`, 1 consulta, hecha por Jesús).
+- Archivos: `carga-inicial/index.ts` (+ su `deno.json`, como recomienda la documentación de Supabase para desplegar), `_shared/api-football/cliente.ts`, `_shared/datos-equipos.ts`, `_shared/sincronizacion/carga-inicial.ts` (armado puro + ejecución con dependencias inyectadas), `_shared/sincronizacion/repositorio.ts` (`supabase-js`), migración `20261102063541_carga_inicial.sql` y `[functions.carga-inicial]` en `config.toml`.
+- Dependencias nuevas con versión exacta: `@supabase/server@1.9.2`, `@supabase/supabase-js@2.118.0` y `postgres@3.4.9` (solo para la prueba contra la base; la 4.0.0 tenía 3 días). Con el `deno.json` propio de la función los tipos de npm también son reales (verificado con errores provocados).
+- `@supabase/server` solo acepta las claves nuevas (`sb_secret_…`); el proyecto ya las usa (`sb_publishable_…` en la app). `auth: 'secret'` acepta solo la clave secreta llamada `default`.
+- Cuerpo de la petición validado con Zod: `{ temporada, prefijoRondas, nombre, esActual }`. `esActual: false` no desmarca un torneo; solo lo desmarca la carga de otro marcado como actual.
+- El esquema de partidos (T21) ahora también valida `league.name` y `league.country`, que la carga usa para crear `liga`.
+- P1 hace 2 consultas (`/teams` y `/fixtures`). Cada una se anota en `sincronizacion.consultas_usadas` **antes** de hacerla, para que cuente en R4 aunque falle. Respuesta HTTP: 200 `EXITO`, 429 `DETENIDA_POR_TOPE`, 502 `ERROR`.
+- `guardar_carga_inicial` no toca los colores (D70), `esta_cerrada` ni `calificado_en`. Usa `left join` para que una jornada o un equipo inexistente aborte toda la carga en vez de omitir el partido sin avisar.
+- Tipos: `supabase gen types --local` usa otro formato que `--linked`, así que se agregó a mano la firma de `guardar_carga_inicial` en los dos `tipos-db.ts`; se confirma con `npm run tipos` después de `db push`.
+- Pruebas: 24 nuevas sin base (3 del cliente, 11 de armado y 10 de ejecución; 59 en total) y 6 contra la base local (`deno task test:bd`): CA1 (18 equipos, 21 jornadas, 17 regulares, 170 partidos, 153 de fase regular), CA2 (repetir no cambia conteos ni ids), A6 (nuevo horario y estado desconocido), R5/R7 (una carga que falla no deja nada a medias), `es_actual` y permisos de la función.
+- **Las pruebas detectan fallas:** con el código roto a propósito (sin R6, sin tope, sin la clave en el encabezado, sin `/teams`, sin un nombre corto, otro torneo anotado como omitido) fallan 11 pruebas sin base; con la migración rota (estado desconocido sobrescrito, sin desmarcar `es_actual`, `authenticated` con permiso, `nombre_corto` alterado al repetir) fallan exactamente las 4 pruebas de base correspondientes. Restaurado, todo pasa. Al hacerlo se corrigió la prueba de permisos, que pasaba aunque `authenticated` pudiera ejecutar la función (la tabla negaba el acceso de todos modos); ahora revisa `has_function_privilege`.
+- README: comandos de las pruebas contra la base local (`npm run test:db` y `deno task test:bd`).
+- Tipos: tras `db push`, `npm run tipos` generó exactamente la firma agregada a mano.
+- **Ejecución real (2026-11-02, Jesús):** migración aplicada, función desplegada (`verify_jwt: false`) y carga del Apertura 2024 ejecutada **dos veces**. `sincronizacion`: dos registros `CARGA_INICIAL` · `EXITO` · 2 consultas · sin error (R8). Conteos en la base real: 18 equipos, 21 jornadas (17 regulares), 170 partidos (153 de fase regular), 1 torneo actual → **CA1** y **CA2** (la segunda carga no duplicó nada).
+- Al invocarla: pegar la clave en `Read-Host` no funciona en la terminal de la app (solo llega el carácter de Ctrl+V y la puerta de Supabase responde 400 sin cuerpo). Se lee con `Get-Clipboard -Raw`, comprobando que empiece con `sb_secret_` antes de usarla; el comando se pega en la terminal **antes** de copiar la clave.

@@ -61,6 +61,11 @@ npm run typecheck && npm run lint && npm test
 # Servidor (requiere Deno)
 cd supabase/functions
 deno task typecheck && deno task lint && deno task test
+
+# Contra la base LOCAL (requiere Docker Desktop abierto), desde la raíz
+npx supabase db start           # tras una migración nueva: npx supabase db reset --local
+npm run test:db                 # pgTAP: RLS y disparadores de usuario
+cd supabase/functions && deno task test:bd   # carga inicial (P1) contra la base local
 ```
 
 ## Secretos

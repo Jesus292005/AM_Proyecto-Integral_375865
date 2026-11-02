@@ -1,5 +1,8 @@
 {
   "imports": {
+    "@supabase/server": "npm:@supabase/server@1.9.2",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.118.0",
+    "postgres": "npm:postgres@3.4.9",
     "zod": "npm:zod@4.6.7"
   },
   "nodeModulesDir": "auto",
@@ -16,6 +19,7 @@
   "tasks": {
     "typecheck": "deno check .",
     "lint": "deno lint --permit-no-files",
-    "test": "deno test --permit-no-files"
+    "test": "deno test --permit-no-files",
+    "test:bd": "deno test --allow-net=127.0.0.1:54322 --allow-env _shared/sincronizacion/carga-inicial.bd-test.ts"
   }
 }

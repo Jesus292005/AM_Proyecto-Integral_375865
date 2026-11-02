@@ -386,6 +386,11 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# F02 P1 (T23): la invoca el administrador con la clave secreta en `apikey`, no con un JWT de
+# usuario; la función la verifica con `withSupabase({ auth: 'secret' })`.
+[functions.carga-inicial]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

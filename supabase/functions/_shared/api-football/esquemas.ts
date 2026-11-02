@@ -38,6 +38,8 @@ export const esquemaPartidoApi = z.object({
   }),
   league: z.object({
     id: idProveedor,
+    name: z.string().min(1),
+    country: z.string().min(1),
     season: z.int(),
     round: z.string().min(1),
   }),
