@@ -1,7 +1,7 @@
 # 04 — Herramientas (fase de Diseño)
 
-> **Estado:** ✅ Aprobado v1.2 (2026-10-19; v1.2 agrega la medición de tamaño y el tope de D79)
-> **Última actualización:** 2026-10-19
+> **Estado:** ✅ Aprobado v1.3 (2026-11-02; medición 2 y tope de 35 MB, D91) · v1.2 (2026-10-19; medición de tamaño y tope de D79)
+> **Última actualización:** 2026-11-02
 > Base: specs 00–03 y `decisions.md`. Las herramientas se eligen por los requisitos ya definidos, no al revés.
 
 ---
@@ -86,7 +86,7 @@
 | Dependencias | Cada librería nueva se justifica en la spec que la necesita; nada de librerías pesadas de animación o UI completas "por si acaso". |
 | Formato de publicación | Android App Bundle (Google Play entrega a cada teléfono solo lo que necesita). |
 | Medición | Se mide el tamaño del primer build (S2) y se fija un tope (P-20); se vuelve a medir antes de la demo. |
-| Tope (D79) | **30 MB** de descarga desde Google Play en `arm64-v8a`. |
+| Tope (D91, reemplaza D79) | **35 MB** (35,000,000 bytes) de descarga desde Google Play en `arm64-v8a`. |
 
 **Medición 1 (2026-10-19, T07)** — versión 1.0.0 (1), Expo SDK 57, sin librerías nativas propias todavía (solo Expo Router, fuentes y `expo-dev-client`).
 
@@ -96,6 +96,13 @@
 | **Descarga desde Google Play, `arm64-v8a`** | **23.8–24.0 MB** | `bundletool get-size total --dimensions=ABI` (1.18.3). Es el valor que cuenta: casi todos los teléfonos actuales son `arm64-v8a`. |
 | Descarga, otras arquitecturas | 22.9–24.6 MB | `armeabi-v7a` 22.9–23.1 · `x86_64` 24.0–24.2 · `x86` 24.4–24.6. |
 | APK de desarrollo (build `5be9d2b2`) | 258.9 MB | Incluye las 4 arquitecturas y el cliente de desarrollo; **no** representa la descarga. |
+
+**Medición 2 (2026-11-02, T32)** — versión 1.0.0, con todas las librerías nativas del MVP (Google Sign-In, almacenamiento seguro, `expo-image`, notificaciones, cámara, SVG/QR). Pasó el tope de D79 y llevó a D91.
+
+| Artefacto | Tamaño | Nota |
+|---|---|---|
+| **Descarga desde Google Play, `arm64-v8a`** | **32.57–32.79 MB** | 32,571,696–32,789,343 bytes. Margen contra D91: 2.2 MB. |
+| Descarga, otras arquitecturas | 31.25–33.92 MB | `armeabi-v7a` 31.25–31.47 · `x86_64` 33.50–33.72 · `x86` 33.70–33.92. |
 
 Cómo repetirla: `npx eas-cli@24.12.1 build -p android --profile production`, descargar el `.aab` y correr `java -jar bundletool-all-1.18.3.jar build-apks --bundle=<archivo>.aab --output=app.apks` y `java -jar bundletool-all-1.18.3.jar get-size total --apks=app.apks --dimensions=ABI`.
 
@@ -131,4 +138,4 @@ Cómo repetirla: `npx eas-cli@24.12.1 build -p android --profile production`, de
 
 ## 10. Pendientes
 
-Ninguno. Resuelto: P-20 (D79).
+Ninguno. Resuelto: P-20 (D79, tope actualizado en D91).

@@ -86,7 +86,7 @@ Fuera del plan (D88): F14–F21.
 
 Ciclo de cada módulo: specs → revisión → tareas → implementación por lotes → pruebas → validación de Jesús → actualizar specs. Las specs del módulo siguiente se escriben mientras Jesús valida el actual (D66). La validación en el teléfono es **una por feature**, con su guion; Jesús puede juntarlas al final del módulo.
 
-**Dependencias nativas:** las que faltan para el MVP (notificaciones de F11a; cámara y generación de QR de F12) entran juntas en una sola development build en M2, con la medición de tamaño contra D79.
+**Dependencias nativas:** las que faltan para el MVP (notificaciones de F11a; cámara y generación de QR de F12) entran juntas en una sola development build en M2, con la medición de tamaño contra el tope (D79, actualizado en D91).
 
 **Riesgo del plan:** M3 (IA) y M4 (grupos, rankings y QR + paso a datos reales 2026) son los módulos más cargados. M3 se prueba con partidos simulados (F09), por eso F09 se termina en M2. Si M4 se atrasa, F13 no entra y S8 absorbe la estabilización.
 
