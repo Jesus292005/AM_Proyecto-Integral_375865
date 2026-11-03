@@ -20,6 +20,6 @@
     "typecheck": "deno check .",
     "lint": "deno lint --permit-no-files",
     "test": "deno test --permit-no-files",
-    "test:bd": "deno test --allow-net=127.0.0.1:54322 --allow-env _shared/sincronizacion/sincronizacion-torneo.bd-test.ts _shared/sincronizacion/datos-partido.bd-test.ts"
+    "test:bd": "deno test --allow-net=127.0.0.1:54322 --allow-env _shared/sincronizacion/sincronizacion-torneo.bd-test.ts _shared/sincronizacion/datos-partido.bd-test.ts _shared/notificaciones/recordatorios.bd-test.ts"
   }
 }

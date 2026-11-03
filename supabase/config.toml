@@ -399,6 +399,10 @@ verify_jwt = false
 [functions.detectar-finales]
 verify_jwt = false
 
+# F11a (T42): la invoca la tarea programada de `pg_cron` cada 15 min (solo si hay pendientes).
+[functions.recordatorios]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
