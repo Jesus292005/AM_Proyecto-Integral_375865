@@ -78,7 +78,7 @@ Fecha de entrega: finales de noviembre (P-07). Un commit por tarea (D59). S1 (5�
 | Módulo | Semana | Features | Qué se puede probar al terminarlo |
 |---|---|---|---|
 | **M1 Base** | S2 (cerró el 2 nov) | Configuración, F01, F02 | Entrar con Google y ver los partidos |
-| **M2 Predecir** | S5 | F03, F04, F09, F11a | Predecir, justificar, simular un partido y recibir el recordatorio |
+| **M2 Predecir** | S5 (cerró el 2 nov, D93) | F03, F04, F09, F11a | Predecir, justificar, simular un partido y recibir el recordatorio |
 | **M3 Calificar** | S6 | F05, F06, F10, F11b | El partido (simulado o real) termina y llegan puntos y bono de IA |
 | **M4 Competir** | S7 | F07, F08, F12, (F13) | Grupos, rankings, unirse con QR |
 

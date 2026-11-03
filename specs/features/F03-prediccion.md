@@ -1,5 +1,5 @@
 # F03 — Crear / editar predicción
-> **Estado:** ✅ Aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F01, F02 · **Pantallas:** S03, S02 (indicador) · **Decisiones:** D06, D19, D20, D21, D44, D46, D48, D52, D54, D68, D72, D78, D82
+> **Estado:** ✅ **Terminada** (2026-11-02, D93: cumple CA1–CA12 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F01, F02 · **Pantallas:** S03, S02 (indicador) · **Decisiones:** D06, D19, D20, D21, D44, D46, D48, D52, D54, D68, D72, D78, D82
 
 ## Decisiones (D90)
 1. Se puede **quitar** la predicción antes del cierre: botón secundario "Quitar predicción" con confirmación; borra también la justificación (F04).

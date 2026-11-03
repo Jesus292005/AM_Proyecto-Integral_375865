@@ -1,5 +1,5 @@
 # F09 — Modo de partidos simulados
-> **Estado:** ✅ Aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F02 (y F03 para predecir los simulados) · **Pantallas:** S10, S09 (acceso), S02 y S03 (etiqueta) · **Decisiones:** D15, D36, D40, D43, D52, D84, D85
+> **Estado:** ✅ **Terminada** (2026-11-02, D93: cumple CA1–CA10 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F02 (y F03 para predecir los simulados) · **Pantallas:** S10, S09 (acceso), S02 y S03 (etiqueta) · **Decisiones:** D15, D36, D40, D43, D52, D84, D85
 
 ## Decisiones (D90)
 2. Los simulados los ven todos los usuarios autenticados, con la etiqueta "Simulado" en S02 y S03.

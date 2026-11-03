@@ -1,5 +1,5 @@
 # F04 — Justificación en texto
-> **Estado:** ✅ Aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F03 · **Pantallas:** S03 · **Decisiones:** D08, D22, D35, D46, D52, D82
+> **Estado:** ✅ **Terminada** (2026-11-02, D93: cumple CA1–CA7 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F03 · **Pantallas:** S03 · **Decisiones:** D08, D22, D35, D46, D52, D82
 
 ## Decisiones (D90)
 5. En M4, quienes comparten grupo ven predicciones y justificaciones desde `cierrePredicciones` (03-data-model R04).

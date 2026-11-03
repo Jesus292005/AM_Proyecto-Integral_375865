@@ -1,5 +1,5 @@
 # F11a — Notificaciones: permiso, registro del dispositivo y recordatorio
-> **Estado:** ✅ Aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F01, F02, F03 · **Pantallas:** S09 (ajuste), S03/S02 (destino) · **Decisiones:** D14, D32, D51, D52, D53, D69, D76, D79, D83, D85
+> **Estado:** ✅ **Terminada** (2026-11-02, D93: cumple CA1–CA9 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-02, D90) · **Prioridad:** Must · **Módulo:** M2 · **Depende de:** F01, F02, F03 · **Pantallas:** S09 (ajuste), S03/S02 (destino) · **Decisiones:** D14, D32, D51, D52, D53, D69, D76, D79, D83, D85
 
 ## Decisiones (D90)
 4. Recordatorio 1 h antes del cierre, solo a quien no ha predicho ese partido; un aviso por usuario y ejecución que agrupa los partidos que cierran en esa hora. Con un partido abre su S03; con varios, S02 de su jornada (02-navigation §4).
