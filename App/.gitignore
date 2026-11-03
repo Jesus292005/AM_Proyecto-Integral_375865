@@ -40,3 +40,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Firebase / FCM (F11a R11): google-services.json llega a EAS como variable de archivo;
+# la clave de cuenta de servicio de FCM V1 solo se sube con `eas credentials`.
+google-services.json
+*firebase-adminsdk*.json

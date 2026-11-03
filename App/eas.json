@@ -13,13 +13,15 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "environment": "development"
     },
     "production": {
       "extends": "base",
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "environment": "production"
     }
   }
 }
