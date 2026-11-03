@@ -65,6 +65,7 @@ export function FilaPartido({ partido, onPress }: Props) {
     marcador
       ? `${local.nombre_corto} ${goles_local}, ${visitante.nombre_corto} ${goles_visitante}. ${estado}`
       : `${local.nombre_corto} contra ${visitante.nombre_corto}, ${hora}. ${estado}`,
+    partido.es_simulado && 'Simulado',
     partido.predicho && 'Predicho',
   ]
     .filter(Boolean)
@@ -96,6 +97,12 @@ export function FilaPartido({ partido, onPress }: Props) {
         <Texto variante="meta" color="textoTenue">
           {estado}
         </Texto>
+        {/* Decisión 2 (D90): todos ven los simulados, marcados. */}
+        {partido.es_simulado && (
+          <Texto variante="etiqueta" color="texto2">
+            Simulado
+          </Texto>
+        )}
         {/* Ícono + texto, no solo color (U5). Aquí entran los puntos del partido (F10). */}
         {partido.predicho && (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.xxs }}>

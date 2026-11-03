@@ -13,6 +13,7 @@ function partido(id: number, inicio: string): PartidoDeLista {
     goles_visitante: null,
     local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png' },
     visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png' },
+    es_simulado: false,
     predicho: false,
   };
 }

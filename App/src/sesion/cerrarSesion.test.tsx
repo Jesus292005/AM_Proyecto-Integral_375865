@@ -20,6 +20,7 @@ import {
 
 jest.mock('../supabase/cliente');
 jest.mock('../partido/datos');
+jest.mock('../perfil/datos');
 
 // S01 se reconoce por su botón principal.
 const S01 = 'Continuar con Google';

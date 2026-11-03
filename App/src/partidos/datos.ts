@@ -51,13 +51,15 @@ export type PartidoDeLista = {
   goles_visitante: number | null;
   local: EquipoDePartido;
   visitante: EquipoDePartido;
+  /** Partido simulado por el administrador (F09). */
+  es_simulado: boolean;
   /** Tengo una predicción en este partido (F03 CA9). */
   predicho: boolean;
 };
 
 // Un solo literal: supabase-js deduce el tipo del resultado a partir de este texto.
 const COLUMNAS_PARTIDO =
-  'id, inicio, estado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url), mis_predicciones:prediccion(id)';
+  'id, inicio, estado, es_simulado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url), mis_predicciones:prediccion(id)';
 
 /** Partidos de una jornada con sus dos equipos, por hora de inicio. */
 export async function obtenerPartidosDeJornada(jornadaId: number): Promise<PartidoDeLista[]> {

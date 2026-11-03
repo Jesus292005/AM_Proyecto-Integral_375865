@@ -12,6 +12,9 @@ import { simularSesionGuardada } from './pruebas/supabaseFalso';
 jest.mock('./supabase/cliente');
 // S03 ya es real (T34): por defecto muestra un partido terminado.
 jest.mock('./partido/datos');
+// S10 ya es real (T38): la cuenta de prueba es de usuario normal.
+jest.mock('./perfil/datos');
+jest.mock('./simulacion/datos');
 // S02 ya es real (T26): sus lecturas se simulan con una jornada de un partido.
 jest.mock('./partidos/datos', () => ({
   ...jest.requireActual<typeof import('./partidos/datos')>('./partidos/datos'),
@@ -32,6 +35,7 @@ jest.mock('./partidos/datos', () => ({
       goles_visitante: 0,
       local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png' },
       visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png' },
+      es_simulado: false,
       predicho: false,
     },
   ]),
@@ -86,7 +90,6 @@ const rutas = [
   { url: '/grupo/3', id: 'S08', titulo: 'Grupo' },
   { url: '/usuario/5', id: 'S13', titulo: 'Perfil de usuario' },
   { url: '/perfil', id: 'S09', titulo: 'Perfil' },
-  { url: '/admin/simulacion', id: 'S10', titulo: 'Simulación' },
 ] as const;
 
 describe('rutas', () => {
@@ -102,6 +105,13 @@ describe('rutas', () => {
 
     expect(await abrioS03()).toBeOnTheScreen();
     expect(obtenerPartido).toHaveBeenCalledWith(7);
+  });
+
+  it('/admin/simulacion abre S10', async () => {
+    await abrir('/admin/simulacion');
+
+    expect(await screen.findByRole('header', { name: 'Simulación' })).toBeOnTheScreen();
+    expect(await screen.findByText('Solo administradores.')).toBeOnTheScreen();
   });
 
   it('/partidos abre S02 en la jornada actual', async () => {

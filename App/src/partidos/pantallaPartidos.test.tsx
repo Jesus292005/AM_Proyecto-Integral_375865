@@ -54,6 +54,7 @@ function partido(
     goles_visitante: null,
     local: { nombre_corto: local, escudo_url: `https://x.mx/${local}.png` },
     visitante: { nombre_corto: visitante, escudo_url: `https://x.mx/${visitante}.png` },
+    es_simulado: false,
     predicho: false,
     ...extra,
   };
@@ -156,6 +157,18 @@ describe('S02 con datos', () => {
     ).toBeOnTheScreen();
     expect(screen.getAllByText('Predicho')).toHaveLength(1);
     expect(screen.getAllByTestId('icono-check')).toHaveLength(1);
+    expect(await fila(/^Chivas contra América, .*\. Por jugar$/)).toBeOnTheScreen();
+  });
+
+  it('F09 CA8: muestra "Simulado" solo en los partidos simulados', async () => {
+    partidosFalsos.mockImplementation(async () => [
+      partido(301, SABADO, 'Puebla', 'Querétaro', { es_simulado: true }),
+      partido(302, DOMINGO, 'Chivas', 'América'),
+    ]);
+    await abrir('/partidos');
+
+    expect(await fila(/^Puebla contra Querétaro, .*\. Por jugar\. Simulado$/)).toBeOnTheScreen();
+    expect(screen.getAllByText('Simulado')).toHaveLength(1);
     expect(await fila(/^Chivas contra América, .*\. Por jugar$/)).toBeOnTheScreen();
   });
 
