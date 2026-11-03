@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      dispositivo: {
+        Row: {
+          actualizado_en: string
+          id: number
+          token: string
+          usuario_id: string
+        }
+        Insert: {
+          actualizado_en?: string
+          id?: never
+          token: string
+          usuario_id: string
+        }
+        Update: {
+          actualizado_en?: string
+          id?: never
+          token?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispositivo_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispositivo_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipo: {
         Row: {
           color_primario: string | null
@@ -192,6 +228,52 @@ export type Database = {
           proveedor_id?: number
         }
         Relationships: []
+      }
+      notificacion_enviada: {
+        Row: {
+          enviada_en: string
+          id: number
+          partido_id: number
+          tipo: Database["public"]["Enums"]["tipo_notificacion"]
+          usuario_id: string
+        }
+        Insert: {
+          enviada_en?: string
+          id?: never
+          partido_id: number
+          tipo: Database["public"]["Enums"]["tipo_notificacion"]
+          usuario_id: string
+        }
+        Update: {
+          enviada_en?: string
+          id?: never
+          partido_id?: number
+          tipo?: Database["public"]["Enums"]["tipo_notificacion"]
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacion_enviada_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacion_enviada_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacion_enviada_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partido: {
         Row: {
@@ -512,6 +594,19 @@ export type Database = {
           proveedor_id: number
         }[]
       }
+      recordatorios_pendientes: {
+        Args: { ahora: string }
+        Returns: {
+          cierre_predicciones: string
+          jornada_orden: number
+          local: string
+          partido_id: number
+          tokens: string[]
+          usuario_id: string
+          visitante: string
+        }[]
+      }
+      registrar_dispositivo: { Args: { token: string }; Returns: undefined }
       simulacion_crear: {
         Args: { minutos?: number; origen: number }
         Returns: number
@@ -536,6 +631,7 @@ export type Database = {
       resultado_prediccion: "LOCAL" | "EMPATE" | "VISITANTE"
       rol_usuario: "USUARIO" | "ADMIN"
       tipo_evento: "GOL" | "TARJETA" | "CAMBIO" | "VAR"
+      tipo_notificacion: "RECORDATORIO" | "PUNTOS_LISTOS"
       tipo_sincronizacion:
         | "CARGA_INICIAL"
         | "ACTUALIZACION_DIARIA"
@@ -686,6 +782,7 @@ export const Constants = {
       resultado_prediccion: ["LOCAL", "EMPATE", "VISITANTE"],
       rol_usuario: ["USUARIO", "ADMIN"],
       tipo_evento: ["GOL", "TARJETA", "CAMBIO", "VAR"],
+      tipo_notificacion: ["RECORDATORIO", "PUNTOS_LISTOS"],
       tipo_sincronizacion: [
         "CARGA_INICIAL",
         "ACTUALIZACION_DIARIA",
