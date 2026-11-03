@@ -49,6 +49,7 @@ const guardada = (extra: Partial<Prediccion> = {}): Prediccion => ({
   rango_goles: null,
   marcador_local: null,
   marcador_visitante: null,
+  justificacion: null,
   actualizada_en: '2026-11-02T18:00:00Z',
   ...extra,
 });
@@ -118,6 +119,7 @@ describe('formulario (F03 CA7)', () => {
         rango_goles: null,
         marcador_local: 2,
         marcador_visitante: 1,
+        justificacion: null,
       }),
     );
   });
@@ -138,6 +140,7 @@ describe('formulario (F03 CA7)', () => {
         rango_goles: 'G4_MAS',
         marcador_local: null,
         marcador_visitante: null,
+        justificacion: null,
       }),
     );
   });
@@ -287,6 +290,112 @@ describe('cierre (F03 R8, Flujo 6)', () => {
 
     expect(await screen.findByRole('header', { name: 'América 2, Chivas 2' })).toBeOnTheScreen();
     expect(screen.getByText('No predijiste este partido.')).toBeOnTheScreen();
+  });
+});
+
+describe('justificación (F04)', () => {
+  const campo = () => screen.getByLabelText('Tu análisis');
+
+  it('F04 CA5: el campo muestra el contador y no deja escribir más de 500 caracteres', async () => {
+    await abrirFormulario();
+
+    expect(screen.getByText('0/500')).toBeOnTheScreen();
+    expect(campo().props.maxLength).toBe(500);
+    await fireEvent.changeText(campo(), 'Gana el local');
+    expect(screen.getByText('13/500')).toBeOnTheScreen();
+    await fireEvent.changeText(campo(), 'a'.repeat(500));
+    expect(screen.getByText('500/500')).toBeOnTheScreen();
+  });
+
+  it('F04 CA6: viaja con la predicción en una sola escritura, ya recortada', async () => {
+    await abrirFormulario();
+
+    await tocar(opcion('Empate'));
+    await fireEvent.changeText(campo(), '  Los dos llegan cansados.  ');
+    await tocar(boton('Guardar predicción'));
+
+    await waitFor(() => expect(guardarFalso).toHaveBeenCalledTimes(1));
+    expect(guardarFalso).toHaveBeenCalledWith(5, {
+      resultado: 'EMPATE',
+      rango_goles: null,
+      marcador_local: null,
+      marcador_visitante: null,
+      justificacion: 'Los dos llegan cansados.',
+    });
+  });
+
+  it('F04 CA6: cambiar solo la justificación habilita "Actualizar"', async () => {
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL', justificacion: 'Juega en casa.' }));
+    await abrirFormulario();
+
+    expect(campo().props.value).toBe('Juega en casa.');
+    expect(boton('Actualizar')).toBeDisabled();
+    await fireEvent.changeText(campo(), 'Juega en casa y con su gente.');
+    expect(boton('Actualizar')).toBeEnabled();
+    // Solo espacios de más no es un cambio: el servidor los recorta.
+    await fireEvent.changeText(campo(), 'Juega en casa.  ');
+    expect(boton('Actualizar')).toBeDisabled();
+  });
+
+  it('F04 R2: sin elegir una predicción no se guarda solo la justificación', async () => {
+    await abrirFormulario();
+
+    await fireEvent.changeText(campo(), 'Va a ser un partidazo.');
+
+    expect(boton('Guardar predicción')).toBeDisabled();
+  });
+
+  it('F04 R5: muestra el texto de ayuda sin puntos', async () => {
+    await abrirFormulario();
+
+    expect(
+      screen.getByText('Opcional. Si tu análisis se parece a lo que pase, ganas bono aunque falles.'),
+    ).toBeOnTheScreen();
+  });
+
+  it('error al guardar: se conserva el texto escrito', async () => {
+    guardarFalso.mockRejectedValue(new ErrorDatos('Network request failed', true));
+    await abrirFormulario();
+
+    await tocar(opcion('América'));
+    await fireEvent.changeText(campo(), 'Mi análisis');
+    await tocar(boton('Guardar predicción'));
+
+    expect(
+      await screen.findByText('No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.'),
+    ).toBeOnTheScreen();
+    expect(campo().props.value).toBe('Mi análisis');
+  });
+
+  it('cerrado: la justificación se ve en solo lectura', async () => {
+    partidoFalso.mockImplementation(async () => partido({ estado: 'EN_JUEGO' }));
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL', justificacion: 'Juega en casa.' }));
+    await abrir();
+
+    expect(await screen.findByText('Juega en casa.')).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Tu análisis')).not.toBeOnTheScreen();
+  });
+
+  it('cerrado sin justificación: no muestra la sección', async () => {
+    partidoFalso.mockImplementation(async () => partido({ estado: 'EN_JUEGO' }));
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
+    await abrir();
+
+    expect(await screen.findByText('Gana América')).toBeOnTheScreen();
+    expect(screen.queryByText('Tu análisis')).not.toBeOnTheScreen();
+  });
+});
+
+describe('simulados (F09)', () => {
+  it('F09 CA8: S03 muestra "Simulado" solo en un partido simulado', async () => {
+    partidoFalso.mockImplementation(async () => partido({ es_simulado: true }));
+    await abrirFormulario();
+    expect(screen.getByText('Simulado')).toBeOnTheScreen();
+  });
+
+  it('F09 CA8: S03 no muestra "Simulado" en un partido real', async () => {
+    await abrirFormulario();
+    expect(screen.queryByText('Simulado')).not.toBeOnTheScreen();
   });
 });
 

@@ -53,30 +53,44 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
 }
 
 /** Mi predicción en solo lectura, después del cierre (Flujo 6). */
-function PrediccionCerrada({ partido, guardada }: { partido: PartidoDetalle; guardada: Prediccion | null }) {
+function PrediccionCerrada({
+  partido,
+  guardada,
+}: {
+  partido: PartidoDetalle;
+  guardada: Prediccion | null;
+}) {
   const { espacio } = useTema();
 
   return (
-    <Seccion etiqueta="Tu predicción">
-      {guardada === null ? (
-        <Texto variante="cuerpo">{mensajes.noPredijo}</Texto>
-      ) : (
-        <View style={{ gap: espacio.s }}>
-          {guardada.marcador_local !== null && guardada.marcador_visitante !== null && (
-            <Dato
-              etiqueta="Marcador exacto"
-              valor={`${partido.local.nombre_corto} ${guardada.marcador_local} - ${guardada.marcador_visitante} ${partido.visitante.nombre_corto}`}
-            />
-          )}
-          {guardada.resultado !== null && (
-            <Dato etiqueta="Resultado" valor={textoResultado(partido, guardada)} />
-          )}
-          {guardada.rango_goles !== null && (
-            <Dato etiqueta="Goles en total" valor={textoRango[guardada.rango_goles]} />
-          )}
-        </View>
+    <View style={{ gap: espacio.xl }}>
+      <Seccion etiqueta="Tu predicción">
+        {guardada === null ? (
+          <Texto variante="cuerpo">{mensajes.noPredijo}</Texto>
+        ) : (
+          <View style={{ gap: espacio.s }}>
+            {guardada.marcador_local !== null && guardada.marcador_visitante !== null && (
+              <Dato
+                etiqueta="Marcador exacto"
+                valor={`${partido.local.nombre_corto} ${guardada.marcador_local} - ${guardada.marcador_visitante} ${partido.visitante.nombre_corto}`}
+              />
+            )}
+            {guardada.resultado !== null && (
+              <Dato etiqueta="Resultado" valor={textoResultado(partido, guardada)} />
+            )}
+            {guardada.rango_goles !== null && (
+              <Dato etiqueta="Goles en total" valor={textoRango[guardada.rango_goles]} />
+            )}
+          </View>
+        )}
+      </Seccion>
+      {/* F04 Flujo 3: en solo lectura; sin justificación no hay sección. */}
+      {guardada?.justificacion != null && (
+        <Seccion etiqueta="Tu análisis">
+          <Texto variante="cuerpo">{guardada.justificacion}</Texto>
+        </Seccion>
       )}
-    </Seccion>
+    </View>
   );
 }
 
@@ -116,7 +130,11 @@ function EsqueletoPartido() {
   );
 }
 
-function estadoEncabezado(partido: PartidoDetalle, abierto: boolean, ahora: Date): EstadoEncabezado {
+function estadoEncabezado(
+  partido: PartidoDetalle,
+  abierto: boolean,
+  ahora: Date,
+): EstadoEncabezado {
   const { goles_local, goles_visitante } = partido;
   if (partido.estado === 'TERMINADO' && goles_local !== null && goles_visitante !== null) {
     return { tipo: 'terminado', golesLocal: goles_local, golesVisitante: goles_visitante };
@@ -203,9 +221,18 @@ export function PantallaPartido() {
             sinConexion={esSinConexion(fallida.error)}
           />
         )}
+        {datos.es_simulado && (
+          // Decisión 2 (D90): todos ven los simulados, marcados.
+          <Texto variante="etiqueta" color="texto2">
+            Simulado
+          </Texto>
+        )}
         <EncabezadoPartido
           local={{ nombre: datos.local.nombre_corto, color: datos.local.color_primario }}
-          visitante={{ nombre: datos.visitante.nombre_corto, color: datos.visitante.color_primario }}
+          visitante={{
+            nombre: datos.visitante.nombre_corto,
+            color: datos.visitante.color_primario,
+          }}
           estado={estadoEncabezado(datos, abierto, ahora)}
         />
         {aviso !== null && <Aviso mensaje={aviso} />}

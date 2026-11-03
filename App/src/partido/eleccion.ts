@@ -10,13 +10,19 @@ export type EstadoPartido = Enums['estado_partido'];
 
 // D72.
 export const MARCADOR_MAXIMO = 10;
+// F04 R1.
+export const JUSTIFICACION_MAXIMA = 500;
 
-/** Lo que se escribe en `prediccion`: siempre las 4 columnas, para borrar la otra forma. */
+/**
+ * Lo que se escribe en `prediccion` en una sola escritura (F04 R6): siempre las 4 columnas de la
+ * elección, para borrar la otra forma, y la justificación.
+ */
 export type EleccionPrediccion = {
   resultado: Resultado | null;
   rango_goles: RangoGoles | null;
   marcador_local: number | null;
   marcador_visitante: number | null;
+  justificacion: string | null;
 };
 
 export type Prediccion = EleccionPrediccion & { actualizada_en: string };
@@ -28,6 +34,7 @@ export type Formulario = {
   resultado: Resultado | null;
   rango: RangoGoles | null;
   marcador: { local: number; visitante: number };
+  justificacion: string;
 };
 
 /** El formulario muestra lo guardado y abre en su pestaña (Flujo 2). */
@@ -41,17 +48,29 @@ export function formularioInicial(guardada: Prediccion | null): Formulario {
       local: guardada?.marcador_local ?? 0,
       visitante: guardada?.marcador_visitante ?? 0,
     },
+    justificacion: guardada?.justificacion ?? '',
   };
 }
 
-/** Solo la pestaña activa (Flujo 3); null si no hay una elección válida (R2). */
+/** Como la guarda el servidor (F04 R1): sin espacios al inicio y al final; vacía = null. */
+export function normalizarJustificacion(texto: string): string | null {
+  const recortada = texto.trim();
+  return recortada === '' ? null : recortada;
+}
+
+/**
+ * Solo la pestaña activa (Flujo 3) más la justificación; null si no hay una elección válida (R2):
+ * no hay justificación sin predicción (F04 R2).
+ */
 export function eleccionDe(formulario: Formulario): EleccionPrediccion | null {
+  const justificacion = normalizarJustificacion(formulario.justificacion);
   if (formulario.pestana === 'marcador') {
     return {
       resultado: null,
       rango_goles: null,
       marcador_local: formulario.marcador.local,
       marcador_visitante: formulario.marcador.visitante,
+      justificacion,
     };
   }
   if (formulario.resultado === null && formulario.rango === null) return null;
@@ -60,6 +79,7 @@ export function eleccionDe(formulario: Formulario): EleccionPrediccion | null {
     rango_goles: formulario.rango,
     marcador_local: null,
     marcador_visitante: null,
+    justificacion,
   };
 }
 
@@ -72,7 +92,8 @@ export function puedeGuardar(formulario: Formulario, guardada: Prediccion | null
     eleccion.resultado !== guardada.resultado ||
     eleccion.rango_goles !== guardada.rango_goles ||
     eleccion.marcador_local !== guardada.marcador_local ||
-    eleccion.marcador_visitante !== guardada.marcador_visitante
+    eleccion.marcador_visitante !== guardada.marcador_visitante ||
+    eleccion.justificacion !== guardada.justificacion
   );
 }
 

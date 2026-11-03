@@ -4,6 +4,7 @@ import { Alert, View } from 'react-native';
 
 import {
   Boton,
+  CampoTexto,
   Opciones,
   PestanasTexto,
   Seccion,
@@ -21,6 +22,7 @@ import {
 import {
   eleccionDe,
   formularioInicial,
+  JUSTIFICACION_MAXIMA,
   MARCADOR_MAXIMO,
   puedeGuardar,
   type EleccionPrediccion,
@@ -34,6 +36,8 @@ import {
 const mensajes = {
   errorGuardar: 'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.',
   errorQuitar: 'No se pudo quitar. Revisa tu conexión e inténtalo de nuevo.',
+  // F04 R5: sin puntos.
+  ayudaAnalisis: 'Opcional. Si tu análisis se parece a lo que pase, ganas bono aunque falles.',
 } as const;
 
 const pestanas: readonly { valor: Pestana; titulo: string }[] = [
@@ -113,50 +117,72 @@ export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
   ];
 
   return (
-    <Seccion etiqueta="Tu predicción">
-      <PestanasTexto
-        pestanas={pestanas}
-        activa={formulario.pestana}
-        onCambiar={(pestana) => cambiar({ pestana })}
-        deshabilitado={ocupado}
-      />
-      {formulario.pestana === 'resultadoGoles' ? (
-        <View style={{ gap: espacio.m }}>
-          <View style={{ gap: espacio.xs }}>
-            <Texto variante="etiqueta" color="textoTenue">
-              Resultado
-            </Texto>
-            <Opciones
-              nombre="Resultado"
-              opciones={resultados}
-              elegida={formulario.resultado}
-              onElegir={(resultado) => cambiar({ resultado })}
-              deshabilitado={ocupado}
-            />
-          </View>
-          <View style={{ gap: espacio.xs }}>
-            <Texto variante="etiqueta" color="textoTenue">
-              Goles en total
-            </Texto>
-            <Opciones
-              nombre="Goles en total"
-              opciones={rangos}
-              elegida={formulario.rango}
-              onElegir={(rango) => cambiar({ rango })}
-              deshabilitado={ocupado}
-            />
-          </View>
-        </View>
-      ) : (
-        <SelectorMarcador
-          local={{ nombre: partido.local.nombre_corto, goles: formulario.marcador.local }}
-          visitante={{ nombre: partido.visitante.nombre_corto, goles: formulario.marcador.visitante }}
-          maximo={MARCADOR_MAXIMO}
-          onCambiar={(lado, goles) => cambiar({ marcador: { ...formulario.marcador, [lado]: goles } })}
+    <View style={{ gap: espacio.xl }}>
+      <Seccion etiqueta="Tu predicción">
+        <PestanasTexto
+          pestanas={pestanas}
+          activa={formulario.pestana}
+          onCambiar={(pestana) => cambiar({ pestana })}
           deshabilitado={ocupado}
         />
-      )}
-      <View style={{ gap: espacio.s, paddingTop: espacio.xs }}>
+        {formulario.pestana === 'resultadoGoles' ? (
+          <View style={{ gap: espacio.m }}>
+            <View style={{ gap: espacio.xs }}>
+              <Texto variante="etiqueta" color="textoTenue">
+                Resultado
+              </Texto>
+              <Opciones
+                nombre="Resultado"
+                opciones={resultados}
+                elegida={formulario.resultado}
+                onElegir={(resultado) => cambiar({ resultado })}
+                deshabilitado={ocupado}
+              />
+            </View>
+            <View style={{ gap: espacio.xs }}>
+              <Texto variante="etiqueta" color="textoTenue">
+                Goles en total
+              </Texto>
+              <Opciones
+                nombre="Goles en total"
+                opciones={rangos}
+                elegida={formulario.rango}
+                onElegir={(rango) => cambiar({ rango })}
+                deshabilitado={ocupado}
+              />
+            </View>
+          </View>
+        ) : (
+          <SelectorMarcador
+            local={{ nombre: partido.local.nombre_corto, goles: formulario.marcador.local }}
+            visitante={{
+              nombre: partido.visitante.nombre_corto,
+              goles: formulario.marcador.visitante,
+            }}
+            maximo={MARCADOR_MAXIMO}
+            onCambiar={(lado, goles) =>
+              cambiar({ marcador: { ...formulario.marcador, [lado]: goles } })
+            }
+            deshabilitado={ocupado}
+          />
+        )}
+      </Seccion>
+      {/* F04: viaja con la predicción en la misma escritura (R6). */}
+      <Seccion etiqueta="Tu análisis">
+        <CampoTexto
+          valor={formulario.justificacion}
+          onCambiar={(justificacion) => cambiar({ justificacion })}
+          etiqueta="Tu análisis"
+          maximo={JUSTIFICACION_MAXIMA}
+          placeholder="¿Por qué crees que pasará?"
+          multilinea
+          deshabilitado={ocupado}
+        />
+        <Texto variante="meta" color="textoTenue">
+          {mensajes.ayudaAnalisis}
+        </Texto>
+      </Seccion>
+      <View style={{ gap: espacio.s }}>
         <Boton
           titulo={guardada ? 'Actualizar' : 'Guardar predicción'}
           onPress={() => eleccion && guardar.mutate(eleccion)}
@@ -183,6 +209,6 @@ export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
           />
         )}
       </View>
-    </Seccion>
+    </View>
   );
 }

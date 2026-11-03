@@ -39,7 +39,7 @@ const COLUMNAS_PARTIDO =
   'id, inicio, cierre_predicciones, estado, es_simulado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, color_primario), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, color_primario)';
 
 const COLUMNAS_PREDICCION =
-  'resultado, rango_goles, marcador_local, marcador_visitante, actualizada_en';
+  'resultado, rango_goles, marcador_local, marcador_visitante, justificacion, actualizada_en';
 
 /** El partido con sus equipos, o null si no existe. */
 export async function obtenerPartido(partidoId: number): Promise<PartidoDetalle | null> {

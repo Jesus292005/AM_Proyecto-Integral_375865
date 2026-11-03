@@ -2,6 +2,7 @@ import {
   contadorCierre,
   eleccionDe,
   formularioInicial,
+  normalizarJustificacion,
   prediccionAbierta,
   puedeGuardar,
   type Formulario,
@@ -15,6 +16,7 @@ const guardadaMarcador: Prediccion = {
   rango_goles: null,
   marcador_local: 2,
   marcador_visitante: 1,
+  justificacion: null,
   actualizada_en: '2026-11-02T10:00:00Z',
 };
 
@@ -25,6 +27,7 @@ describe('formularioInicial', () => {
       resultado: null,
       rango: null,
       marcador: { local: 0, visitante: 0 },
+      justificacion: '',
     });
   });
 
@@ -42,6 +45,7 @@ describe('eleccionDe', () => {
     resultado: 'LOCAL',
     rango: 'G2',
     marcador: { local: 3, visitante: 3 },
+    justificacion: '',
   };
 
   it('F03 CA7: guarda solo la pestaña de resultado y goles', () => {
@@ -50,6 +54,7 @@ describe('eleccionDe', () => {
       rango_goles: 'G2',
       marcador_local: null,
       marcador_visitante: null,
+      justificacion: null,
     });
   });
 
@@ -59,6 +64,7 @@ describe('eleccionDe', () => {
       rango_goles: null,
       marcador_local: 3,
       marcador_visitante: 3,
+      justificacion: null,
     });
   });
 
@@ -132,5 +138,16 @@ describe('contadorCierre (F03 R8)', () => {
 
   it('nunca es negativo', () => {
     expect(contadorCierre(new Date('2026-11-02T09:00:00Z'), ahora)).toBe('00:00:00');
+  });
+});
+
+describe('normalizarJustificacion (F04 R1)', () => {
+  it('recorta los espacios al inicio y al final, como el servidor', () => {
+    expect(normalizarJustificacion('  \n Gana el local.\t ')).toBe('Gana el local.');
+  });
+
+  it('vacía o solo espacios es null', () => {
+    expect(normalizarJustificacion('')).toBeNull();
+    expect(normalizarJustificacion('   \n ')).toBeNull();
   });
 });

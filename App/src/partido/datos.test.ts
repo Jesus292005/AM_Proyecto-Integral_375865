@@ -39,7 +39,13 @@ function consulta(respuesta: Respuesta) {
 }
 
 const desde = supabase.from as unknown as jest.Mock;
-const eleccion = { resultado: 'LOCAL', rango_goles: null, marcador_local: null, marcador_visitante: null } as const;
+const eleccion = {
+  resultado: 'LOCAL',
+  rango_goles: null,
+  marcador_local: null,
+  marcador_visitante: null,
+  justificacion: null,
+} as const;
 
 beforeEach(() => desde.mockReset());
 

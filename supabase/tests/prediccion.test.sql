@@ -3,7 +3,7 @@
 -- dentro de la transacción no cambia. Todo se deshace al final.
 begin;
 
-select plan(43);
+select plan(49);
 
 -- ---------------------------------------------------------------------------
 -- Datos de prueba (como postgres)
@@ -80,7 +80,20 @@ from (values
 ) as u (id, proveedor)
 join public.partido p on p.proveedor_id = u.proveedor;
 
+-- Con justificación (F04): la de A en 9020 antes del cierre y la de B en 9030.
+update public.prediccion set justificacion = 'Análisis de ' || u.nombre
+from public.usuario u
+where u.id = prediccion.usuario_id
+  and prediccion.partido_id in (select id from public.partido where proveedor_id in (9020, 9030))
+  and (u.nombre = 'Usuario B' or prediccion.partido_id = (select id from public.partido where proveedor_id = 9020));
+
 update public.partido set cierre_predicciones = now() - interval '1 minute' where proveedor_id = 9020;
+
+select results_eq(
+  $$ select count(*)::int from public.prediccion where justificacion is not null $$,
+  $$ values (3) $$,
+  'F04 CA3: preparación: A y B tienen justificaciones guardadas'
+);
 
 -- ---------------------------------------------------------------------------
 -- Como el usuario A
@@ -272,6 +285,31 @@ select results_eq(
   'F04 CA2: una justificación de solo espacios se guarda como null'
 );
 
+-- F04 CA3/CA4: la justificación sigue los permisos y el cierre de la predicción.
+select is_empty(
+  $$ select justificacion from public.prediccion
+     where usuario_id = '00000000-0000-0000-0000-00000000000b' $$,
+  'F04 CA3: A no lee la justificación de B'
+);
+select throws_ok(
+  $$ update public.prediccion set justificacion = 'Cambio de opinión'
+     where partido_id = (select id from public.partido where proveedor_id = 9020) $$,
+  'P0001', 'PREDICCIONES_CERRADAS',
+  'F04 CA4: no edita la justificación después del cierre'
+);
+select throws_ok(
+  $$ update public.prediccion set justificacion = null
+     where partido_id = (select id from public.partido where proveedor_id = 9020) $$,
+  'P0001', 'PREDICCIONES_CERRADAS',
+  'F04 CA4: no quita la justificación después del cierre'
+);
+select throws_ok(
+  $$ insert into public.prediccion (partido_id, resultado, justificacion)
+     values ((select id from public.partido where proveedor_id = 9010), 'LOCAL', 'Tarde.') $$,
+  'P0001', 'PREDICCIONES_CERRADAS',
+  'F04 CA4: no guarda una justificación justo a la hora del cierre'
+);
+
 -- CA6: predicciones de otro usuario.
 select is_empty(
   $$ select id from public.prediccion where usuario_id = '00000000-0000-0000-0000-00000000000b' $$,
@@ -331,6 +369,10 @@ select is_empty(
 select is_empty(
   $$ update public.prediccion set resultado = 'EMPATE' returning id $$,
   'F03 CA6: el administrador no modifica predicciones ajenas'
+);
+select is_empty(
+  $$ select justificacion from public.prediccion where justificacion is not null $$,
+  'F04 CA3: el administrador no lee justificaciones ajenas'
 );
 
 -- ---------------------------------------------------------------------------
