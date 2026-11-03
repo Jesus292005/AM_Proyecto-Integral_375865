@@ -101,6 +101,7 @@
 
 | Artefacto | Tamaño | Nota |
 |---|---|---|
+| AAB de producción (EAS, build `703cc5e8`) | — | Development build con Firebase: `4d8d0853`. |
 | **Descarga desde Google Play, `arm64-v8a`** | **32.57–32.79 MB** | 32,571,696–32,789,343 bytes. Margen contra D91: 2.2 MB. |
 | Descarga, otras arquitecturas | 31.25–33.92 MB | `armeabi-v7a` 31.25–31.47 · `x86_64` 33.50–33.72 · `x86` 33.70–33.92. |
 
