@@ -6,6 +6,7 @@ import { getMockContext } from 'expo-router/testing-library';
 
 import { clienteConsultas } from '../datos/clienteConsultas';
 import { formatearDia, formatearHora } from '../formato/fechas';
+import { obtenerPartido } from '../partido/datos';
 import { simularSesionGuardada } from '../pruebas/supabaseFalso';
 import {
   ErrorDatos,
@@ -16,6 +17,7 @@ import {
 } from './datos';
 
 jest.mock('../supabase/cliente');
+jest.mock('../partido/datos');
 jest.mock('./datos', () => ({
   ...jest.requireActual<typeof import('./datos')>('./datos'),
   obtenerTorneoActual: jest.fn(),
@@ -52,6 +54,7 @@ function partido(
     goles_visitante: null,
     local: { nombre_corto: local, escudo_url: `https://x.mx/${local}.png` },
     visitante: { nombre_corto: visitante, escudo_url: `https://x.mx/${visitante}.png` },
+    predicho: false,
     ...extra,
   };
 }
@@ -140,12 +143,29 @@ describe('S02 con datos', () => {
     expect(await screen.findByRole('header', { name: 'Jornada 2' })).toBeOnTheScreen();
   });
 
+  it('F03 CA9: muestra "Predicho" solo en los partidos con predicción propia', async () => {
+    partidosFalsos.mockImplementation(async () => [
+      partido(201, SABADO, 'Puebla', 'Querétaro', { predicho: true }),
+      partido(202, DOMINGO, 'Chivas', 'América'),
+    ]);
+    await abrir('/partidos');
+
+    const horaPuebla = formatearHora(new Date(SABADO));
+    expect(
+      await fila(`Puebla contra Querétaro, ${horaPuebla}. Por jugar. Predicho`),
+    ).toBeOnTheScreen();
+    expect(screen.getAllByText('Predicho')).toHaveLength(1);
+    expect(screen.getAllByTestId('icono-check')).toHaveLength(1);
+    expect(await fila(/^Chivas contra América, .*\. Por jugar$/)).toBeOnTheScreen();
+  });
+
   it('tocar un partido abre su detalle (S03)', async () => {
     await abrir('/partidos');
 
     await fireEvent.press(await fila(/Chivas/));
 
-    expect(await screen.findByText('partidoId: 103')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Puebla 1, Santos 0' })).toBeOnTheScreen();
+    expect(obtenerPartido).toHaveBeenCalledWith(103);
   });
 });
 

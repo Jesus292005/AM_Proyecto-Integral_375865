@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Pressable, View } from 'react-native';
 
-import { Texto } from '../componentes';
+import { Icono, Texto } from '../componentes';
 import { formatearHora } from '../formato/fechas';
 import { useTema } from '../tema';
 import type { EquipoDePartido, EstadoPartido, PartidoDeLista } from './datos';
@@ -61,9 +61,14 @@ export function FilaPartido({ partido, onPress }: Props) {
       ? `${goles_local} - ${goles_visitante}`
       : null;
   const hora = formatearHora(new Date(partido.inicio));
-  const descripcion = marcador
-    ? `${local.nombre_corto} ${goles_local}, ${visitante.nombre_corto} ${goles_visitante}. ${estado}`
-    : `${local.nombre_corto} contra ${visitante.nombre_corto}, ${hora}. ${estado}`;
+  const descripcion = [
+    marcador
+      ? `${local.nombre_corto} ${goles_local}, ${visitante.nombre_corto} ${goles_visitante}. ${estado}`
+      : `${local.nombre_corto} contra ${visitante.nombre_corto}, ${hora}. ${estado}`,
+    partido.predicho && 'Predicho',
+  ]
+    .filter(Boolean)
+    .join('. ');
 
   return (
     <Pressable
@@ -91,7 +96,15 @@ export function FilaPartido({ partido, onPress }: Props) {
         <Texto variante="meta" color="textoTenue">
           {estado}
         </Texto>
-        {/* Aquí entra el indicador "ya predije" (F03) y los puntos del partido (F10). */}
+        {/* Ícono + texto, no solo color (U5). Aquí entran los puntos del partido (F10). */}
+        {partido.predicho && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.xxs }}>
+            <Icono nombre="check" color="acento" />
+            <Texto variante="meta" color="acento">
+              Predicho
+            </Texto>
+          </View>
+        )}
       </View>
       <Equipo equipo={visitante} lado="visitante" />
     </Pressable>

@@ -1,7 +1,15 @@
 import { supabase } from '../supabase/cliente';
 import { ErrorDatos, obtenerPartidosDeJornada, obtenerTorneoActual } from './datos';
 
-jest.mock('../supabase/cliente', () => ({ supabase: { from: jest.fn(), rpc: jest.fn() } }));
+jest.mock('../supabase/cliente', () => ({
+  supabase: {
+    from: jest.fn(),
+    rpc: jest.fn(),
+    auth: {
+      getSession: jest.fn(async () => ({ data: { session: { user: { id: 'usuario-1' } } } })),
+    },
+  },
+}));
 
 type Respuesta = { data: unknown; error: { message: string } | null; status: number };
 
@@ -29,14 +37,34 @@ beforeEach(() => {
 
 describe('obtenerPartidosDeJornada', () => {
   it('pide los partidos de la jornada con sus equipos, por hora', async () => {
-    const partidos = consulta({ data: [{ id: 1 }], error: null, status: 200 });
+    const partidos = consulta({ data: [{ id: 1, mis_predicciones: [] }], error: null, status: 200 });
     desde.mockReturnValue(partidos);
 
-    expect(await obtenerPartidosDeJornada(12)).toEqual([{ id: 1 }]);
+    expect(await obtenerPartidosDeJornada(12)).toEqual([{ id: 1, predicho: false }]);
     expect(desde).toHaveBeenCalledWith('partido');
     expect(partidos.llamadas).toContainEqual(['eq', 'jornada_id', 12]);
     expect(partidos.llamadas).toContainEqual(['order', 'inicio']);
     expect(String(partidos.llamadas[0]?.[1])).toContain('local:equipo!partido_equipo_local_id_fkey');
+  });
+
+  it('F03 CA9: marca "predicho" solo con una predicción propia', async () => {
+    const partidos = consulta({
+      data: [
+        { id: 1, mis_predicciones: [{ id: 7 }] },
+        { id: 2, mis_predicciones: [] },
+      ],
+      error: null,
+      status: 200,
+    });
+    desde.mockReturnValue(partidos);
+
+    expect(await obtenerPartidosDeJornada(12)).toEqual([
+      { id: 1, predicho: true },
+      { id: 2, predicho: false },
+    ]);
+    // Solo las mías aunque en M4 el servidor entregue las de mis grupos (R04).
+    expect(partidos.llamadas).toContainEqual(['eq', 'mis_predicciones.usuario_id', 'usuario-1']);
+    expect(String(partidos.llamadas[0]?.[1])).toContain('mis_predicciones:prediccion(id)');
   });
 
   it('sin red (status 0) lanza un error de "sin conexión"', async () => {

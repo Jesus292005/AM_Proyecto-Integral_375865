@@ -1,26 +1,15 @@
+import { comoErrorDatos } from '../datos/errores';
+import { idUsuarioActual } from '../datos/sesionActual';
 import { supabase } from '../supabase/cliente';
 import type { Database } from '../supabase/tipos-db';
 
 // Lecturas de S02. La app solo lee de Supabase (F02 B-R1); los datos de fútbol son de solo lectura
 // para el usuario (B-R2) y la jornada actual la decide el servidor (`jornada_actual`, Q4, D52).
 
+export { ErrorDatos } from '../datos/errores';
+
 export type EstadoPartido = Database['public']['Enums']['estado_partido'];
 
-/** Error de una lectura; `sinConexion` distingue la falta de red de una falla del servidor. */
-export class ErrorDatos extends Error {
-  constructor(
-    mensaje: string,
-    readonly sinConexion: boolean,
-  ) {
-    super(mensaje);
-    this.name = 'ErrorDatos';
-  }
-}
-
-// Sin red, supabase-js no lanza: devuelve el error con `status` 0.
-function comoErrorDatos(error: { message: string }, status: number): ErrorDatos {
-  return new ErrorDatos(error.message, status === 0);
-}
 
 export type JornadaDeLista = { id: number; orden: number; nombre: string };
 
@@ -62,20 +51,27 @@ export type PartidoDeLista = {
   goles_visitante: number | null;
   local: EquipoDePartido;
   visitante: EquipoDePartido;
+  /** Tengo una predicción en este partido (F03 CA9). */
+  predicho: boolean;
 };
 
 // Un solo literal: supabase-js deduce el tipo del resultado a partir de este texto.
 const COLUMNAS_PARTIDO =
-  'id, inicio, estado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url)';
+  'id, inicio, estado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url), mis_predicciones:prediccion(id)';
 
 /** Partidos de una jornada con sus dos equipos, por hora de inicio. */
 export async function obtenerPartidosDeJornada(jornadaId: number): Promise<PartidoDeLista[]> {
+  const usuarioId = await idUsuarioActual();
   const { data, error, status } = await supabase
     .from('partido')
     .select(COLUMNAS_PARTIDO)
     .eq('jornada_id', jornadaId)
+    .eq('mis_predicciones.usuario_id', usuarioId)
     .order('inicio')
     .order('id');
   if (error) throw comoErrorDatos(error, status);
-  return data;
+  return data.map(({ mis_predicciones, ...partido }) => ({
+    ...partido,
+    predicho: mis_predicciones.length > 0,
+  }));
 }
