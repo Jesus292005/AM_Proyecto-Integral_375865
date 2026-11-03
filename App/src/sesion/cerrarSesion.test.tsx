@@ -19,6 +19,7 @@ import {
 } from '../pruebas/supabaseFalso';
 
 jest.mock('../supabase/cliente');
+jest.mock('../partido/datos');
 
 // S01 se reconoce por su botón principal.
 const S01 = 'Continuar con Google';
@@ -141,12 +142,15 @@ it('el siguiente inicio de sesión va a Inicio, no a Perfil', async () => {
   expect(screen.queryByText('S09')).not.toBeOnTheScreen();
 });
 
+// S03 se reconoce por el encabezado del partido que simula `partido/__mocks__/datos`.
+const S03 = 'Puebla 1, Santos 0';
+
 it('olvida la ruta pedida antes de iniciar sesión (CA8) al cerrar sesión', async () => {
   simularSinSesion();
   await abrir('/partido/7');
   await screen.findByText(S01);
   await iniciarSesion();
-  await screen.findByText('S03');
+  await screen.findByRole('header', { name: S03 });
 
   await fireEvent.press(screen.getByRole('tab', { name: 'Perfil' }));
   await screen.findByRole('button', { name: CERRAR });
@@ -155,7 +159,7 @@ it('olvida la ruta pedida antes de iniciar sesión (CA8) al cerrar sesión', asy
   await iniciarSesion();
 
   expect(await screen.findByText('S11')).toBeOnTheScreen();
-  expect(screen.queryByText('S03')).not.toBeOnTheScreen();
+  expect(screen.queryByRole('header', { name: S03 })).not.toBeOnTheScreen();
 });
 
 it('si la sesión termina sola (no por cerrar sesión) se sigue conservando la ruta (F01 §6.2)', async () => {

@@ -131,6 +131,9 @@ export const medidas = {
   altoBoton: 54,
   // Escudo de equipo en listas (S02).
   escudoLista: 28,
+  // Íconos de trazo (05-ui §7).
+  icono: 16,
+  trazoIcono: 2,
   // Tamaño de letra del sistema respetado hasta 1.3× (05-ui §3, accesibilidad).
   escalaTextoMaxima: 1.3,
   // Teko deja los números altos en su caja (ascendente 958, descendente 475, mayúsculas 642 por

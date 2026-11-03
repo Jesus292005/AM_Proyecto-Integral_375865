@@ -7,7 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AvisoSinConexion, Esqueleto, EstadoPantalla, Texto } from '../componentes';
 import { useTema } from '../tema';
 import { agruparPorDia, elegirJornada } from './agruparPorDia';
-import { ErrorDatos, obtenerPartidosDeJornada, obtenerTorneoActual } from './datos';
+import { esSinConexion } from '../datos/errores';
+import { obtenerPartidosDeJornada, obtenerTorneoActual } from './datos';
 import { FilaPartido } from './FilaPartido';
 import { SelectorJornada } from './SelectorJornada';
 
@@ -18,10 +19,6 @@ const mensajes = {
   sinConexion: 'Sin conexión. Revisa tu internet e inténtalo de nuevo.',
   error: 'No pudimos cargar los partidos. Inténtalo de nuevo.',
 } as const;
-
-function esSinConexion(error: unknown): boolean {
-  return error instanceof ErrorDatos && error.sinConexion;
-}
 
 function EsqueletoPartidos() {
   const { colores, espacio, medidas } = useTema();

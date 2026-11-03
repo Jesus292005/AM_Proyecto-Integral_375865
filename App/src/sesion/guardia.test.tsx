@@ -3,6 +3,7 @@ import { act, render, screen, waitFor } from '@testing-library/react-native';
 import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 
+import { obtenerPartido } from '../partido/datos';
 import {
   emitirEventoSesion,
   sesionDePrueba,
@@ -13,6 +14,7 @@ import {
 } from '../pruebas/supabaseFalso';
 
 jest.mock('../supabase/cliente');
+jest.mock('../partido/datos');
 // S02 ya es real (T26): sus lecturas se simulan.
 jest.mock('../partidos/datos', () => ({
   ...jest.requireActual<typeof import('../partidos/datos')>('../partidos/datos'),
@@ -58,8 +60,8 @@ describe('sin sesión', () => {
 
     await iniciarSesion();
 
-    expect(await screen.findByText('S03')).toBeOnTheScreen();
-    expect(screen.getByText('partidoId: 7')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Puebla 1, Santos 0' })).toBeOnTheScreen();
+    expect(obtenerPartido).toHaveBeenCalledWith(7);
     // Entrada externa: el detalle se abre en la pestaña Inicio (D76).
     expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
   });

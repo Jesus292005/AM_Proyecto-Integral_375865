@@ -6,9 +6,12 @@ import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 
 import { clienteConsultas } from './datos/clienteConsultas';
+import { obtenerPartido } from './partido/datos';
 import { simularSesionGuardada } from './pruebas/supabaseFalso';
 
 jest.mock('./supabase/cliente');
+// S03 ya es real (T34): por defecto muestra un partido terminado.
+jest.mock('./partido/datos');
 // S02 ya es real (T26): sus lecturas se simulan con una jornada de un partido.
 jest.mock('./partidos/datos', () => ({
   ...jest.requireActual<typeof import('./partidos/datos')>('./partidos/datos'),
@@ -29,11 +32,14 @@ jest.mock('./partidos/datos', () => ({
       goles_visitante: 0,
       local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png' },
       visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png' },
+      predicho: false,
     },
   ]),
 }));
 
 const PARTIDO_S02 = 'Puebla 1, Santos 0. Terminado';
+// S03 se reconoce por el encabezado del partido.
+const S03 = 'Puebla 1, Santos 0';
 
 beforeEach(() => {
   simularSesionGuardada();
@@ -59,6 +65,12 @@ async function seCerro(id: string) {
   await waitFor(() => expect(screen.queryByText(id)).not.toBeOnTheScreen());
 }
 
+const abrioS03 = () => screen.findByRole('header', { name: S03 });
+
+async function seCerroS03() {
+  await waitFor(() => expect(screen.queryByRole('header', { name: S03 })).not.toBeOnTheScreen());
+}
+
 // Las pantallas apiladas siguen montadas (ocultas para accesibilidad): una copia de más cuenta.
 function contar(id: string) {
   return screen.queryAllByText(id, { includeHiddenElements: true }).length;
@@ -67,7 +79,6 @@ function contar(id: string) {
 const rutas = [
   { url: '/inicio', id: 'S11', titulo: 'Inicio' },
   { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
-  { url: '/partido/7', id: 'S03', titulo: 'Partido' },
   { url: '/grupos', id: 'S04', titulo: 'Grupos' },
   { url: '/grupos/nuevo', id: 'S05', titulo: 'Crear grupo' },
   { url: '/grupos/unirse', id: 'S06', titulo: 'Unirse a grupo' },
@@ -84,6 +95,13 @@ describe('rutas', () => {
 
     expect(await screen.findByRole('header', { name: titulo })).toBeOnTheScreen();
     expect(screen.getByText(id)).toBeOnTheScreen();
+  });
+
+  it('/partido/7 abre S03 del partido 7', async () => {
+    await abrir('/partido/7');
+
+    expect(await abrioS03()).toBeOnTheScreen();
+    expect(obtenerPartido).toHaveBeenCalledWith(7);
   });
 
   it('/partidos abre S02 en la jornada actual', async () => {
@@ -139,11 +157,11 @@ describe('menú inferior', () => {
     await abrir('/inicio');
 
     await tocar('Partido 1');
-    expect(await screen.findByText('S03')).toBeOnTheScreen();
+    expect(await abrioS03()).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
 
     await tocar('Volver');
-    await seCerro('S03');
+    await seCerroS03();
     expect(screen.getByText('S11')).toBeOnTheScreen();
   });
 
@@ -151,10 +169,10 @@ describe('menú inferior', () => {
     await abrir('/partidos');
 
     await tocar(PARTIDO_S02);
-    expect(await screen.findByText('S03')).toBeOnTheScreen();
+    expect(await abrioS03()).toBeOnTheScreen();
 
     await tocar('Partidos', 'tab');
-    await seCerro('S03');
+    await seCerroS03();
     expect(screen.getByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
   });
 
@@ -162,13 +180,13 @@ describe('menú inferior', () => {
     await abrir('/partidos');
 
     await tocar(PARTIDO_S02);
-    expect(await screen.findByText('S03')).toBeOnTheScreen();
+    expect(await abrioS03()).toBeOnTheScreen();
 
     await tocar('Grupos', 'tab');
     expect(await screen.findByText('S04')).toBeOnTheScreen();
 
     await tocar('Partidos', 'tab');
-    expect(await screen.findByText('S03')).toBeOnTheScreen();
+    expect(await abrioS03()).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Partidos' })).toBeSelected();
   });
 
@@ -178,10 +196,10 @@ describe('menú inferior', () => {
     // Toques rápidos sobre el mismo botón, antes de que la pantalla nueva lo tape.
     const enlace = await screen.findByRole('button', { name: 'Partido 1' });
     for (let i = 0; i < 3; i++) await fireEvent.press(enlace);
-    expect(await screen.findByText('S03')).toBeOnTheScreen();
+    expect(await abrioS03()).toBeOnTheScreen();
 
     await tocar('Volver');
-    await seCerro('S03');
+    await seCerroS03();
     expect(screen.getByText('S11')).toBeOnTheScreen();
   });
 
