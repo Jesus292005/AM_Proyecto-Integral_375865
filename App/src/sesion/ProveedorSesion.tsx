@@ -13,6 +13,7 @@ import {
 } from 'react';
 
 import { clienteConsultas } from '../datos/clienteConsultas';
+import { olvidarDispositivo } from '../notificaciones/registro';
 import { supabase } from '../supabase/cliente';
 import { configurarGoogle } from './iniciarSesionGoogle';
 
@@ -97,6 +98,14 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
    * dentro), luego la de Google, y vacía la caché de datos (CA4).
    */
   const cerrarSesion = useCallback(async (): Promise<ResultadoCierreSesion> => {
+    // F11a R3: el token de este teléfono deja de ser del usuario que sale (con la sesión aún viva).
+    // Si falla, se cierra igual; el siguiente usuario que inicie sesión aquí se lo queda.
+    try {
+      await olvidarDispositivo();
+    } catch (e) {
+      registrar('No se borró el token de notificaciones', e);
+    }
+
     cierre.current = 'enCurso';
     let error: unknown = null;
     try {

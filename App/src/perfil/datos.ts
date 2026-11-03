@@ -16,3 +16,24 @@ export async function obtenerMiRol(): Promise<Rol> {
   if (error) throw comoErrorDatos(error, status);
   return data.rol;
 }
+
+/** Si quiero recordatorios antes del cierre (F11a R4, `Usuario.recordatoriosActivos`). */
+export async function obtenerRecordatoriosActivos(): Promise<boolean> {
+  const usuarioId = await idUsuarioActual();
+  const { data, error, status } = await supabase
+    .from('usuario')
+    .select('recordatorios_activos')
+    .eq('id', usuarioId)
+    .single();
+  if (error) throw comoErrorDatos(error, status);
+  return data.recordatorios_activos;
+}
+
+export async function guardarRecordatoriosActivos(activos: boolean): Promise<void> {
+  const usuarioId = await idUsuarioActual();
+  const { error, status } = await supabase
+    .from('usuario')
+    .update({ recordatorios_activos: activos })
+    .eq('id', usuarioId);
+  if (error) throw comoErrorDatos(error, status);
+}

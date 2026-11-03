@@ -1,6 +1,6 @@
 // S03 (T34): formulario de predicción (F03 CA7, CA8), quitar, cierre y estados de pantalla.
 // Corre la app completa con una sesión guardada; las lecturas y escrituras se simulan.
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 import { Alert, type AlertButton } from 'react-native';
@@ -16,6 +16,7 @@ import {
   quitarPrediccion,
   type PartidoDetalle,
 } from './datos';
+import { guardarAhoraNo, leerAhoraNo, leerPermiso, pedirPermiso } from '../notificaciones/sistema';
 import type { Prediccion } from './eleccion';
 
 jest.mock('../supabase/cliente');
@@ -383,6 +384,62 @@ describe('justificación (F04)', () => {
 
     expect(await screen.findByText('Gana América')).toBeOnTheScreen();
     expect(screen.queryByText('Tu análisis')).not.toBeOnTheScreen();
+  });
+});
+
+describe('permiso de notificaciones (F11a R1)', () => {
+  const PREGUNTA = '¿Te avisamos 1 h antes de que cierren los partidos que no has predicho?';
+
+  beforeEach(() => {
+    (leerPermiso as jest.Mock).mockResolvedValue('sinPreguntar');
+    (leerAhoraNo as jest.Mock).mockResolvedValue(false);
+    (pedirPermiso as jest.Mock).mockClear();
+    (guardarAhoraNo as jest.Mock).mockClear();
+  });
+
+  async function guardarPrediccion() {
+    await abrirFormulario();
+    expect(screen.queryByText(PREGUNTA)).not.toBeOnTheScreen();
+    await tocar(opcion('Empate'));
+    await tocar(boton('Guardar predicción'));
+  }
+
+  it('F11a CA5: tras guardar, explica y "Sí, avísame" pide el permiso del sistema', async () => {
+    await guardarPrediccion();
+
+    expect(await screen.findByText(PREGUNTA)).toBeOnTheScreen();
+    await tocar(boton('Sí, avísame'));
+
+    expect(pedirPermiso).toHaveBeenCalled();
+    expect(screen.queryByText(PREGUNTA)).not.toBeOnTheScreen();
+  });
+
+  it('F11a CA5: "Ahora no" guarda la marca y no pide el permiso', async () => {
+    await guardarPrediccion();
+
+    await tocar(await screen.findByRole('button', { name: 'Ahora no' }));
+
+    expect(guardarAhoraNo).toHaveBeenCalled();
+    expect(pedirPermiso).not.toHaveBeenCalled();
+    expect(screen.queryByText(PREGUNTA)).not.toBeOnTheScreen();
+  });
+
+  it('F11a CA5: con "Ahora no" guardado no pregunta', async () => {
+    (leerAhoraNo as jest.Mock).mockClear().mockResolvedValue(true);
+    await guardarPrediccion();
+    // Espera a que la app termine de decidir antes de comprobar que no preguntó.
+    await waitFor(() => expect(leerAhoraNo).toHaveBeenCalled());
+    await act(async () => {});
+    expect(screen.queryByText(PREGUNTA)).not.toBeOnTheScreen();
+  });
+
+  it('F11a CA5: con el permiso ya concedido no pregunta', async () => {
+    (leerPermiso as jest.Mock).mockClear().mockResolvedValue('concedido');
+    await guardarPrediccion();
+    // Una vez al abrir (registro del teléfono) y otra al decidir si pregunta.
+    await waitFor(() => expect((leerPermiso as jest.Mock).mock.calls.length).toBeGreaterThan(1));
+    await act(async () => {});
+    expect(screen.queryByText(PREGUNTA)).not.toBeOnTheScreen();
   });
 });
 

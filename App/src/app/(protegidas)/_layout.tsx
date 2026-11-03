@@ -2,6 +2,7 @@ import { Redirect, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 
 import { useOpcionesPila } from '../../navegacion/opcionesPila';
+import { registrarDispositivo } from '../../notificaciones/registro';
 import { useRutaActual } from '../../sesion/rutaActual';
 import { useSesion } from '../../sesion/ProveedorSesion';
 
@@ -23,6 +24,16 @@ function IrAInicioSesion({ guardarRuta }: { guardarRuta: boolean }) {
 export default function LayoutProtegidas() {
   const { estado } = useSesion();
   const opciones = useOpcionesPila();
+  const conSesion = estado.tipo === 'conSesion';
+
+  // F11a R2: con permiso, el token se registra en cada inicio con sesión (puede cambiar). Si falla,
+  // no se avisa al usuario: se reintenta en el siguiente inicio.
+  useEffect(() => {
+    if (!conSesion) return;
+    registrarDispositivo().catch((error: unknown) =>
+      console.warn('[notificaciones] No se registró el dispositivo', error),
+    );
+  }, [conSesion]);
 
   // Mientras se lee la sesión guardada sigue visible la pantalla de carga.
   if (estado.tipo === 'cargando') return null;

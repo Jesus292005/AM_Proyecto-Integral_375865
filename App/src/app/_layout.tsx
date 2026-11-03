@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { clienteConsultas } from '../datos/clienteConsultas';
 import { useOpcionesPila } from '../navegacion/opcionesPila';
 import { temaNavegacion } from '../navegacion/temaNavegacion';
+import { ManejadorNotificaciones } from '../notificaciones/ManejadorNotificaciones';
 import { ProveedorSesion, useSesion } from '../sesion/ProveedorSesion';
 import { ProveedorTema, useFuentesApp, useTema } from '../tema';
 import { temaGrafito } from '../tema/tokens';
@@ -47,6 +48,8 @@ function Contenido() {
     <>
       <StatusBar style="light" />
       <Pila />
+      {/* Después de saber si hay sesión: una notificación tocada navega cuando la pila ya existe. */}
+      {listo && <ManejadorNotificaciones />}
     </>
   );
 }

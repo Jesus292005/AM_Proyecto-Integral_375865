@@ -32,6 +32,11 @@ type RespuestaCierre = { borraSesion: boolean; error: AuthError | null };
 let respuestaCierre: () => RespuestaCierre = () => ({ borraSesion: true, error: null });
 
 export const supabaseFalso = {
+  // Solo lo de las notificaciones (F11a): registrar el token al abrir y borrarlo al cerrar sesión.
+  rpc: jest.fn(async (_funcion: string, _argumentos: object) => ({ data: null, error: null })),
+  from: jest.fn((_tabla: string) => ({
+    delete: () => ({ eq: async (_columna: string, _valor: string) => ({ error: null }) }),
+  })),
   auth: {
     getSession: async () => {
       const { session, error } = await inicial;

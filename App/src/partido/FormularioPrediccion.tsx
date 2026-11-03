@@ -12,6 +12,8 @@ import {
   Texto,
 } from '../componentes';
 import { formatearHora } from '../formato/fechas';
+import { aceptarRecordatorios, debePreguntar } from '../notificaciones/registro';
+import { guardarAhoraNo } from '../notificaciones/sistema';
 import { useTema } from '../tema';
 import {
   ErrorPrediccionesCerradas,
@@ -36,6 +38,8 @@ import {
 const mensajes = {
   errorGuardar: 'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.',
   errorQuitar: 'No se pudo quitar. Revisa tu conexión e inténtalo de nuevo.',
+  // F11a R1.
+  preguntaRecordatorios: '¿Te avisamos 1 h antes de que cierren los partidos que no has predicho?',
   // F04 R5: sin puntos.
   ayudaAnalisis: 'Opcional. Si tu análisis se parece a lo que pase, ganas bono aunque falles.',
 } as const;
@@ -69,10 +73,12 @@ interface Props {
 
 /** Formulario de S03 antes del cierre (F03 Flujo 2–5). */
 export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
-  const { espacio } = useTema();
+  const { colores, espacio, medidas } = useTema();
   const clienteConsultas = useQueryClient();
   const [formulario, setFormulario] = useState<Formulario>(() => formularioInicial(guardada));
   const [falla, setFalla] = useState<string | null>(null);
+  // F11a R1: la explicación previa al permiso, solo después de guardar.
+  const [preguntar, setPreguntar] = useState(false);
 
   const alGuardarse = (nueva: Prediccion | null) => {
     clienteConsultas.setQueryData(clavesPrediccion.mia(partido.id), nueva);
@@ -86,7 +92,12 @@ export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
 
   const guardar = useMutation({
     mutationFn: (eleccion: EleccionPrediccion) => guardarPrediccion(partido.id, eleccion),
-    onSuccess: alGuardarse,
+    onSuccess: (nueva) => {
+      alGuardarse(nueva);
+      debePreguntar()
+        .then(setPreguntar)
+        .catch((error: unknown) => console.warn('[notificaciones] No se leyó el permiso', error));
+    },
     onError: alFallar(mensajes.errorGuardar),
   });
   const quitar = useMutation({
@@ -198,6 +209,36 @@ export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
           <Texto variante="meta" color="textoTenue" accessibilityLiveRegion="polite">
             {`Predicción guardada · ${formatearHora(new Date(guardar.data.actualizada_en))}`}
           </Texto>
+        )}
+        {preguntar && (
+          <View
+            accessibilityRole="alert"
+            style={{
+              gap: espacio.s,
+              padding: espacio.m,
+              borderRadius: medidas.radio,
+              backgroundColor: colores.superficie,
+            }}
+          >
+            <Texto variante="cuerpo">{mensajes.preguntaRecordatorios}</Texto>
+            <Boton
+              titulo="Sí, avísame"
+              onPress={() => {
+                setPreguntar(false);
+                aceptarRecordatorios().catch((error: unknown) =>
+                  console.warn('[notificaciones] No se activaron los recordatorios', error),
+                );
+              }}
+            />
+            <Boton
+              titulo="Ahora no"
+              variante="secundario"
+              onPress={() => {
+                setPreguntar(false);
+                void guardarAhoraNo();
+              }}
+            />
+          </View>
         )}
         {guardada && (
           <Boton

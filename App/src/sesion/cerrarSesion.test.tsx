@@ -5,6 +5,7 @@ import { getMockContext } from 'expo-router/testing-library';
 import { Alert, type AlertButton } from 'react-native';
 
 import { clienteConsultas } from '../datos/clienteConsultas';
+import { leerTokenGuardado } from '../notificaciones/sistema';
 import { GoogleSignin, reiniciarGoogle } from '../pruebas/googleFalso';
 import {
   emitirEventoSesion,
@@ -83,6 +84,20 @@ async function cerrarSesion() {
 async function iniciarSesion() {
   await act(async () => emitirEventoSesion('SIGNED_IN', sesionDePrueba));
 }
+
+it('F11a CA6: cerrar sesión borra el token de este teléfono antes de cerrar la sesión', async () => {
+  (leerTokenGuardado as jest.Mock).mockResolvedValueOnce('ExponentPushToken[prueba]');
+  supabaseFalso.from.mockClear();
+  await abrirPerfil();
+
+  await cerrarSesion();
+
+  expect(await screen.findByText(S01)).toBeOnTheScreen();
+  expect(supabaseFalso.from).toHaveBeenCalledWith('dispositivo');
+  const borrado = supabaseFalso.from.mock.invocationCallOrder[0] ?? Infinity;
+  const cierre = supabaseFalso.auth.signOut.mock.invocationCallOrder.at(-1) ?? 0;
+  expect(borrado).toBeLessThan(cierre);
+});
 
 it('S09 tiene "Cerrar sesión" y pide confirmación antes de cerrar', async () => {
   await abrirPerfil();
