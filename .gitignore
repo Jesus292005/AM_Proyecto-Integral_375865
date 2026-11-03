@@ -12,6 +12,7 @@ supabase/.branches/
 
 # Claude Code (copias de trabajo locales)
 .claude/worktrees/
+.claude/settings.local.json
 
 # Sistema operativo
 .DS_Store
