@@ -512,6 +512,12 @@ export type Database = {
           proveedor_id: number
         }[]
       }
+      simulacion_crear: {
+        Args: { minutos?: number; origen: number }
+        Returns: number
+      }
+      simulacion_iniciar: { Args: { partido: number }; Returns: undefined }
+      simulacion_terminar: { Args: { partido: number }; Returns: undefined }
     }
     Enums: {
       estado_partido:
