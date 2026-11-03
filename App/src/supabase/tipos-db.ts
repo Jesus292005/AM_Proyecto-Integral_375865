@@ -292,6 +292,67 @@ export type Database = {
           },
         ]
       }
+      prediccion: {
+        Row: {
+          actualizada_en: string
+          creada_en: string
+          id: number
+          justificacion: string | null
+          marcador_local: number | null
+          marcador_visitante: number | null
+          partido_id: number
+          rango_goles: Database["public"]["Enums"]["rango_goles"] | null
+          resultado: Database["public"]["Enums"]["resultado_prediccion"] | null
+          usuario_id: string
+        }
+        Insert: {
+          actualizada_en?: string
+          creada_en?: string
+          id?: never
+          justificacion?: string | null
+          marcador_local?: number | null
+          marcador_visitante?: number | null
+          partido_id: number
+          rango_goles?: Database["public"]["Enums"]["rango_goles"] | null
+          resultado?: Database["public"]["Enums"]["resultado_prediccion"] | null
+          usuario_id?: string
+        }
+        Update: {
+          actualizada_en?: string
+          creada_en?: string
+          id?: never
+          justificacion?: string | null
+          marcador_local?: number | null
+          marcador_visitante?: number | null
+          partido_id?: number
+          rango_goles?: Database["public"]["Enums"]["rango_goles"] | null
+          resultado?: Database["public"]["Enums"]["resultado_prediccion"] | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sincronizacion: {
         Row: {
           consultas_usadas: number
@@ -465,6 +526,8 @@ export type Database = {
         | "ERROR"
         | "DETENIDA_POR_TOPE"
       fase_jornada: "REGULAR" | "LIGUILLA"
+      rango_goles: "G0_1" | "G2" | "G3" | "G4_MAS"
+      resultado_prediccion: "LOCAL" | "EMPATE" | "VISITANTE"
       rol_usuario: "USUARIO" | "ADMIN"
       tipo_evento: "GOL" | "TARJETA" | "CAMBIO" | "VAR"
       tipo_sincronizacion:
@@ -613,6 +676,8 @@ export const Constants = {
         "DETENIDA_POR_TOPE",
       ],
       fase_jornada: ["REGULAR", "LIGUILLA"],
+      rango_goles: ["G0_1", "G2", "G3", "G4_MAS"],
+      resultado_prediccion: ["LOCAL", "EMPATE", "VISITANTE"],
       rol_usuario: ["USUARIO", "ADMIN"],
       tipo_evento: ["GOL", "TARJETA", "CAMBIO", "VAR"],
       tipo_sincronizacion: [
