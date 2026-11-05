@@ -403,6 +403,10 @@ verify_jwt = false
 [functions.recordatorios]
 verify_jwt = false
 
+# F05 (T52): la invoca la tarea programada de `pg_cron` cada minuto (solo si hay partidos por calificar).
+[functions.calificar]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
