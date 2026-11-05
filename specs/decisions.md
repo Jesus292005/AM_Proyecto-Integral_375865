@@ -1,7 +1,7 @@
 # Registro de decisiones
 
 > Regla: una decisión **cerrada** no se vuelve a discutir salvo que aparezca información nueva; si cambia, se agrega una nueva fila que la reemplaza (no se borra la anterior).
-> Última actualización: 2026-11-02
+> Última actualización: 2026-11-05
 
 ## Decisiones cerradas
 
@@ -100,6 +100,7 @@
 | D91 | 2026-11-02 | **Tope de descarga: 35 MB** (= 35,000,000 bytes) desde Google Play en `arm64-v8a`; reemplaza el tope de D79 (el método de medición no cambia). | Medición 2 (T32): 32.79 MB con todas las librerías nativas del MVP (Google Sign-In, almacenamiento seguro, `expo-image`, notificaciones, cámara, SVG/QR); el margen de D79 no alcanzó. Se descartó activar R8 por ahorro incierto (el peso son las `.so` y Hermes) y riesgo de romper el inicio de sesión. |
 | D92 | 2026-11-02 | **P4 forzado en M2 con el plan gratis:** ~10 partidos de 2024 (~20 consultas) para tener orígenes de simulación (F09 R2, T39), sin esperar al plan Pro que preveía D85. | Sin orígenes, F03, F04 y F09 no se validan en el teléfono hasta S7; el gasto cabe en el tope diario. |
 | D93 | 2026-11-02 | **M2 Predecir terminado:** F03 (predicción), F04 (justificación), F09 (simulación) y F11a (recordatorios) cumplen todos sus criterios de aceptación, sus pruebas automatizadas pasan y Jesús las aprobó en su teléfono. S5 cerrada (T45). | Definición de "terminado" de 01-mvp §3. Guion del módulo validado por Jesús el 2026-11-02 con la build de T32 (`4d8d0853`): F03 CA10–CA12, F04 CA7, F09 CA9–CA10 y F11a CA8–CA9. |
+| D94 | 2026-11-05 | **Specs de M3 aprobadas** (F05, F06, F10, F11b v1.0) y **tareas de S6** (`tasks/S6.md` v1.0, T46–T62). Decisiones: (1) rúbrica del bono: la IA solo da veredictos con evidencia y el **servidor calcula** Precisión 70 + Alcance 30; lo que repite la predicción no cuenta; (2) modelo **Claude Haiku 5.5** con esfuerzo `low` (reemplaza esa parte de D51; 04-tech-stack v1.4), comparado con Haiku 4.5 en T48 y confirmado por Jesús en T49; (3) el aviso de puntos **no** depende del ajuste "Recordatorios", con su propio canal de Android. Incluye los permisos declarados en F05 R10, F06 R15, F10 R9 y F11b R8, y el tope de costo de F06 R10 (5 USD al mes). | Aprobación de Jesús (opción A en las 3). Haiku 4.5 sigue disponible a 1 / 5 USD por millón de tokens; Haiku 5.5 cuesta 0.10 / 0.50 USD (~5 veces menos por evaluación). |
 
 ## Pendientes
 

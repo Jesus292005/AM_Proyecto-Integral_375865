@@ -1,7 +1,7 @@
 # 04 — Herramientas (fase de Diseño)
 
-> **Estado:** ✅ Aprobado v1.3 (2026-11-02; medición 2 y tope de 35 MB, D91) · v1.2 (2026-10-19; medición de tamaño y tope de D79)
-> **Última actualización:** 2026-11-02
+> **Estado:** ✅ Aprobado v1.4 (2026-11-05; modelo de IA Claude Haiku 5.5, D94) · v1.3 (2026-11-02; medición 2 y tope de 35 MB, D91) · v1.2 (2026-10-19; medición de tamaño y tope de D79)
+> **Última actualización:** 2026-11-05
 > Base: specs 00–03 y `decisions.md`. Las herramientas se eligen por los requisitos ya definidos, no al revés.
 
 ---
@@ -56,8 +56,8 @@
 | | Propuesta |
 |---|---|
 | Proveedor | Anthropic (ya hay clave, solo en el servidor). |
-| Modelo | **Claude Haiku 4.5** (1 USD / 5 USD por millón de tokens de entrada / salida). Una evaluación (~2,000 tokens de entrada y ~500 de salida) cuesta ≈ 0.005 USD (≈ 8 centavos MXN). Si resulta inconsistente en las pruebas, Claude Sonnet 4.6 (~3 veces el costo). Se decide en la spec de F06 con pruebas reales. |
-| Salida | Formato fijo (JSON) validado en el servidor antes de guardar; si no es válido, reintento y luego estado `ERROR` (el bono queda pendiente). |
+| Modelo | **Claude Haiku 5.5** (`claude-haiku-5-5`, 0.10 USD / 0.50 USD por millón de tokens de entrada / salida) con esfuerzo `low` (D94, reemplaza a Haiku 4.5 de D51). Una evaluación (~2,000 tokens de entrada y ~500 de salida, ~30% más con su tokenizador, más el razonamiento) cuesta ≈ 0.001 USD (≈ 2 centavos MXN). Topes en F06 R10. Alternativa probada en T48: Claude Haiku 4.5 (1 / 5 USD, ≈ 0.0045 USD por evaluación). |
+| Salida | Formato fijo (JSON, salidas estructuradas) validado con Zod en el servidor antes de guardar; si no es válido, reintento y, al 3.º fallo, estado `ERROR` sin bono (F06 R6, R8). |
 
 ## 5. Pruebas
 
