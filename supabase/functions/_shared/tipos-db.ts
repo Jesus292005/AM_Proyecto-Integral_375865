@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      calificacion: {
+        Row: {
+          calificada_en: string
+          es_simulada: boolean
+          id: number
+          prediccion_id: number
+          puntos_base: number | null
+          puntos_marcador: number
+          puntos_rango_goles: number
+          puntos_resultado: number
+        }
+        Insert: {
+          calificada_en?: string
+          es_simulada: boolean
+          id?: never
+          prediccion_id: number
+          puntos_base?: never
+          puntos_marcador: number
+          puntos_rango_goles: number
+          puntos_resultado: number
+        }
+        Update: {
+          calificada_en?: string
+          es_simulada?: boolean
+          id?: never
+          prediccion_id?: number
+          puntos_base?: never
+          puntos_marcador?: number
+          puntos_rango_goles?: number
+          puntos_resultado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calificacion_prediccion_id_fkey"
+            columns: ["prediccion_id"]
+            isOneToOne: true
+            referencedRelation: "prediccion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dispositivo: {
         Row: {
           actualizado_en: string
@@ -550,6 +591,27 @@ export type Database = {
           },
         ]
       }
+      valor_puntos: {
+        Row: {
+          id: boolean
+          marcador_exacto: number
+          rango_goles: number
+          resultado: number
+        }
+        Insert: {
+          id?: boolean
+          marcador_exacto: number
+          rango_goles: number
+          resultado: number
+        }
+        Update: {
+          id?: boolean
+          marcador_exacto?: number
+          rango_goles?: number
+          resultado?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       usuario_publico: {
@@ -594,6 +656,14 @@ export type Database = {
           proveedor_id: number
         }[]
       }
+      partidos_por_calificar: {
+        Args: { limite: number }
+        Returns: {
+          goles_local: number
+          goles_visitante: number
+          partido_id: number
+        }[]
+      }
       recordatorios_pendientes: {
         Args: { ahora: string }
         Returns: {
@@ -605,6 +675,10 @@ export type Database = {
           usuario_id: string
           visitante: string
         }[]
+      }
+      registrar_calificaciones: {
+        Args: { calificaciones: Json; id_partido: number }
+        Returns: string
       }
       registrar_dispositivo: { Args: { token: string }; Returns: undefined }
       simulacion_crear: {
