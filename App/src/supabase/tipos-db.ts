@@ -50,6 +50,13 @@ export type Database = {
             foreignKeyName: "calificacion_prediccion_id_fkey"
             columns: ["prediccion_id"]
             isOneToOne: true
+            referencedRelation: "mis_puntos"
+            referencedColumns: ["prediccion_id"]
+          },
+          {
+            foreignKeyName: "calificacion_prediccion_id_fkey"
+            columns: ["prediccion_id"]
+            isOneToOne: true
             referencedRelation: "prediccion"
             referencedColumns: ["id"]
           },
@@ -210,6 +217,13 @@ export type Database = {
           version_prompt?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "evaluacion_ia_prediccion_id_fkey"
+            columns: ["prediccion_id"]
+            isOneToOne: true
+            referencedRelation: "mis_puntos"
+            referencedColumns: ["prediccion_id"]
+          },
           {
             foreignKeyName: "evaluacion_ia_prediccion_id_fkey"
             columns: ["prediccion_id"]
@@ -714,6 +728,31 @@ export type Database = {
       }
     }
     Views: {
+      mis_puntos: {
+        Row: {
+          afirmaciones: Json | null
+          estado_bono: string | null
+          estado_prediccion: string | null
+          explicacion: string | null
+          partido_id: number | null
+          prediccion_id: number | null
+          puntos_base: number | null
+          puntos_bono: number | null
+          puntos_marcador: number | null
+          puntos_rango_goles: number | null
+          puntos_resultado: number | null
+          puntos_total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuario_publico: {
         Row: {
           equipo_favorito_id: number | null
@@ -746,6 +785,22 @@ export type Database = {
     }
     Functions: {
       actualizar_estados_partidos: { Args: { datos: Json }; Returns: number }
+      avisos_puntos_pendientes: {
+        Args: { ahora: string }
+        Returns: {
+          es_simulado: boolean
+          estado_bono: string
+          goles_local: number
+          goles_visitante: number
+          local: string
+          partido_id: number
+          puntos_base: number
+          puntos_bono: number
+          tokens: string[]
+          usuario_id: string
+          visitante: string
+        }[]
+      }
       guardar_carga_inicial: { Args: { carga: Json }; Returns: Json }
       guardar_datos_partido: { Args: { datos: Json }; Returns: Json }
       guardar_evaluacion: {
