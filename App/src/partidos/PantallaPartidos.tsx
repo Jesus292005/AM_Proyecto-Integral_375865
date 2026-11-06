@@ -8,6 +8,7 @@ import { AvisoSinConexion, Esqueleto, EstadoPantalla, Texto } from '../component
 import { useTema } from '../tema';
 import { agruparPorDia, elegirJornada } from './agruparPorDia';
 import { esSinConexion } from '../datos/errores';
+import { obtenerMisPuntos } from '../puntos/datos';
 import { obtenerPartidosDeJornada, obtenerTorneoActual } from './datos';
 import { FilaPartido } from './FilaPartido';
 import { SelectorJornada } from './SelectorJornada';
@@ -70,6 +71,14 @@ export function PantallaPartidos() {
     enabled: elegida !== undefined,
   });
 
+  // F10 R3: mis puntos de los partidos predichos. Si fallan, las filas se ven sin puntos.
+  const predichos = (partidos.data ?? []).filter((p) => p.predicho).map((p) => p.id);
+  const misPuntos = useQuery({
+    queryKey: ['mis-puntos', 'jornada', elegida?.id, predichos.join(',')],
+    queryFn: () => obtenerMisPuntos(predichos),
+    enabled: predichos.length > 0,
+  });
+
   // Cambiar de jornada actualiza esta misma pantalla, sin agregar historial (D78).
   const indice = elegida ? jornadas.indexOf(elegida) : -1;
   const anterior = indice > 0 ? jornadas[indice - 1] : undefined;
@@ -78,7 +87,7 @@ export function PantallaPartidos() {
 
   async function recargar() {
     setRefrescando(true);
-    await Promise.all([torneo.refetch(), partidos.refetch()]);
+    await Promise.all([torneo.refetch(), partidos.refetch(), misPuntos.refetch()]);
     setRefrescando(false);
   }
 
@@ -145,6 +154,7 @@ export function PantallaPartidos() {
         renderItem={({ item }) => (
           <FilaPartido
             partido={item}
+            puntos={misPuntos.data?.get(item.id)}
             onPress={() =>
               router.navigate({
                 pathname: '/partido/[partidoId]',

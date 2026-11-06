@@ -7,6 +7,7 @@ import { getMockContext } from 'expo-router/testing-library';
 import { clienteConsultas } from '../datos/clienteConsultas';
 import { formatearDia, formatearHora } from '../formato/fechas';
 import { obtenerPartido } from '../partido/datos';
+import { obtenerMisPuntos } from '../puntos/datos';
 import { simularSesionGuardada } from '../pruebas/supabaseFalso';
 import {
   ErrorDatos,
@@ -18,6 +19,7 @@ import {
 
 jest.mock('../supabase/cliente');
 jest.mock('../partido/datos');
+jest.mock('../puntos/datos');
 jest.mock('./datos', () => ({
   ...jest.requireActual<typeof import('./datos')>('./datos'),
   obtenerTorneoActual: jest.fn(),
@@ -158,6 +160,47 @@ describe('S02 con datos', () => {
     expect(screen.getAllByText('Predicho')).toHaveLength(1);
     expect(screen.getAllByTestId('icono-check')).toHaveLength(1);
     expect(await fila(/^Chivas contra América, .*\. Por jugar$/)).toBeOnTheScreen();
+  });
+
+  it('F10 CA3: pide mis puntos solo de los predichos y muestra el total en su tarjeta', async () => {
+    const puntosFalsos = obtenerMisPuntos as jest.MockedFunction<typeof obtenerMisPuntos>;
+    puntosFalsos.mockResolvedValue(
+      new Map([
+        [
+          201,
+          {
+            partido_id: 201,
+            estado_prediccion: 'PARCIAL' as const,
+            estado_bono: 'PENDIENTE' as const,
+            puntos_resultado: 100,
+            puntos_rango_goles: 0,
+            puntos_marcador: 0,
+            puntos_base: 100,
+            puntos_bono: null,
+            puntos_total: 100,
+            explicacion: null,
+            afirmaciones: null,
+          },
+        ],
+      ]),
+    );
+    partidosFalsos.mockImplementation(async () => [
+      partido(201, SABADO, 'Puebla', 'Querétaro', {
+        predicho: true,
+        estado: 'TERMINADO',
+        goles_local: 2,
+        goles_visitante: 1,
+      }),
+      partido(202, DOMINGO, 'Chivas', 'América'),
+    ]);
+    await abrir('/partidos');
+
+    expect(
+      await fila('Puebla 2, Querétaro 1. Terminado. Parcial, 100 puntos, bono pendiente'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('+100')).toBeOnTheScreen();
+    expect(puntosFalsos).toHaveBeenCalledWith([201]);
+    puntosFalsos.mockReset().mockResolvedValue(new Map());
   });
 
   it('F09 CA8: muestra "Simulado" solo en los partidos simulados', async () => {

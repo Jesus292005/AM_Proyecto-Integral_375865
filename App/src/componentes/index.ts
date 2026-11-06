@@ -7,6 +7,7 @@ export { EncabezadoPartido, type EstadoEncabezado } from './EncabezadoPartido';
 export { Esqueleto } from './Esqueleto';
 export { EstadoPantalla } from './EstadoPantalla';
 export { Icono } from './Icono';
+export { IndicadorEstado, type EstadoIndicador } from './IndicadorEstado';
 export { Interruptor } from './Interruptor';
 export { MenuInferior, type DestinoMenu } from './MenuInferior';
 export { Opciones } from './Opciones';

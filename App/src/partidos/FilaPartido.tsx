@@ -1,8 +1,10 @@
 import { Image } from 'expo-image';
 import { Pressable, View } from 'react-native';
 
-import { Icono, Texto } from '../componentes';
+import { Texto } from '../componentes';
 import { formatearHora } from '../formato/fechas';
+import type { PuntosPrediccion } from '../puntos/datos';
+import { descripcionEnFila, estadoEnFila, PuntosEnFila } from '../puntos/PuntosEnFila';
 import { useTema } from '../tema';
 import type { EquipoDePartido, EstadoPartido, PartidoDeLista } from './datos';
 
@@ -47,11 +49,13 @@ function Equipo({ equipo, lado }: { equipo: EquipoDePartido; lado: 'local' | 'vi
 
 interface Props {
   partido: PartidoDeLista;
+  /** Mis puntos del partido (F10); sin cargar o sin predicción, `undefined`. */
+  puntos?: PuntosPrediccion;
   onPress: () => void;
 }
 
 /** Un partido de la lista: equipos, hora o marcador de 90 min (Q5) y estado (B4). */
-export function FilaPartido({ partido, onPress }: Props) {
+export function FilaPartido({ partido, puntos, onPress }: Props) {
   const { colores, espacio, medidas } = useTema();
   const { local, visitante, goles_local, goles_visitante } = partido;
   const estado = textoEstado[partido.estado];
@@ -61,12 +65,13 @@ export function FilaPartido({ partido, onPress }: Props) {
       ? `${goles_local} - ${goles_visitante}`
       : null;
   const hora = formatearHora(new Date(partido.inicio));
+  const mio = estadoEnFila(partido.estado, partido.predicho, puntos);
   const descripcion = [
     marcador
       ? `${local.nombre_corto} ${goles_local}, ${visitante.nombre_corto} ${goles_visitante}. ${estado}`
       : `${local.nombre_corto} contra ${visitante.nombre_corto}, ${hora}. ${estado}`,
     partido.es_simulado && 'Simulado',
-    partido.predicho && 'Predicho',
+    descripcionEnFila(mio),
   ]
     .filter(Boolean)
     .join('. ');
@@ -103,15 +108,8 @@ export function FilaPartido({ partido, onPress }: Props) {
             Simulado
           </Texto>
         )}
-        {/* Ícono + texto, no solo color (U5). Aquí entran los puntos del partido (F10). */}
-        {partido.predicho && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.xxs }}>
-            <Icono nombre="check" color="acento" />
-            <Texto variante="meta" color="acento">
-              Predicho
-            </Texto>
-          </View>
-        )}
+        {/* "Predicho" (F03) o mis puntos del partido (F10 R3). */}
+        <PuntosEnFila estado={mio} />
       </View>
       <Equipo equipo={visitante} lado="visitante" />
     </Pressable>

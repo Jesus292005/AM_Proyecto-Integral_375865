@@ -16,6 +16,8 @@ import {
 } from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { formatearDia, formatearHora } from '../formato/fechas';
+import { obtenerMisPuntosDePartido } from '../puntos/datos';
+import { PuntosDelPartido } from '../puntos/PuntosDelPartido';
 import { useTema } from '../tema';
 import { obtenerMiPrediccion, obtenerPartido, type PartidoDetalle } from './datos';
 import { contadorCierre, prediccionAbierta, type Prediccion } from './eleccion';
@@ -165,6 +167,14 @@ export function PantallaPartido() {
     enabled: idValido,
   });
 
+  // F10: con el partido terminado (o cancelado) y mi predicción, mis puntos con su desglose.
+  const conPuntos = partido.data?.estado === 'TERMINADO' || partido.data?.estado === 'CANCELADO';
+  const puntos = useQuery({
+    queryKey: ['mis-puntos', 'partido', id],
+    queryFn: () => obtenerMisPuntosDePartido(id),
+    enabled: idValido && conPuntos && prediccion.data != null,
+  });
+
   const abierto =
     partido.data != null && !cerradoPorServidor && prediccionAbierta(partido.data, ahora);
 
@@ -244,6 +254,15 @@ export function PantallaPartido() {
           />
         ) : (
           <PrediccionCerrada partido={datos} guardada={guardada} />
+        )}
+        {!abierto && guardada !== null && conPuntos && puntos.data !== null && (
+          <PuntosDelPartido
+            {...(puntos.data !== undefined
+              ? { estado: 'listo', puntos: puntos.data, prediccion: guardada }
+              : puntos.isError
+                ? { estado: 'error', onReintentar: () => void puntos.refetch() }
+                : { estado: 'cargando' })}
+          />
         )}
       </View>
     );

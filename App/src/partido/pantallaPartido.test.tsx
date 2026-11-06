@@ -17,10 +17,14 @@ import {
   type PartidoDetalle,
 } from './datos';
 import { guardarAhoraNo, leerAhoraNo, leerPermiso, pedirPermiso } from '../notificaciones/sistema';
+import { obtenerMisPuntosDePartido } from '../puntos/datos';
 import type { Prediccion } from './eleccion';
 
 jest.mock('../supabase/cliente');
 jest.mock('./datos');
+jest.mock('../puntos/datos');
+
+const puntosFalsos = obtenerMisPuntosDePartido as jest.MockedFunction<typeof obtenerMisPuntosDePartido>;
 
 const partidoFalso = obtenerPartido as jest.MockedFunction<typeof obtenerPartido>;
 const prediccionFalsa = obtenerMiPrediccion as jest.MockedFunction<typeof obtenerMiPrediccion>;
@@ -69,6 +73,7 @@ beforeEach(() => {
     actualizada_en: '2026-11-02T18:30:00Z',
   }));
   quitarFalso.mockReset().mockResolvedValue();
+  puntosFalsos.mockReset().mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -291,6 +296,47 @@ describe('cierre (F03 R8, Flujo 6)', () => {
 
     expect(await screen.findByRole('header', { name: 'América 2, Chivas 2' })).toBeOnTheScreen();
     expect(screen.getByText('No predijiste este partido.')).toBeOnTheScreen();
+    expect(puntosFalsos).not.toHaveBeenCalled();
+  });
+
+  it('F10 CA4: terminado con predicción muestra mis puntos debajo de la predicción', async () => {
+    partidoFalso.mockImplementation(async () =>
+      partido({ estado: 'TERMINADO', goles_local: 2, goles_visitante: 2 }),
+    );
+    prediccionFalsa.mockResolvedValue(guardada({ marcador_local: 2, marcador_visitante: 2 }));
+    puntosFalsos.mockResolvedValue({
+      partido_id: 5,
+      estado_prediccion: 'ACERTADA',
+      estado_bono: 'SIN_JUSTIFICACION',
+      puntos_resultado: 0,
+      puntos_rango_goles: 0,
+      puntos_marcador: 350,
+      puntos_base: 350,
+      puntos_bono: null,
+      puntos_total: 350,
+      explicacion: null,
+      afirmaciones: null,
+    });
+    await abrir();
+
+    expect(await screen.findByLabelText('Marcador exacto: acertada, 350 puntos')).toBeOnTheScreen();
+    expect(screen.getByText('Tus puntos')).toBeOnTheScreen();
+    expect(puntosFalsos).toHaveBeenCalledWith(5);
+  });
+
+  it('F10 estados: si fallan solo los puntos, el partido se ve y se puede reintentar', async () => {
+    partidoFalso.mockImplementation(async () =>
+      partido({ estado: 'TERMINADO', goles_local: 1, goles_visitante: 0 }),
+    );
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
+    puntosFalsos.mockRejectedValue(new ErrorDatos('sin red', true));
+    await abrir();
+
+    expect(await screen.findByText('No se pudieron cargar tus puntos.')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'América 1, Chivas 0' })).toBeOnTheScreen();
+    puntosFalsos.mockResolvedValue(null);
+    await tocar(boton('Reintentar'));
+    await waitFor(() => expect(puntosFalsos).toHaveBeenCalledTimes(2));
   });
 });
 
