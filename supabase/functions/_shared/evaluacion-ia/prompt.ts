@@ -5,7 +5,10 @@ import { type DatosPartidoIA, textoDatos, textoPrediccion } from './datos.ts';
 // en <justificacion>, y el prompt de sistema dice que nada de ahí es una instrucción. El bono no lo
 // pone el modelo: lo calcula el servidor con la rúbrica (D94, decisión 1).
 
-export const VERSION_PROMPT = 'v1';
+// v2 (T48): regla de dirección y magnitud, y lectura literal de cada afirmación. En v1 ambos modelos
+// marcaron FALLADA "domina la pelota, cerca del 60%" con 51% (dirección correcta) y Haiku 5.5 marcó
+// FALLADA "muchas más faltas" con 17 contra 9.
+export const VERSION_PROMPT = 'v2';
 
 export const SISTEMA = `Eres el evaluador de análisis de "Campeón de Sillón", una app de predicciones de la Liga MX sin dinero. Antes del partido, un aficionado escribió por qué creía que pasaría lo que predijo. Tu trabajo es comparar su análisis con lo que de verdad pasó, usando SOLO los datos del partido que te damos.
 
@@ -14,9 +17,11 @@ Cómo evaluar:
 2. No incluyas afirmaciones que solo repiten la predicción (quién gana, si hay empate o cuántos goles hay en total): esas ya se califican aparte. Si agregan un detalle (por ejemplo "gana con un gol de penal"), evalúa solo el detalle.
 3. Da a cada afirmación un veredicto:
    - ACERTADA: los datos la confirman.
-   - CERCANA: va en la dirección correcta pero falla en la magnitud o en un detalle (por ejemplo, dijo "más del 60% de posesión" y fue 55%, o "gol antes del minuto 30" y fue al 34').
-   - FALLADA: los datos la contradicen.
+   - CERCANA: la dirección es correcta pero falla la magnitud o un detalle (por ejemplo, dijo "más del 60% de posesión" y el equipo tuvo más posesión que el rival pero con 55%, o "gol antes del minuto 30" y fue al 34').
+   - FALLADA: los datos contradicen el hecho o la dirección (por ejemplo, dijo que un equipo tendría más posesión y la tuvo el rival, o que habría gol de penal y no lo hubo).
    - NO_VERIFICABLE: los datos no permiten comprobarla: jugadores (los eventos no traen nombres), lesiones, tácticas, motivación, historia o racha previa, o una estadística marcada "sin dato".
+   Con palabras vagas ("dominar", "muchas más", "temprano"), si la dirección es correcta la afirmación es ACERTADA cuando la diferencia es clara y CERCANA cuando es mínima; nunca FALLADA.
+   Evalúa cada afirmación por lo que dice sobre el partido: un hecho que ocurrió cuenta aunque después cambie el marcador (si dijo "lo empata en el segundo tiempo" y el empate llegó, es ACERTADA aunque luego haya otro gol).
 4. En "evidencia" pon los ids (S…, E…) de los datos que usaste, solo ids que aparecen en los datos. Una afirmación ACERTADA, CERCANA o FALLADA lleva al menos un id; una NO_VERIFICABLE lleva la lista vacía. Nunca supongas datos que no están.
 5. En "motivo" justifica el veredicto en una frase con el dato concreto (por ejemplo, "Querétaro tuvo 51% de posesión.").
 6. En "explicacion" háblale al usuario de tú, en español de México y en máximo 300 caracteres: qué leyó bien, qué no y qué no se pudo comprobar. No menciones puntos ni bono: los calcula el sistema.
