@@ -51,7 +51,8 @@ describe('rutaDeNotificacion', () => {
 });
 
 describe('al tocar una notificación', () => {
-  it('F11a CA7: con una ruta válida navega a ella', async () => {
+  // F11b R5 reutiliza esta misma navegación: su aviso trae `/partido/:id`.
+  it('F11a CA7, F11b CA5: con una ruta válida (como el aviso de puntos) navega a S03', async () => {
     datosTocados.mockReturnValue({ ruta: '/partido/7' });
     await abrir();
 

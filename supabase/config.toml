@@ -411,6 +411,10 @@ verify_jwt = false
 [functions.evaluar]
 verify_jwt = false
 
+# F11b (T60): la invoca la tarea programada de `pg_cron` cada minuto (solo si hay avisos listos).
+[functions.avisos-puntos]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

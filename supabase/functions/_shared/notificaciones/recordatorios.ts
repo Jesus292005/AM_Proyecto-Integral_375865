@@ -1,12 +1,6 @@
-import { z } from 'zod';
-
 import type { Database } from '../tipos-db.ts';
-import {
-  type EnviarAExpo,
-  esquemaRespuestaExpo,
-  MENSAJES_POR_PETICION,
-  type MensajeExpo,
-} from './expo.ts';
+import { enviarMensajes } from './envio.ts';
+import type { EnviarAExpo, MensajeExpo } from './expo.ts';
 
 // F11a: recordatorio 1 h antes del cierre a quien no ha predicho (R5, decisión 4 de D90). Un aviso
 // por usuario y ejecución que agrupa sus partidos, a todos sus dispositivos (R6).
@@ -126,40 +120,10 @@ export async function ejecutarRecordatorios(
   resumen.avisos = avisos.length;
   resumen.mensajes = mensajes.length;
 
-  const noRegistrados: string[] = [];
-  for (let i = 0; i < mensajes.length; i += MENSAJES_POR_PETICION) {
-    const bloque = mensajes.slice(i, i + MENSAJES_POR_PETICION);
-    const respuesta = await dependencias.enviarAExpo(bloque);
-    if (respuesta.tipo === 'error') {
-      resumen.fallidos += bloque.length;
-      resumen.errores.push(respuesta.mensaje);
-      continue;
-    }
-    const tickets = esquemaRespuestaExpo.safeParse(respuesta.cuerpo);
-    if (!tickets.success || tickets.data.data.length !== bloque.length) {
-      resumen.fallidos += bloque.length;
-      resumen.errores.push(
-        tickets.success
-          ? `Expo devolvió ${tickets.data.data.length} tickets para ${bloque.length} mensajes`
-          : `Respuesta de Expo con forma inválida: ${z.prettifyError(tickets.error)}`,
-      );
-      continue;
-    }
-    tickets.data.data.forEach((ticket, j) => {
-      if (ticket.status === 'ok') {
-        resumen.enviados += 1;
-        return;
-      }
-      resumen.fallidos += 1;
-      resumen.errores.push(ticket.message);
-      const mensaje = bloque[j];
-      if (ticket.details?.error === 'DeviceNotRegistered' && mensaje) noRegistrados.push(mensaje.to);
-    });
-  }
-
-  if (noRegistrados.length > 0) {
-    await dependencias.borrarTokens(noRegistrados);
-    resumen.tokensBorrados = noRegistrados.length;
-  }
+  const envio = await enviarMensajes(mensajes, dependencias.enviarAExpo, dependencias.borrarTokens);
+  resumen.enviados = envio.enviados;
+  resumen.fallidos = envio.fallidos;
+  resumen.tokensBorrados = envio.tokensBorrados;
+  resumen.errores.push(...envio.errores);
   return resumen;
 }

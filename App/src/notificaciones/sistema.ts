@@ -10,8 +10,12 @@ import { Linking } from 'react-native';
 
 export type EstadoPermiso = 'concedido' | 'negado' | 'sinPreguntar';
 
-// R9.
-const CANAL = { id: 'recordatorios', nombre: 'Recordatorios de partidos' } as const;
+// F11a R9 y F11b R6: un canal por tipo de aviso, para que el usuario los silencie por separado
+// desde los ajustes del teléfono. El servidor elige el canal con el mismo `id`.
+export const CANALES = [
+  { id: 'recordatorios', nombre: 'Recordatorios de partidos' },
+  { id: 'puntos', nombre: 'Puntos de partidos' },
+] as const;
 const CLAVE_AHORA_NO = 'notificaciones.ahora_no';
 const CLAVE_TOKEN = 'notificaciones.token';
 
@@ -28,12 +32,14 @@ export async function pedirPermiso(): Promise<EstadoPermiso> {
   return comoEstado(await Notifications.requestPermissionsAsync());
 }
 
-/** Crea el canal (Android 8+; en iOS no hace nada) y devuelve el token de push de Expo (R2). */
+/** Crea los canales (Android 8+; en iOS no hace nada) y devuelve el token de push de Expo (R2). */
 export async function obtenerToken(): Promise<string> {
-  await Notifications.setNotificationChannelAsync(CANAL.id, {
-    name: CANAL.nombre,
-    importance: Notifications.AndroidImportance.HIGH,
-  });
+  for (const canal of CANALES) {
+    await Notifications.setNotificationChannelAsync(canal.id, {
+      name: canal.nombre,
+      importance: Notifications.AndroidImportance.HIGH,
+    });
+  }
   const projectId = Constants.easConfig?.projectId;
   const { data } = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : {});
   return data;
