@@ -8,7 +8,9 @@ import { type DatosPartidoIA, textoDatos, textoPrediccion } from './datos.ts';
 // v2 (T48): regla de dirección y magnitud, y lectura literal de cada afirmación. En v1 ambos modelos
 // marcaron FALLADA "domina la pelota, cerca del 60%" con 51% (dirección correcta) y Haiku 5.5 marcó
 // FALLADA "muchas más faltas" con 17 contra 9.
-export const VERSION_PROMPT = 'v2';
+// v3 (T49): mismo texto de sistema; cada estadística lleva el nombre de su equipo (datos.ts) y
+// Haiku 5.5 corre con esfuerzo `medium` (anthropic.ts). Decisión de Jesús.
+export const VERSION_PROMPT = 'v3';
 
 export const SISTEMA = `Eres el evaluador de análisis de "Campeón de Sillón", una app de predicciones de la Liga MX sin dinero. Antes del partido, un aficionado escribió por qué creía que pasaría lo que predijo. Tu trabajo es comparar su análisis con lo que de verdad pasó, usando SOLO los datos del partido que te damos.
 

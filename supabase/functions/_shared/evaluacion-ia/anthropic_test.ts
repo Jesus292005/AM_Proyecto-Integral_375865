@@ -17,11 +17,11 @@ const SALIDA = {
   explicacion: 'Leíste bien los tiros.',
 };
 
-Deno.test('F06 R10, R13: Haiku 5.5 con esfuerzo low, salida estructurada y sin temperature', () => {
+Deno.test('F06 R10, R13: Haiku 5.5 con esfuerzo medium, salida estructurada y sin temperature', () => {
   const peticion = armarPeticion('claude-haiku-5-5', 'sistema', 'usuario');
   equal(peticion.model, 'claude-haiku-5-5');
   equal(peticion.max_tokens, 2000);
-  equal(peticion.output_config.effort, 'low');
+  equal(peticion.output_config.effort, 'medium');
   equal(peticion.output_config.format.type, 'json_schema');
   equal('temperature' in peticion, false);
   deepStrictEqual(peticion.messages, [{ role: 'user', content: 'usuario' }]);

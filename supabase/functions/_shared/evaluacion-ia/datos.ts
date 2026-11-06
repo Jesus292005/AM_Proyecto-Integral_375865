@@ -93,9 +93,12 @@ export function armarEvidencias(datos: DatosPartidoIA): {
 } {
   const estadisticas = datos.estadisticas
     .toSorted((a, b) => ordenEstadistica(a.tipo) - ordenEstadistica(b.tipo) || a.tipo.localeCompare(b.tipo))
+    // v3: el nombre de cada equipo va junto a su valor; con solo el orden en un encabezado, Haiku
+    // 5.5 invertía las columnas (T48).
     .map((e, i) => ({
       id: `S${i + 1}`,
-      texto: `${ESTADISTICAS[e.tipo] ?? e.tipo}: ${e.local ?? 'sin dato'} | ${e.visitante ?? 'sin dato'}`,
+      texto: `${ESTADISTICAS[e.tipo] ?? e.tipo}: ${datos.local} ${e.local ?? 'sin dato'} · ` +
+        `${datos.visitante} ${e.visitante ?? 'sin dato'}`,
     }));
   const eventos = datos.eventos
     .toSorted((a, b) => a.minuto - b.minuto || (a.minutoAgregado ?? 0) - (b.minutoAgregado ?? 0))
@@ -116,7 +119,7 @@ export function textoDatos(datos: DatosPartidoIA): { texto: string; ids: Set<str
     `Marcador a los 90 minutos: ${local} ${marcador.local}-${marcador.visitante} ${visitante}` +
       (medioTiempo ? ` · Medio tiempo: ${medioTiempo.local}-${medioTiempo.visitante}` : ''),
     '',
-    `ESTADÍSTICAS (${local} | ${visitante}; "sin dato" = la fuente no lo trae)`,
+    'ESTADÍSTICAS ("sin dato" = la fuente no lo trae)',
     ...(estadisticas.length > 0 ? estadisticas.map((e) => `${e.id} ${e.texto}`) : ['Sin estadísticas.']),
     '',
     'EVENTOS (minuto, equipo y qué pasó; los datos no incluyen nombres de jugadores)',

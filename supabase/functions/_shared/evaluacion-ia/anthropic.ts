@@ -30,12 +30,12 @@ export type PeticionMensajes = {
   system: string;
   messages: { role: 'user'; content: string }[];
   output_config: {
-    effort?: 'low';
+    effort?: 'medium';
     format: { type: 'json_schema'; schema: typeof ESQUEMA_JSON_SALIDA };
   };
 };
 
-/** R10: esfuerzo `low` en Haiku 5.5 (Haiku 4.5 no acepta `effort`). */
+/** R10: esfuerzo `medium` en Haiku 5.5 (Jesús, T49; Haiku 4.5 no acepta `effort`). */
 export function armarPeticion(modelo: ModeloIA, sistema: string, usuario: string): PeticionMensajes {
   return {
     model: modelo,
@@ -43,7 +43,7 @@ export function armarPeticion(modelo: ModeloIA, sistema: string, usuario: string
     system: sistema,
     messages: [{ role: 'user', content: usuario }],
     output_config: {
-      ...(MODELOS[modelo].esfuerzo ? { effort: 'low' as const } : {}),
+      ...(MODELOS[modelo].esfuerzo ? { effort: 'medium' as const } : {}),
       format: { type: 'json_schema', schema: ESQUEMA_JSON_SALIDA },
     },
   };
