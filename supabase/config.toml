@@ -407,6 +407,10 @@ verify_jwt = false
 [functions.calificar]
 verify_jwt = false
 
+# F06 (T55): la invoca la tarea programada de `pg_cron` cada minuto (solo si hay evaluaciones por hacer).
+[functions.evaluar]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

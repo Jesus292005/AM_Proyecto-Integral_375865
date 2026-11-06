@@ -1,6 +1,6 @@
 import { deepStrictEqual, equal, ok } from 'node:assert/strict';
 
-import { armarEvidencias, textoDatos, textoPrediccion } from './datos.ts';
+import { armarDatosPartidoIA, armarEvidencias, textoDatos, textoPrediccion } from './datos.ts';
 import { datosDeEjemplo } from './ejemplos.ts';
 
 const datos = datosDeEjemplo();
@@ -42,4 +42,48 @@ Deno.test('F06 R2: la predicción se describe en palabras', () => {
   equal(textoPrediccion({ ...base, resultado: 'VISITANTE', rango_goles: 'G4_MAS' }, 'Puebla', 'Querétaro'),
     'Resultado: gana Querétaro · Goles en total: 4 o más');
   equal(textoPrediccion({ ...base, resultado: 'EMPATE' }, 'Puebla', 'Querétaro'), 'Resultado: empate');
+});
+
+Deno.test('F06 R2: las filas de la base dan los mismos datos que el ejemplo de la API', () => {
+  const fila = {
+    equipo_local_id: 11,
+    equipo_visitante_id: 22,
+    local: 'Puebla',
+    visitante: 'Querétaro',
+    torneo: 'Apertura 2024',
+    jornada: 'Jornada 7',
+    goles_local: 2,
+    goles_visitante: 1,
+    goles_local_medio_tiempo: 1,
+    goles_visitante_medio_tiempo: 0,
+  };
+  const desdeBD = armarDatosPartidoIA(
+    fila,
+    datos.estadisticas.flatMap((e) => [
+      { equipo_id: 11, tipo: e.tipo, valor: e.local },
+      { equipo_id: 22, tipo: e.tipo, valor: e.visitante },
+    ]),
+    datos.eventos.map((e) => ({
+      equipo_id: e.lado === 'local' ? 11 : 22,
+      minuto: e.minuto,
+      minuto_agregado: e.minutoAgregado,
+      tipo: e.tipo,
+      detalle: e.detalle,
+    })),
+  );
+  deepStrictEqual(desdeBD, datos);
+  equal(textoDatos(desdeBD).texto, textoDatos(datos).texto);
+});
+
+Deno.test('F06 R2: un partido sin marcador de 90 min no se evalúa', () => {
+  let mensaje = '';
+  try {
+    armarDatosPartidoIA({
+      equipo_local_id: 1, equipo_visitante_id: 2, local: 'L', visitante: 'V', torneo: 'T', jornada: 'J',
+      goles_local: null, goles_visitante: null, goles_local_medio_tiempo: null, goles_visitante_medio_tiempo: null,
+    }, [], []);
+  } catch (error) {
+    mensaje = error instanceof Error ? error.message : '';
+  }
+  ok(mensaje.includes('marcador'));
 });

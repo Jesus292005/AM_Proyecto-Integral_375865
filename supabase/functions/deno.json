@@ -21,6 +21,6 @@
     "lint": "deno lint --permit-no-files",
     "test": "deno test --permit-no-files",
     "probar-prompt": "deno run --allow-net=api.anthropic.com --allow-env=ANTHROPIC_API_KEY --env-file=.env _shared/evaluacion-ia/probar-prompt.ts",
-    "test:bd": "deno test --allow-net=127.0.0.1:54322 --allow-env _shared/sincronizacion/sincronizacion-torneo.bd-test.ts _shared/sincronizacion/datos-partido.bd-test.ts _shared/notificaciones/recordatorios.bd-test.ts _shared/calificacion/calificar.bd-test.ts"
+    "test:bd": "deno test --allow-net=127.0.0.1:54322 --allow-env _shared/sincronizacion/sincronizacion-torneo.bd-test.ts _shared/sincronizacion/datos-partido.bd-test.ts _shared/notificaciones/recordatorios.bd-test.ts _shared/calificacion/calificar.bd-test.ts _shared/evaluacion-ia/evaluar.bd-test.ts"
   }
 }

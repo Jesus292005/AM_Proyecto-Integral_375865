@@ -156,3 +156,62 @@ export function textoPrediccion(
   }
   return partes.join(' · ');
 }
+
+// --- Desde la base (T55) ---
+
+export type FilaPartidoIA = {
+  equipo_local_id: number;
+  equipo_visitante_id: number;
+  local: string;
+  visitante: string;
+  torneo: string;
+  jornada: string;
+  goles_local: number | null;
+  goles_visitante: number | null;
+  goles_local_medio_tiempo: number | null;
+  goles_visitante_medio_tiempo: number | null;
+};
+
+export type EstadisticaBD = { equipo_id: number; tipo: string; valor: string | null };
+
+export type EventoBD = {
+  equipo_id: number;
+  minuto: number;
+  minuto_agregado: number | null;
+  tipo: Enums<'tipo_evento'>;
+  detalle: string;
+};
+
+/** Arma los datos de R2 con las filas de `partido`, `estadistica_partido` y `evento_partido`. */
+export function armarDatosPartidoIA(
+  fila: FilaPartidoIA,
+  estadisticas: readonly EstadisticaBD[],
+  eventos: readonly EventoBD[],
+): DatosPartidoIA {
+  if (fila.goles_local === null || fila.goles_visitante === null) {
+    throw new Error('El partido no tiene marcador de 90 minutos.');
+  }
+  const valor = (equipo: number, tipo: string) =>
+    estadisticas.find((e) => e.equipo_id === equipo && e.tipo === tipo)?.valor ?? null;
+  return {
+    local: fila.local,
+    visitante: fila.visitante,
+    contexto: `${fila.torneo} · ${fila.jornada}`,
+    marcador: { local: fila.goles_local, visitante: fila.goles_visitante },
+    medioTiempo: fila.goles_local_medio_tiempo === null || fila.goles_visitante_medio_tiempo === null
+      ? null
+      : { local: fila.goles_local_medio_tiempo, visitante: fila.goles_visitante_medio_tiempo },
+    estadisticas: [...new Set(estadisticas.map((e) => e.tipo))].map((tipo) => ({
+      tipo,
+      local: valor(fila.equipo_local_id, tipo),
+      visitante: valor(fila.equipo_visitante_id, tipo),
+    })),
+    eventos: eventos.map((e) => ({
+      minuto: e.minuto,
+      minutoAgregado: e.minuto_agregado,
+      lado: e.equipo_id === fila.equipo_local_id ? 'local' : 'visitante',
+      tipo: e.tipo,
+      detalle: e.detalle,
+    })),
+  };
+}
