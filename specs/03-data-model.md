@@ -1,6 +1,6 @@
 # 03 — Modelo de datos (conceptual)
 
-> **Estado:** ✅ Aprobado v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
+> **Estado:** ✅ Aprobado v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
 > **Última actualización:** 2026-10-04
 > Base: [`01-mvp.md`](./01-mvp.md), [`02-navigation.md`](./02-navigation.md), [`decisions.md`](./decisions.md).
 > Este documento describe **qué datos existen y cómo se relacionan**. No decide dónde viven (base de datos, tablas, colecciones): eso es la fase de Diseño.
@@ -80,7 +80,7 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 
 **Calificacion** (puntos base, F05) — `prediccionId`, `puntosResultado`, `puntosRangoGoles`, `puntosMarcador`, `puntosBase`, `esSimulada`, `calificadaEn`.
 
-**EvaluacionIA** (bono, F06) — `prediccionId`, `estado` (`PENDIENTE` | `EVALUADA` | `ERROR`), `puntosBono` (0–100), `explicacion`, `afirmaciones` (lista: texto, veredicto `ACERTADA` | `CERCANA` | `FALLADA` | `NO_VERIFICABLE`, motivo), `intentos`, `evaluadaEn?`.
+**EvaluacionIA** (bono, F06) — `prediccionId`, `estado` (`PENDIENTE` | `EVALUADA` | `ERROR`), `puntosBono` (0–100), `explicacion`, `afirmaciones` (lista: texto, veredicto `ACERTADA` | `CERCANA` | `FALLADA` | `NO_VERIFICABLE`, motivo, `evidencia` = ids de los datos citados), `intentos`, `siguienteIntentoEn`, `modelo`, `versionPrompt`, `error?`, `esSimulada`, `evaluadaEn?`.
 > Solo existe si la predicción tiene justificación.
 
 **Comentario** (F16, Could) — `id`, `prediccionId`, `usuarioId`, `texto`, `creadoEn`.
@@ -94,6 +94,9 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 > Una insignia repetible (p. ej. top de la jornada) genera un registro por cada vez que se gana.
 
 ### Operación
+
+**LlamadaIA** (F06 R10) — `evaluacionId?`, `inicio`, `modelo`, `tokensEntrada?`, `tokensSalida?`, `resultado` (`OK` | `FALLO`), `detalle?`.
+> Cuenta para el tope diario de llamadas a la IA y deja el costo real.
 
 **Sincronizacion** — `tipo` (partidos, estadísticas, tabla…), `inicio`, `fin`, `estado`, `consultasUsadas`, `error?`.
 > Sirve para no pasarse del límite de consultas de la API y para diagnosticar fallas.

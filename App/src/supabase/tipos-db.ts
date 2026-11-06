@@ -160,6 +160,65 @@ export type Database = {
           },
         ]
       }
+      evaluacion_ia: {
+        Row: {
+          afirmaciones: NonNullable<Json>
+          creada_en: string
+          error: string | null
+          es_simulada: boolean
+          estado: Database["public"]["Enums"]["estado_evaluacion"]
+          evaluada_en: string | null
+          explicacion: string | null
+          id: number
+          intentos: number
+          modelo: string | null
+          prediccion_id: number
+          puntos_bono: number | null
+          siguiente_intento_en: string
+          version_prompt: string | null
+        }
+        Insert: {
+          afirmaciones?: NonNullable<Json>
+          creada_en?: string
+          error?: string | null
+          es_simulada: boolean
+          estado?: Database["public"]["Enums"]["estado_evaluacion"]
+          evaluada_en?: string | null
+          explicacion?: string | null
+          id?: never
+          intentos?: number
+          modelo?: string | null
+          prediccion_id: number
+          puntos_bono?: number | null
+          siguiente_intento_en?: string
+          version_prompt?: string | null
+        }
+        Update: {
+          afirmaciones?: NonNullable<Json>
+          creada_en?: string
+          error?: string | null
+          es_simulada?: boolean
+          estado?: Database["public"]["Enums"]["estado_evaluacion"]
+          evaluada_en?: string | null
+          explicacion?: string | null
+          id?: never
+          intentos?: number
+          modelo?: string | null
+          prediccion_id?: number
+          puntos_bono?: number | null
+          siguiente_intento_en?: string
+          version_prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluacion_ia_prediccion_id_fkey"
+            columns: ["prediccion_id"]
+            isOneToOne: true
+            referencedRelation: "prediccion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evento_partido: {
         Row: {
           detalle: string
@@ -269,6 +328,47 @@ export type Database = {
           proveedor_id?: number
         }
         Relationships: []
+      }
+      llamada_ia: {
+        Row: {
+          detalle: string | null
+          evaluacion_id: number | null
+          id: number
+          inicio: string
+          modelo: string
+          resultado: string
+          tokens_entrada: number | null
+          tokens_salida: number | null
+        }
+        Insert: {
+          detalle?: string | null
+          evaluacion_id?: number | null
+          id?: never
+          inicio?: string
+          modelo: string
+          resultado: string
+          tokens_entrada?: number | null
+          tokens_salida?: number | null
+        }
+        Update: {
+          detalle?: string | null
+          evaluacion_id?: number | null
+          id?: never
+          inicio?: string
+          modelo?: string
+          resultado?: string
+          tokens_entrada?: number | null
+          tokens_salida?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "llamada_ia_evaluacion_id_fkey"
+            columns: ["evaluacion_id"]
+            isOneToOne: false
+            referencedRelation: "evaluacion_ia"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notificacion_enviada: {
         Row: {
@@ -648,7 +748,17 @@ export type Database = {
       actualizar_estados_partidos: { Args: { datos: Json }; Returns: number }
       guardar_carga_inicial: { Args: { carga: Json }; Returns: Json }
       guardar_datos_partido: { Args: { datos: Json }; Returns: Json }
+      guardar_evaluacion: {
+        Args: { datos: Json; id_evaluacion: number }
+        Returns: boolean
+      }
+      hay_evaluaciones_por_hacer: {
+        Args: { ahora: string; tope: number }
+        Returns: boolean
+      }
       jornada_actual: { Args: { ahora?: string }; Returns: number }
+      liberar_evaluaciones: { Args: { ids: number[] }; Returns: undefined }
+      llamadas_ia_hoy: { Args: { ahora: string }; Returns: number }
       partidos_pendientes_de_final: {
         Args: { ahora: string }
         Returns: {
@@ -681,14 +791,28 @@ export type Database = {
         Returns: string
       }
       registrar_dispositivo: { Args: { token: string }; Returns: undefined }
+      registrar_fallo_evaluacion: {
+        Args: { id_evaluacion: number; motivo: string }
+        Returns: Database["public"]["Enums"]["estado_evaluacion"]
+      }
       simulacion_crear: {
         Args: { minutos?: number; origen: number }
         Returns: number
       }
       simulacion_iniciar: { Args: { partido: number }; Returns: undefined }
       simulacion_terminar: { Args: { partido: number }; Returns: undefined }
+      tomar_evaluaciones: {
+        Args: { limite: number }
+        Returns: {
+          evaluacion_id: number
+          intentos: number
+          partido_id: number
+          prediccion_id: number
+        }[]
+      }
     }
     Enums: {
+      estado_evaluacion: "PENDIENTE" | "EVALUADA" | "ERROR"
       estado_partido:
         | "PROGRAMADO"
         | "EN_JUEGO"
@@ -838,6 +962,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      estado_evaluacion: ["PENDIENTE", "EVALUADA", "ERROR"],
       estado_partido: [
         "PROGRAMADO",
         "EN_JUEGO",
