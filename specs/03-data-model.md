@@ -1,6 +1,6 @@
 # 03 — Modelo de datos (conceptual)
 
-> **Estado:** ✅ Aprobado v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
+> **Estado:** ✅ Aprobado v1.7 (2026-11-07; límites y código de `Grupo`, F07, D97) · v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
 > **Última actualización:** 2026-10-04
 > Base: [`01-mvp.md`](./01-mvp.md), [`02-navigation.md`](./02-navigation.md), [`decisions.md`](./decisions.md).
 > Este documento describe **qué datos existen y cómo se relacionan**. No decide dónde viven (base de datos, tablas, colecciones): eso es la fase de Diseño.
@@ -69,8 +69,9 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 
 **Dispositivo** (F11) — `usuarioId`, `tokenNotificaciones`, `actualizadoEn`. Un usuario puede tener varios.
 
-**Grupo** — `id`, `nombre`, `codigoInvitacion` (único), `creadorId`, `creadoEn`.
+**Grupo** — `id`, `nombre` (3–30 caracteres), `codigoInvitacion` (único: 8 caracteres de un alfabeto de 31 sin 0 O 1 I L, F07 R2), `creadorId?`, `creadoEn`.
 > El grupo **no** pertenece a un torneo: dura entre torneos y su ranking se calcula por torneo.
+> Límites (D97): **30 miembros** por grupo y **10 grupos** por usuario. Si sale el último miembro, el grupo se borra; si sale el último `ADMIN`, el miembro más antiguo pasa a `ADMIN`.
 
 **MiembroGrupo** — `grupoId`, `usuarioId`, `rol` (`ADMIN` | `MIEMBRO`), `unidoEn`.
 
