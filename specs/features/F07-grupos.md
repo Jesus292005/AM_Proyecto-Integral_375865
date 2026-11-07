@@ -1,5 +1,5 @@
 # F07 — Grupos privados: crear, unirse con código, ver miembros
-> **Estado:** ✅ Aprobada v1.0 (2026-11-07, D97) · **Prioridad:** Must · **Módulo:** M4 · **Depende de:** F01, F03, F04 · **Pantallas:** S04, S05, S06, S08 (miembros, código, salir), S03 (predicciones del grupo) · **Decisiones:** D20, D35, D37, D45, D46, D52, D54, D76, D78, D82, D90 (5), D97
+> **Estado:** ✅ **Terminada** (2026-11-07, D99: cumple CA1–CA14 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-07, D97) · **Prioridad:** Must · **Módulo:** M4 · **Depende de:** F01, F03, F04 · **Pantallas:** S04, S05, S06, S08 (miembros, código, salir), S03 (predicciones del grupo) · **Decisiones:** D20, D35, D37, D45, D46, D52, D54, D76, D78, D82, D90 (5), D97
 
 ## Decisiones (D97)
 1. **P-26:** `usuario_publico` pasa a `security_invoker` y solo muestra **mi registro y el de quienes comparten grupo conmigo**. `usuario` agrega esa política de lectura y permisos **por columna**: nadie lee `correo` ni `google_id` por la API (la app no los usa). Los compañeros de grupo pueden leer `rol` y `recordatorios_activos`. Se vuelven a correr las pruebas de F01.
