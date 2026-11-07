@@ -1,7 +1,7 @@
 # 01 — MVP: alcance, prioridades y plan
 
-> **Estado:** ✅ Aprobado v1.4 (2026-11-02; plan replanteado y F12 a Must por D88) · v1.3 (2026-10-10; F11 dividida por D69, módulos por D66) · antes v1.2 (2026-10-04; v1.1 agrega F17–F20 por D39/D41; v1.2 agrega F21 y reordena Should por D42)
-> **Última actualización:** 2026-11-02
+> **Estado:** ✅ Aprobado v1.5 (2026-11-07; demo el 23 de noviembre, S7 adelantada y congelamiento 20–22 por D98) · v1.4 (2026-11-02; plan replanteado y F12 a Must por D88) · v1.3 (2026-10-10; F11 dividida por D69, módulos por D66) · antes v1.2 (2026-10-04; v1.1 agrega F17–F20 por D39/D41; v1.2 agrega F21 y reordena Should por D42)
+> **Última actualización:** 2026-11-07
 > Base: [`00-project.md`](./00-project.md) (aprobado) y [`decisions.md`](./decisions.md).
 > Este documento decide **qué entra y en qué orden**. El detalle de cada feature va en `features/Fxx-*.md`.
 
@@ -60,18 +60,18 @@ Si una funcionalidad no aporta a este flujo o a la gamificación que lo hace atr
 4. Jesús la probó en su Android y la **aprobó**.
 5. La spec está actualizada si algo cambió durante la implementación.
 
-## 4. Plan semanal (D88; reemplaza el de D33)
+## 4. Plan semanal (D88, fechas de S7–S8 por D98; reemplaza el de D33)
 
-Fecha de entrega: finales de noviembre (P-07). Un commit por tarea (D59). S1 (5–11 oct) fue de especificación y diseño; M1 (S2) cerró el 2 de noviembre (D87), así que el plan original ya no era alcanzable.
+**Demo: lunes 23 de noviembre de 2026** (D98). Un commit por tarea (D59). S1 (5–11 oct) fue de especificación y diseño; M1 (S2) cerró el 2 de noviembre (D87), así que el plan original ya no era alcanzable.
 
 | Semana | Fechas | Módulo | Features |
 |---|---|---|---|
 | S5 | 2–8 nov | M2 Predecir | F03, F04, F09, F11a |
-| S6 | 9–15 nov | M3 Calificar | F05, F06, F10, F11b |
-| S7 | 16–22 nov | M4 Competir | F07, F08, F12 · (F13 solo si sobra tiempo) |
-| S8 | 23–29 nov | **Congelamiento:** sin features nuevas; estabilizar y ensayar la demo. | — |
+| S6 | 2–7 nov (adelantada) | M3 Calificar | F05, F06, F10, F11b |
+| S7 | 9–19 nov (adelantada) | M4 Competir | F07, F08, F12 · F13 solo si las tres están aprobadas en el teléfono a más tardar el 17 nov |
+| S8 | 20–22 nov | **Congelamiento:** sin features nuevas; corregir, medir el tamaño y ensayar la demo. | — |
 
-**API-Football Pro (D24, D25):** 1 mes, contratado según la fecha de la demo (P-07) para que cubra S7–S8; con él se pasa a la temporada 2026.
+**API-Football Pro (D24, D25):** 1 mes desde el 9 de noviembre (cubre la demo y la entrega); con él se pasa a la temporada 2026 al inicio de M4 (`tasks/S7.md` T63).
 
 ### 4.1 Módulos (D66, D88)
 
@@ -80,7 +80,7 @@ Fecha de entrega: finales de noviembre (P-07). Un commit por tarea (D59). S1 (5�
 | **M1 Base** | S2 (cerró el 2 nov) | Configuración, F01, F02 | Entrar con Google y ver los partidos |
 | **M2 Predecir** | S5 (cerró el 2 nov, D93) | F03, F04, F09, F11a | Predecir, justificar, simular un partido y recibir el recordatorio |
 | **M3 Calificar** | S6 (cerró el 7 nov, D96) | F05, F06, F10, F11b | El partido (simulado o real) termina y llegan puntos y bono de IA |
-| **M4 Competir** | S7 | F07, F08, F12, (F13) | Grupos, rankings, unirse con QR |
+| **M4 Competir** | S7 (9–19 nov, D98) | F07, F08, F12, (F13) | Grupos, rankings, unirse con QR |
 
 Fuera del plan (D88): F14–F21.
 
@@ -88,7 +88,7 @@ Ciclo de cada módulo: specs → revisión → tareas → implementación por lo
 
 **Dependencias nativas:** las que faltan para el MVP (notificaciones de F11a; cámara y generación de QR de F12) entran juntas en una sola development build en M2, con la medición de tamaño contra el tope (D79, actualizado en D91).
 
-**Riesgo del plan:** M3 (IA) y M4 (grupos, rankings y QR + paso a datos reales 2026) son los módulos más cargados. M3 se prueba con partidos simulados (F09), por eso F09 se termina en M2. Si M4 se atrasa, F13 no entra y S8 absorbe la estabilización.
+**Riesgo del plan:** M3 (IA) y M4 (grupos, rankings y QR + paso a datos reales 2026) son los módulos más cargados. M3 se prueba con partidos simulados (F09), por eso F09 se termina en M2. Si M4 se atrasa, F13 no entra y S8 (20–22 nov) absorbe la estabilización; el congelamiento no se acorta.
 
 ## 5. Criterio de éxito del MVP
 
