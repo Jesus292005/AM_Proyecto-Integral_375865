@@ -104,17 +104,16 @@ describe('con sesión guardada', () => {
   });
 
   it('si la sesión termina estando dentro, va a S01 y al volver regresa a la misma ruta (F01 §6.2)', async () => {
-    await abrir('/grupo/3?vista=jornada');
-    expect(await screen.findByText('S08')).toBeOnTheScreen();
+    // Con parámetro: S02 en la jornada 2 (S08 ya es real desde T67).
+    await abrir('/partidos?jornada=2');
+    expect(await screen.findByRole('header', { name: 'Jornada 2' })).toBeOnTheScreen();
 
     await act(async () => emitirEventoSesion('SIGNED_OUT', null));
     expect(await screen.findByText(S01)).toBeOnTheScreen();
-    expect(screen.queryByText('S08')).not.toBeOnTheScreen();
+    expect(screen.queryByRole('header', { name: 'Jornada 2' })).not.toBeOnTheScreen();
 
     await iniciarSesion();
-    expect(await screen.findByText('S08')).toBeOnTheScreen();
-    expect(screen.getByText('grupoId: 3')).toBeOnTheScreen();
-    expect(screen.getByText('vista: jornada')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Jornada 2' })).toBeOnTheScreen();
   });
 
   it('renovar el token no saca al usuario', async () => {

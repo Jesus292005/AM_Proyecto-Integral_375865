@@ -22,6 +22,7 @@ import type { Prediccion } from './eleccion';
 
 jest.mock('../supabase/cliente');
 jest.mock('./datos');
+jest.mock('../grupos/datos');
 jest.mock('../puntos/datos');
 
 const puntosFalsos = obtenerMisPuntosDePartido as jest.MockedFunction<typeof obtenerMisPuntosDePartido>;

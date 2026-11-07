@@ -11,6 +11,7 @@ import { olvidarNotificacionTocada, useDatosNotificacionTocada } from './sistema
 
 jest.mock('../supabase/cliente');
 jest.mock('../partido/datos');
+jest.mock('../grupos/datos');
 
 const datosTocados = useDatosNotificacionTocada as jest.MockedFunction<
   typeof useDatosNotificacionTocada

@@ -22,6 +22,8 @@ import { useTema } from '../tema';
 import { obtenerMiPrediccion, obtenerPartido, type PartidoDetalle } from './datos';
 import { contadorCierre, prediccionAbierta, type Prediccion } from './eleccion';
 import { clavesPrediccion, FormularioPrediccion } from './FormularioPrediccion';
+import { PrediccionesDelGrupo } from '../grupos/PrediccionesDelGrupo';
+import { datosDePrediccion } from './presentacion';
 import { useAhora } from './useAhora';
 
 const mensajes = {
@@ -33,15 +35,6 @@ const mensajes = {
   cerradoEnPantalla: 'Se cerraron las predicciones.',
   noPredijo: 'No predijiste este partido.',
 } as const;
-
-const textoResultado = (partido: PartidoDetalle, prediccion: Prediccion) => {
-  if (prediccion.resultado === 'LOCAL') return `Gana ${partido.local.nombre_corto}`;
-  if (prediccion.resultado === 'VISITANTE') return `Gana ${partido.visitante.nombre_corto}`;
-  return 'Empate';
-};
-
-// D48.
-const textoRango = { G0_1: '0–1', G2: '2', G3: '3', G4_MAS: '4 o más' } as const;
 
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -71,18 +64,9 @@ function PrediccionCerrada({
           <Texto variante="cuerpo">{mensajes.noPredijo}</Texto>
         ) : (
           <View style={{ gap: espacio.s }}>
-            {guardada.marcador_local !== null && guardada.marcador_visitante !== null && (
-              <Dato
-                etiqueta="Marcador exacto"
-                valor={`${partido.local.nombre_corto} ${guardada.marcador_local} - ${guardada.marcador_visitante} ${partido.visitante.nombre_corto}`}
-              />
-            )}
-            {guardada.resultado !== null && (
-              <Dato etiqueta="Resultado" valor={textoResultado(partido, guardada)} />
-            )}
-            {guardada.rango_goles !== null && (
-              <Dato etiqueta="Goles en total" valor={textoRango[guardada.rango_goles]} />
-            )}
+            {datosDePrediccion(partido, guardada).map((dato) => (
+              <Dato key={dato.etiqueta} etiqueta={dato.etiqueta} valor={dato.valor} />
+            ))}
           </View>
         )}
       </Seccion>
@@ -264,6 +248,8 @@ export function PantallaPartido() {
                 : { estado: 'cargando' })}
           />
         )}
+        {/* F07 R7: desde el cierre, las predicciones de quienes comparten grupo conmigo. */}
+        {!abierto && <PrediccionesDelGrupo partido={datos} />}
       </View>
     );
   }

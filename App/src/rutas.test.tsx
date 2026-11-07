@@ -6,6 +6,7 @@ import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 
 import { clienteConsultas } from './datos/clienteConsultas';
+import { crearGrupo, obtenerGrupo, obtenerMisGrupos } from './grupos/datos';
 import { obtenerPartido } from './partido/datos';
 import { simularSesionGuardada } from './pruebas/supabaseFalso';
 
@@ -15,6 +16,8 @@ jest.mock('./partido/datos');
 // S10 ya es real (T38): la cuenta de prueba es de usuario normal.
 jest.mock('./perfil/datos');
 jest.mock('./simulacion/datos');
+// S04, S05, S06 y S08 ya son reales (T66, T67): un grupo "Los del sillón".
+jest.mock('./grupos/datos');
 // S02 ya es real (T26): sus lecturas se simulan con una jornada de un partido.
 jest.mock('./partidos/datos', () => ({
   ...jest.requireActual<typeof import('./partidos/datos')>('./partidos/datos'),
@@ -45,7 +48,11 @@ const PARTIDO_S02 = 'Puebla 1, Santos 0. Terminado';
 // S03 se reconoce por el encabezado del partido.
 const S03 = 'Puebla 1, Santos 0';
 
+const misGruposFalsos = obtenerMisGrupos as jest.MockedFunction<typeof obtenerMisGrupos>;
+const GRUPO = 'Los del sillón';
+
 beforeEach(() => {
+  misGruposFalsos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 2 }]);
   simularSesionGuardada();
   clienteConsultas.clear();
   clienteConsultas.setDefaultOptions({ queries: { retry: false, gcTime: Infinity } });
@@ -64,32 +71,27 @@ async function tocar(nombre: string, rol: 'button' | 'tab' = 'button') {
   await fireEvent.press(await screen.findByRole(rol, { name: nombre }));
 }
 
-// Las pantallas anteriores siguen montadas debajo de la pila: se verifica que la de arriba se cerró.
-async function seCerro(id: string) {
-  await waitFor(() => expect(screen.queryByText(id)).not.toBeOnTheScreen());
-}
-
 const abrioS03 = () => screen.findByRole('header', { name: S03 });
 
 async function seCerroS03() {
   await waitFor(() => expect(screen.queryByRole('header', { name: S03 })).not.toBeOnTheScreen());
 }
 
-// Las pantallas apiladas siguen montadas (ocultas para accesibilidad): una copia de más cuenta.
-function contar(id: string) {
-  return screen.queryAllByText(id, { includeHiddenElements: true }).length;
-}
-
+// Pantallas provisionales (T03): muestran su id.
 const rutas = [
   { url: '/inicio', id: 'S11', titulo: 'Inicio' },
   { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
+  { url: '/grupos/escanear', id: 'S07', titulo: 'Escanear QR' },
+  { url: '/usuario/5', id: 'S13', titulo: 'Perfil de usuario' },
+  { url: '/perfil', id: 'S09', titulo: 'Perfil' },
+] as const;
+
+// Pantallas reales: se reconocen por su encabezado.
+const rutasReales = [
   { url: '/grupos', id: 'S04', titulo: 'Grupos' },
   { url: '/grupos/nuevo', id: 'S05', titulo: 'Crear grupo' },
   { url: '/grupos/unirse', id: 'S06', titulo: 'Unirse a grupo' },
-  { url: '/grupos/escanear', id: 'S07', titulo: 'Escanear QR' },
-  { url: '/grupo/3', id: 'S08', titulo: 'Grupo' },
-  { url: '/usuario/5', id: 'S13', titulo: 'Perfil de usuario' },
-  { url: '/perfil', id: 'S09', titulo: 'Perfil' },
+  { url: '/grupo/3', id: 'S08', titulo: GRUPO },
 ] as const;
 
 describe('rutas', () => {
@@ -98,6 +100,19 @@ describe('rutas', () => {
 
     expect(await screen.findByRole('header', { name: titulo })).toBeOnTheScreen();
     expect(screen.getByText(id)).toBeOnTheScreen();
+  });
+
+  it.each(rutasReales)('$url abre $id', async ({ url, titulo }) => {
+    await abrir(url);
+
+    expect(await screen.findByRole('header', { name: titulo })).toBeOnTheScreen();
+  });
+
+  it('/grupo/3 abre S08 del grupo 3', async () => {
+    await abrir('/grupo/3');
+
+    expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
+    expect(obtenerGrupo).toHaveBeenCalledWith(3);
   });
 
   it('/partido/7 abre S03 del partido 7', async () => {
@@ -127,10 +142,9 @@ describe('rutas', () => {
   });
 
   it('los parámetros de ruta llegan a la pantalla', async () => {
-    await abrir('/grupo/3?vista=jornada');
+    await abrir('/usuario/5');
 
-    expect(await screen.findByText('grupoId: 3')).toBeOnTheScreen();
-    expect(screen.getByText('vista: jornada')).toBeOnTheScreen();
+    expect(await screen.findByText('usuarioId: 5')).toBeOnTheScreen();
   });
 
   it.each(['/partido/7', '/grupo/3', '/usuario/5', '/admin/simulacion'])(
@@ -159,7 +173,7 @@ describe('menú inferior', () => {
 
     await tocar('Grupos', 'tab');
 
-    expect(await screen.findByText('S04')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Grupos' })).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Grupos' })).toBeSelected();
   });
 
@@ -193,7 +207,7 @@ describe('menú inferior', () => {
     expect(await abrioS03()).toBeOnTheScreen();
 
     await tocar('Grupos', 'tab');
-    expect(await screen.findByText('S04')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Grupos' })).toBeOnTheScreen();
 
     await tocar('Partidos', 'tab');
     expect(await abrioS03()).toBeOnTheScreen();
@@ -224,29 +238,42 @@ describe('menú inferior', () => {
     ).toHaveLength(1);
   });
 
-  it('cambiar la vista del grupo actualiza el grupo sin agregar historial (D78)', async () => {
+  it('tocar varias veces un grupo no apila su pantalla y "volver" regresa a Grupos (D78)', async () => {
     await abrir('/grupos');
 
-    await tocar('Grupo 1');
-    await tocar('Vista jornada');
-    await tocar('Vista jornada');
-    expect(await screen.findByText('vista: jornada')).toBeOnTheScreen();
-    expect(contar('S08')).toBe(1);
+    const fila = await screen.findByRole('button', { name: `${GRUPO}, 2 miembros` });
+    for (let i = 0; i < 3; i++) await fireEvent.press(fila);
+    expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
+    expect(screen.queryAllByRole('header', { name: GRUPO, includeHiddenElements: true })).toHaveLength(1);
 
     await tocar('Volver');
-    await seCerro('S08');
-    expect(screen.getByText('S04')).toBeOnTheScreen();
+    await waitFor(() => expect(screen.queryByRole('header', { name: GRUPO })).not.toBeOnTheScreen());
+    expect(screen.getByRole('header', { name: 'Grupos' })).toBeOnTheScreen();
   });
 
-  it('al crear un grupo desde el modal se abre el grupo en la pestaña Grupos', async () => {
+  it('F07 CA9: al crear un grupo desde el modal se abre el grupo en la pestaña Grupos', async () => {
     await abrir('/inicio');
 
     await tocar('Grupos', 'tab');
     await tocar('Crear grupo');
-    expect(await screen.findByText('S05')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Crear grupo' })).toBeOnTheScreen();
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
 
-    await tocar('Grupo 1 (al crear)');
-    expect(await screen.findByText('S08')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('Nombre del grupo'), 'Los del sillón');
+    await tocar('Crear grupo');
+    expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
+    expect(crearGrupo).toHaveBeenCalledWith('Los del sillón');
+    expect(screen.getByRole('tab', { name: 'Grupos' })).toBeSelected();
+  });
+
+  it('F07 CA9: al unirse desde el modal, el grupo se abre en la pestaña Grupos', async () => {
+    await abrir('/inicio');
+
+    await tocar('Grupos', 'tab');
+    await tocar('Unirse con código');
+    await fireEvent.changeText(await screen.findByLabelText('Código del grupo'), 'abcd-efgh');
+    await tocar('Unirse');
+    expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Grupos' })).toBeSelected();
   });
 });
