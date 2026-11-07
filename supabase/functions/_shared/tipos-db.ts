@@ -862,6 +862,7 @@ export type Database = {
         Row: {
           id: number | null
           miembros: number | null
+          mi_posicion: number | null
           nombre: string | null
           rol: Database["public"]["Enums"]["rol_grupo"] | null
           unido_en: string | null
@@ -994,6 +995,7 @@ export type Database = {
       jornada_actual: { Args: { ahora?: string }; Returns: number }
       liberar_evaluaciones: { Args: { ids: number[] }; Returns: undefined }
       llamadas_ia_hoy: { Args: { ahora: string }; Returns: number }
+      mi_posicion_en_grupo: { Args: { id_grupo: number }; Returns: number }
       normalizar_codigo_invitacion: {
         Args: { codigo: string }
         Returns: string
@@ -1011,6 +1013,35 @@ export type Database = {
           goles_local: number
           goles_visitante: number
           partido_id: number
+        }[]
+      }
+      posiciones_grupo: {
+        Args: { id_grupo: number; id_jornada: number; id_torneo: number }
+        Returns: {
+          con_simulados: boolean
+          marcadores_exactos: number
+          posicion: number
+          puntos_base: number
+          puntos_bono: number
+          puntos_total: number
+          ultima_calificacion: string
+          usuario_id: string
+        }[]
+      }
+      ranking_grupo: {
+        Args: { id_grupo: number; id_jornada?: number }
+        Returns: {
+          es_yo: boolean
+          foto_url: string
+          incluye_simulados: boolean
+          marcadores_exactos: number
+          nombre: string
+          posicion: number
+          puntos_base: number
+          puntos_bono: number
+          puntos_total: number
+          ultima_calificacion: string
+          usuario_id: string
         }[]
       }
       recordatorios_pendientes: {
@@ -1050,6 +1081,7 @@ export type Database = {
           prediccion_id: number
         }[]
       }
+      torneo_actual_id: { Args: never; Returns: number }
       unirse_grupo: {
         Args: { codigo: string }
         Returns: {
