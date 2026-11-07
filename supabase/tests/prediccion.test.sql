@@ -289,7 +289,7 @@ select results_eq(
 select is_empty(
   $$ select justificacion from public.prediccion
      where usuario_id = '00000000-0000-0000-0000-00000000000b' $$,
-  'F04 CA3: A no lee la justificación de B'
+  'F04 CA3: sin grupo en común, A no lee la justificación de B (R04)'
 );
 select throws_ok(
   $$ update public.prediccion set justificacion = 'Cambio de opinión'
@@ -313,7 +313,7 @@ select throws_ok(
 -- CA6: predicciones de otro usuario.
 select is_empty(
   $$ select id from public.prediccion where usuario_id = '00000000-0000-0000-0000-00000000000b' $$,
-  'F03 CA6: A no lee las predicciones de B'
+  'F03 CA6: sin grupo en común, A no lee las predicciones de B (R04)'
 );
 select throws_ok(
   $$ insert into public.prediccion (usuario_id, partido_id, resultado)
@@ -364,7 +364,7 @@ set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000c", 
 
 select is_empty(
   $$ select id from public.prediccion $$,
-  'F03 CA6: el administrador no lee predicciones ajenas'
+  'F03 CA6: sin grupo en común, el administrador no lee predicciones ajenas (R04)'
 );
 select is_empty(
   $$ update public.prediccion set resultado = 'EMPATE' returning id $$,
@@ -372,7 +372,7 @@ select is_empty(
 );
 select is_empty(
   $$ select justificacion from public.prediccion where justificacion is not null $$,
-  'F04 CA3: el administrador no lee justificaciones ajenas'
+  'F04 CA3: sin grupo en común, el administrador no lee justificaciones ajenas (R04)'
 );
 
 -- ---------------------------------------------------------------------------

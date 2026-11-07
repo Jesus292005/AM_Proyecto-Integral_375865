@@ -1,4 +1,5 @@
--- T14 — RLS y permisos de `usuario` y `usuario_publico` (F01 CA7, V3, V4, V6).
+-- T14 — RLS y permisos de `usuario` y `usuario_publico` (F01 CA7, V3, V4, V6). Desde T65 (P-26,
+-- D97): nadie lee `correo` por la API y `usuario_publico` solo muestra a quienes comparten grupo.
 -- Dos usuarios de Google (A y B); cada prueba actúa como uno de ellos con su token simulado.
 -- Todo corre dentro de una transacción que se deshace al final.
 begin;
@@ -40,10 +41,10 @@ select results_eq(
   $$ values ('00000000-0000-0000-0000-00000000000a'::uuid) $$,
   'A solo ve su propio registro en usuario'
 );
-select is(
-  (select correo from public.usuario where id = '00000000-0000-0000-0000-00000000000a'),
-  'a@example.com',
-  'A lee su propio correo'
+select throws_ok(
+  $$ select correo from public.usuario where id = '00000000-0000-0000-0000-00000000000a' $$,
+  '42501', null,
+  'F07 CA8: nadie lee correo por la API, tampoco el propio (P-26, D97)'
 );
 select is(
   (select rol::text from public.usuario where id = '00000000-0000-0000-0000-00000000000a'),
@@ -51,8 +52,9 @@ select is(
   'A lee su propio rol (S09 lo usa para mostrar S10)'
 );
 -- CA7: no puede leer el correo de otro usuario.
-select is_empty(
+select throws_ok(
   $$ select correo from public.usuario where id = '00000000-0000-0000-0000-00000000000b' $$,
+  '42501', null,
   'CA7: A no puede leer el correo de B'
 );
 
@@ -139,8 +141,8 @@ select throws_ok(
 -- V3: de los demás solo nombre, foto y equipo, por la vista pública.
 select results_eq(
   $$ select nombre from public.usuario_publico order by nombre $$,
-  $$ values ('Usuario A'), ('Usuario B') $$,
-  'A ve a todos los usuarios en usuario_publico'
+  $$ values ('Usuario A') $$,
+  'F07 CA8: sin grupo en común, A solo se ve a sí mismo en usuario_publico'
 );
 select throws_ok(
   $$ select correo from public.usuario_publico $$,
@@ -199,7 +201,7 @@ reset role;
 select columns_are(
   'public', 'usuario_publico',
   array['id', 'nombre', 'foto_url', 'equipo_favorito_id'],
-  'V3: usuario_publico solo tiene id, nombre, foto y equipo'
+  'F07 CA8: usuario_publico solo tiene id, nombre, foto y equipo (V3)'
 );
 select is(
   (select rol::text from public.usuario where id = '00000000-0000-0000-0000-00000000000a'),

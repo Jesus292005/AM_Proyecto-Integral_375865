@@ -278,6 +278,45 @@ export type Database = {
           },
         ]
       }
+      grupo: {
+        Row: {
+          codigo_invitacion: string
+          creado_en: string
+          creador_id: string | null
+          id: number
+          nombre: string
+        }
+        Insert: {
+          codigo_invitacion: string
+          creado_en?: string
+          creador_id?: string | null
+          id?: never
+          nombre: string
+        }
+        Update: {
+          codigo_invitacion?: string
+          creado_en?: string
+          creador_id?: string | null
+          id?: never
+          nombre?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grupo_creador_id_fkey"
+            columns: ["creador_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grupo_creador_id_fkey"
+            columns: ["creador_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jornada: {
         Row: {
           esta_cerrada: boolean
@@ -380,6 +419,56 @@ export type Database = {
             columns: ["evaluacion_id"]
             isOneToOne: false
             referencedRelation: "evaluacion_ia"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      miembro_grupo: {
+        Row: {
+          grupo_id: number
+          rol: Database["public"]["Enums"]["rol_grupo"]
+          unido_en: string
+          usuario_id: string
+        }
+        Insert: {
+          grupo_id: number
+          rol?: Database["public"]["Enums"]["rol_grupo"]
+          unido_en?: string
+          usuario_id: string
+        }
+        Update: {
+          grupo_id?: number
+          rol?: Database["public"]["Enums"]["rol_grupo"]
+          unido_en?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "miembro_grupo_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "miembro_grupo_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "mis_grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "miembro_grupo_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "miembro_grupo_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -728,6 +817,57 @@ export type Database = {
       }
     }
     Views: {
+      miembros_grupo: {
+        Row: {
+          es_yo: boolean | null
+          foto_url: string | null
+          grupo_id: number | null
+          nombre: string | null
+          rol: Database["public"]["Enums"]["rol_grupo"] | null
+          unido_en: string | null
+          usuario_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "miembro_grupo_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "miembro_grupo_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "mis_grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "miembro_grupo_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "miembro_grupo_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mis_grupos: {
+        Row: {
+          id: number | null
+          miembros: number | null
+          nombre: string | null
+          rol: Database["public"]["Enums"]["rol_grupo"] | null
+          unido_en: string | null
+        }
+        Relationships: []
+      }
       mis_puntos: {
         Row: {
           afirmaciones: Json | null
@@ -749,6 +889,42 @@ export type Database = {
             columns: ["partido_id"]
             isOneToOne: false
             referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      predicciones_grupo: {
+        Row: {
+          foto_url: string | null
+          justificacion: string | null
+          marcador_local: number | null
+          marcador_visitante: number | null
+          nombre: string | null
+          partido_id: number | null
+          rango_goles: Database["public"]["Enums"]["rango_goles"] | null
+          resultado: Database["public"]["Enums"]["resultado_prediccion"] | null
+          usuario_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -801,6 +977,10 @@ export type Database = {
           visitante: string
         }[]
       }
+      comparte_grupo: { Args: { otro: string }; Returns: boolean }
+      crear_grupo: { Args: { nombre: string }; Returns: number }
+      es_miembro: { Args: { id_grupo: number }; Returns: boolean }
+      generar_codigo_invitacion: { Args: never; Returns: string }
       guardar_carga_inicial: { Args: { carga: Json }; Returns: Json }
       guardar_datos_partido: { Args: { datos: Json }; Returns: Json }
       guardar_evaluacion: {
@@ -814,6 +994,10 @@ export type Database = {
       jornada_actual: { Args: { ahora?: string }; Returns: number }
       liberar_evaluaciones: { Args: { ids: number[] }; Returns: undefined }
       llamadas_ia_hoy: { Args: { ahora: string }; Returns: number }
+      normalizar_codigo_invitacion: {
+        Args: { codigo: string }
+        Returns: string
+      }
       partidos_pendientes_de_final: {
         Args: { ahora: string }
         Returns: {
@@ -850,6 +1034,7 @@ export type Database = {
         Args: { id_evaluacion: number; motivo: string }
         Returns: Database["public"]["Enums"]["estado_evaluacion"]
       }
+      salir_grupo: { Args: { id_grupo: number }; Returns: undefined }
       simulacion_crear: {
         Args: { minutos?: number; origen: number }
         Returns: number
@@ -863,6 +1048,13 @@ export type Database = {
           intentos: number
           partido_id: number
           prediccion_id: number
+        }[]
+      }
+      unirse_grupo: {
+        Args: { codigo: string }
+        Returns: {
+          grupo_id: number
+          ya_era_miembro: boolean
         }[]
       }
     }
@@ -882,6 +1074,7 @@ export type Database = {
       fase_jornada: "REGULAR" | "LIGUILLA"
       rango_goles: "G0_1" | "G2" | "G3" | "G4_MAS"
       resultado_prediccion: "LOCAL" | "EMPATE" | "VISITANTE"
+      rol_grupo: "ADMIN" | "MIEMBRO"
       rol_usuario: "USUARIO" | "ADMIN"
       tipo_evento: "GOL" | "TARJETA" | "CAMBIO" | "VAR"
       tipo_notificacion: "RECORDATORIO" | "PUNTOS_LISTOS"
@@ -1034,6 +1227,7 @@ export const Constants = {
       fase_jornada: ["REGULAR", "LIGUILLA"],
       rango_goles: ["G0_1", "G2", "G3", "G4_MAS"],
       resultado_prediccion: ["LOCAL", "EMPATE", "VISITANTE"],
+      rol_grupo: ["ADMIN", "MIEMBRO"],
       rol_usuario: ["USUARIO", "ADMIN"],
       tipo_evento: ["GOL", "TARJETA", "CAMBIO", "VAR"],
       tipo_notificacion: ["RECORDATORIO", "PUNTOS_LISTOS"],
