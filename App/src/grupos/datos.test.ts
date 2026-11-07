@@ -2,8 +2,8 @@ import { ErrorDatos } from '../datos/errores';
 import { supabase } from '../supabase/cliente';
 import {
   crearGrupo,
-  obtenerMiembros,
   obtenerMisGrupos,
+  obtenerRanking,
   obtenerPrediccionesDelGrupo,
   salirDeGrupo,
   unirseAGrupo,
@@ -40,28 +40,57 @@ beforeEach(() => {
 
 describe('lecturas', () => {
   it('F07 R9: mis grupos, del más reciente al que me uní', async () => {
-    const c = consulta({ data: [{ id: 1, nombre: 'Amigos', miembros: 3 }], error: null, status: 200 });
+    const fila = { id: 1, nombre: 'Amigos', miembros: 3, mi_posicion: 2 };
+    const c = consulta({ data: [fila], error: null, status: 200 });
     desde.mockReturnValue(c);
 
-    expect(await obtenerMisGrupos()).toEqual([{ id: 1, nombre: 'Amigos', miembros: 3 }]);
+    expect(await obtenerMisGrupos()).toEqual([fila]);
     expect(desde).toHaveBeenCalledWith('mis_grupos');
     expect(c.llamadas).toContainEqual(['order', 'unido_en', { ascending: false }]);
   });
 
   it('una fila con forma inválida es un error, no un dato (D54)', async () => {
-    desde.mockReturnValue(consulta({ data: [{ id: 1, nombre: null, miembros: 3 }], error: null, status: 200 }));
+    desde.mockReturnValue(consulta({ data: [{ id: 1, nombre: null, miembros: 3, mi_posicion: null }], error: null, status: 200 }));
 
     await expect(obtenerMisGrupos()).rejects.toThrow('forma inválida');
   });
 
-  it('F07 R10: miembros del grupo por nombre', async () => {
-    const c = consulta({ data: [], error: null, status: 200 });
-    desde.mockReturnValue(c);
+  it('F08 CA9: el ranking es una sola llamada al servidor, del torneo o de una jornada', async () => {
+    const fila = {
+      posicion: 1,
+      usuario_id: 'a',
+      nombre: 'Ana',
+      foto_url: null,
+      puntos_total: 500,
+      puntos_base: 450,
+      puntos_bono: 50,
+      marcadores_exactos: 1,
+      es_yo: true,
+      incluye_simulados: true,
+      ultima_calificacion: '2026-11-07T18:00:00Z',
+    };
+    rpc.mockResolvedValue({ data: [fila], error: null, status: 200 });
 
-    await obtenerMiembros(4);
-    expect(desde).toHaveBeenCalledWith('miembros_grupo');
-    expect(c.llamadas).toContainEqual(['eq', 'grupo_id', 4]);
+    expect(await obtenerRanking(4, null)).toEqual({ filas: [fila], incluyeSimulados: true });
+    await obtenerRanking(4, 9);
+
+    expect(rpc.mock.calls).toEqual([
+      ['ranking_grupo', { id_grupo: 4 }],
+      ['ranking_grupo', { id_grupo: 4, id_jornada: 9 }],
+    ]);
+    expect(desde).not.toHaveBeenCalled();
   });
+
+  it.each(['NO_MIEMBRO', 'JORNADA_INVALIDA', 'SIN_TORNEO_ACTUAL'] as const)(
+    'F08 R6: el error %s del ranking se distingue de una falla',
+    async (codigo) => {
+      rpc.mockResolvedValue({ data: null, error: { message: codigo }, status: 400 });
+
+      const error = await obtenerRanking(4, null).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ErrorGrupo);
+      expect((error as ErrorGrupo).codigo).toBe(codigo);
+    },
+  );
 
   it('F07 R7: predicciones del grupo de un partido (las RLS filtran, R04)', async () => {
     const c = consulta({ data: [], error: null, status: 200 });

@@ -4,19 +4,27 @@ import { comoErrorDatos } from '../datos/errores';
 import { supabase } from '../supabase/cliente';
 import { ErrorGrupo, esCodigoGrupo } from './errores';
 
-// Lecturas y acciones de grupos (F07). Crear, unirse y salir son funciones del servidor que usan
+// Lecturas y acciones de grupos (F07) y su ranking (F08). Crear, unirse y salir son funciones del servidor que usan
 // `auth.uid()` y validan los límites (R3–R5, R12); las lecturas pasan por las RLS (R04, R12). Las
 // vistas devuelven columnas que pueden venir vacías: Zod valida su forma (D54).
 
 const entero = z.number().int();
 
-const esquemaMiGrupo = z.object({ id: entero, nombre: z.string(), miembros: entero });
-const esquemaMiembro = z.object({
+// F08 R8: `mi_posicion` en el ranking del torneo actual; vacía sin torneo actual.
+const esquemaMiGrupo = z.object({ id: entero, nombre: z.string(), miembros: entero, mi_posicion: entero.nullable() });
+// F08 R6: una fila por miembro actual; de otros, solo nombre, foto y puntos.
+const esquemaFilaRanking = z.object({
+  posicion: entero,
   usuario_id: z.string(),
   nombre: z.string(),
   foto_url: z.string().nullable(),
-  rol: z.enum(['ADMIN', 'MIEMBRO']),
+  puntos_total: entero,
+  puntos_base: entero,
+  puntos_bono: entero,
+  marcadores_exactos: entero,
   es_yo: z.boolean(),
+  incluye_simulados: z.boolean(),
+  ultima_calificacion: z.string().nullable(),
 });
 const esquemaPrediccionAjena = z.object({
   usuario_id: z.string(),
@@ -31,7 +39,8 @@ const esquemaPrediccionAjena = z.object({
 const esquemaUnion = z.array(z.object({ grupo_id: entero, ya_era_miembro: z.boolean() })).length(1);
 
 export type MiGrupo = z.infer<typeof esquemaMiGrupo>;
-export type Miembro = z.infer<typeof esquemaMiembro>;
+export type FilaRanking = z.infer<typeof esquemaFilaRanking>;
+export type Ranking = { filas: FilaRanking[]; incluyeSimulados: boolean };
 export type PrediccionAjena = z.infer<typeof esquemaPrediccionAjena>;
 export type GrupoDetalle = { id: number; nombre: string; codigo_invitacion: string };
 export type Union = { grupoId: number; yaEraMiembro: boolean };
@@ -50,7 +59,7 @@ function comoErrorAccion(error: { message: string }, status: number): Error {
 export async function obtenerMisGrupos(): Promise<MiGrupo[]> {
   const { data, error, status } = await supabase
     .from('mis_grupos')
-    .select('id, nombre, miembros')
+    .select('id, nombre, miembros, mi_posicion')
     .order('unido_en', { ascending: false })
     .order('id', { ascending: false });
   if (error) throw comoErrorDatos(error, status);
@@ -68,15 +77,18 @@ export async function obtenerGrupo(grupoId: number): Promise<GrupoDetalle | null
   return data;
 }
 
-/** S08: miembros del grupo por nombre (R10). */
-export async function obtenerMiembros(grupoId: number): Promise<Miembro[]> {
-  const { data, error, status } = await supabase
-    .from('miembros_grupo')
-    .select('usuario_id, nombre, foto_url, rol, es_yo')
-    .eq('grupo_id', grupoId)
-    .order('nombre');
-  if (error) throw comoErrorDatos(error, status);
-  return validar(z.array(esquemaMiembro), data, 'Miembros');
+/**
+ * S08: ranking del grupo en el torneo actual (`jornadaId` null) o en una jornada (F08 R6). Una sola
+ * llamada; el servidor suma, ordena y desempata (D52).
+ */
+export async function obtenerRanking(grupoId: number, jornadaId: number | null): Promise<Ranking> {
+  const { data, error, status } = await supabase.rpc(
+    'ranking_grupo',
+    jornadaId === null ? { id_grupo: grupoId } : { id_grupo: grupoId, id_jornada: jornadaId },
+  );
+  if (error) throw comoErrorAccion(error, status);
+  const filas = validar(z.array(esquemaFilaRanking), data, 'Ranking');
+  return { filas, incluyeSimulados: filas.some((f) => f.incluye_simulados) };
 }
 
 /** S03 cerrado: predicciones de quienes comparten grupo conmigo (R6, R7), por nombre. */

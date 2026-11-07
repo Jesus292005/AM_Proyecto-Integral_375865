@@ -52,7 +52,7 @@ const misGruposFalsos = obtenerMisGrupos as jest.MockedFunction<typeof obtenerMi
 const GRUPO = 'Los del sillón';
 
 beforeEach(() => {
-  misGruposFalsos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 2 }]);
+  misGruposFalsos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 2, mi_posicion: null }]);
   simularSesionGuardada();
   clienteConsultas.clear();
   clienteConsultas.setDefaultOptions({ queries: { retry: false, gcTime: Infinity } });
@@ -152,7 +152,10 @@ describe('rutas', () => {
     async (url) => {
       await abrir(url);
 
-      expect(await screen.findAllByRole('tab')).toHaveLength(4);
+      // Los 4 destinos del menú (S08 tiene además sus pestañas Torneo / Jornada, F08).
+      for (const destino of ['Inicio', 'Partidos', 'Grupos', 'Perfil']) {
+        expect(await screen.findByRole('tab', { name: destino })).toBeOnTheScreen();
+      }
     },
   );
 

@@ -11,15 +11,16 @@ import {
   Esqueleto,
   EstadoPantalla,
   Seccion,
-  TablaFila,
   Texto,
 } from '../componentes';
 import { esSinConexion } from '../datos/errores';
+import { elegirJornada } from '../partidos/agruparPorDia';
+import { obtenerPartidosDeJornada, obtenerTorneoActual } from '../partidos/datos';
 import { useTema } from '../tema';
 import { formatearCodigo } from './codigo';
-import { obtenerGrupo, obtenerMiembros, salirDeGrupo, type GrupoDetalle, type Miembro } from './datos';
-import { mensajeAlSalir, mensajesGrupo } from './errores';
-import { FotoUsuario } from './FotoUsuario';
+import { obtenerGrupo, obtenerRanking, salirDeGrupo, type GrupoDetalle } from './datos';
+import { ErrorGrupo, mensajeAlSalir, mensajesGrupo } from './errores';
+import { RankingGrupo, type Vista } from './RankingGrupo';
 
 function EsqueletoGrupo() {
   const { espacio } = useTema();
@@ -34,37 +35,8 @@ function EsqueletoGrupo() {
   );
 }
 
-function FilaMiembro({ miembro }: { miembro: Miembro }) {
-  const etiqueta = [miembro.nombre, miembro.es_yo ? 'tú' : null, miembro.rol === 'ADMIN' ? 'Admin' : null]
-    .filter((t) => t !== null)
-    .join(', ');
-
-  return (
-    <TablaFila resaltada={miembro.es_yo} accessibilityLabel={etiqueta}>
-      <FotoUsuario url={miembro.foto_url} nombre={miembro.nombre} />
-      <View style={{ flex: 1 }}>
-        <Texto variante="cuerpoFuerte" numberOfLines={1}>
-          {miembro.nombre}
-        </Texto>
-      </View>
-      {miembro.rol === 'ADMIN' && (
-        <Texto variante="meta" color="textoTenue">
-          Admin
-        </Texto>
-      )}
-    </TablaFila>
-  );
-}
-
-function Grupo({
-  grupo,
-  miembros,
-  aviso,
-}: {
-  grupo: GrupoDetalle;
-  miembros: { datos: Miembro[] | undefined; error: unknown; reintentar: () => void };
-  aviso: string | null;
-}) {
+/** Código para invitar y salir del grupo (F07 R10). */
+function InvitarYSalir({ grupo }: { grupo: GrupoDetalle }) {
   const { espacio } = useTema();
   const clienteConsultas = useQueryClient();
   const salida = useMutation({
@@ -72,7 +44,7 @@ function Grupo({
     onSuccess: () => {
       void clienteConsultas.invalidateQueries({ queryKey: ['mis-grupos'] });
       clienteConsultas.removeQueries({ queryKey: ['grupo', grupo.id] });
-      // R5: dejo de ver al instante las predicciones de quienes ya no comparten grupo conmigo.
+      // F07 R5: dejo de ver al instante las predicciones de quienes ya no comparten grupo conmigo.
       clienteConsultas.removeQueries({ queryKey: ['predicciones-grupo'] });
       router.navigate('/grupos');
     },
@@ -89,35 +61,8 @@ function Grupo({
     );
   }
 
-  let lista: ReactNode;
-  if (miembros.datos !== undefined) {
-    lista = miembros.datos.map((m) => <FilaMiembro key={m.usuario_id} miembro={m} />);
-  } else if (miembros.error !== null) {
-    lista = (
-      <EstadoPantalla
-        mensaje={esSinConexion(miembros.error) ? mensajesGrupo.sinConexion : mensajesGrupo.errorGrupo}
-        accion={{ titulo: 'Reintentar', onPress: miembros.reintentar }}
-      />
-    );
-  } else {
-    lista = <Esqueleto variante="cuerpoFuerte" ancho="80%" />;
-  }
-
   return (
-    <View style={{ gap: espacio.xl }}>
-      <View style={{ gap: espacio.xs }}>
-        <Texto variante="titulo1" accessibilityRole="header">
-          {grupo.nombre}
-        </Texto>
-        {aviso !== null && (
-          <Texto variante="meta" color="texto2" accessibilityLiveRegion="polite">
-            {aviso}
-          </Texto>
-        )}
-      </View>
-      <Seccion etiqueta="Miembros">
-        <View>{lista}</View>
-      </Seccion>
+    <>
       <Seccion etiqueta="Invitar">
         <Texto
           variante="titulo2"
@@ -143,40 +88,82 @@ function Grupo({
           </Texto>
         )}
       </View>
-    </View>
+    </>
   );
 }
 
-/** S08: grupo con sus miembros, el código para invitar y salir (F07 R10). F08 agrega el ranking. */
+/**
+ * S08: ranking del grupo por torneo o jornada (F08), código para invitar y salir (F07). El ranking
+ * se vuelve a pedir al abrir, al cambiar de vista o de jornada y al deslizar (F08 R7).
+ */
 export function PantallaGrupo() {
-  const { grupoId, aviso } = useLocalSearchParams<'/grupo/[grupoId]'>();
+  const { grupoId, aviso, vista: vistaRuta, jornada } = useLocalSearchParams<'/grupo/[grupoId]'>();
   const id = Number(grupoId);
   const idValido = Number.isInteger(id) && id > 0;
+  const vista: Vista = vistaRuta === 'jornada' ? 'jornada' : 'torneo';
   const { colores, espacio, medidas } = useTema();
   const [refrescando, setRefrescando] = useState(false);
 
   const grupo = useQuery({ queryKey: ['grupo', id], queryFn: () => obtenerGrupo(id), enabled: idValido });
-  const miembros = useQuery({
-    queryKey: ['grupo', id, 'miembros'],
-    queryFn: () => obtenerMiembros(id),
-    enabled: idValido && grupo.data != null,
+  const esMiembro = grupo.data != null;
+
+  // Vista "Jornada": las jornadas del torneo actual (las mismas de S02) y la elegida (D86).
+  const torneo = useQuery({
+    queryKey: ['torneo-actual'],
+    queryFn: obtenerTorneoActual,
+    enabled: esMiembro && vista === 'jornada',
+  });
+  const jornadas = torneo.data?.jornadas ?? [];
+  const elegida = elegirJornada(
+    jornadas,
+    typeof jornada === 'string' ? jornada : undefined,
+    torneo.data?.ordenActual ?? null,
+  );
+  const jornadaId = vista === 'jornada' ? (elegida?.id ?? null) : null;
+
+  // "Esta jornada no tiene partidos" (F08 Estados): la misma consulta y caché de S02.
+  const partidos = useQuery({
+    queryKey: ['partidos-de-jornada', elegida?.id],
+    queryFn: () => (elegida ? obtenerPartidosDeJornada(elegida.id) : Promise.resolve([])),
+    enabled: esMiembro && vista === 'jornada' && elegida !== undefined,
+  });
+  let vacio: string | undefined;
+  if (vista === 'jornada' && torneo.data != null && (jornadas.length === 0 || partidos.data?.length === 0)) {
+    vacio = mensajesGrupo.jornadaSinPartidos;
+  }
+
+  const ranking = useQuery({
+    queryKey: ['grupo', id, 'ranking', vista, jornadaId],
+    queryFn: () => obtenerRanking(id, jornadaId),
+    enabled: esMiembro && (vista === 'torneo' || elegida !== undefined),
   });
 
   async function recargar() {
     setRefrescando(true);
-    await Promise.all([grupo.refetch(), miembros.refetch()]);
+    await Promise.all([grupo.refetch(), ranking.refetch()]);
     setRefrescando(false);
   }
 
+  // Sin torneo actual, la vista "Jornada" no tiene jornadas: lo dice como el ranking (F08 Estados).
+  let errorRanking: Error | null = ranking.error;
+  if (vista === 'jornada' && torneo.data === null) errorRanking = new ErrorGrupo('SIN_TORNEO_ACTUAL');
+  else if (vista === 'jornada' && torneo.error) errorRanking = torneo.error;
+
+  const indice = elegida ? jornadas.indexOf(elegida) : -1;
+  const noMiembro =
+    !idValido ||
+    grupo.data === null ||
+    (ranking.error instanceof ErrorGrupo && ranking.error.codigo === 'NO_MIEMBRO');
+
   let contenido: ReactNode;
-  if (!idValido || grupo.data === null) {
+  if (noMiembro) {
     contenido = (
       <EstadoPantalla
         mensaje={mensajesGrupo.noMiembro}
         accion={{ titulo: 'Ir a Grupos', onPress: () => router.navigate('/grupos') }}
       />
     );
-  } else if (grupo.data === undefined) {
+  } else if (grupo.data == null) {
     contenido = grupo.isError ? (
       <EstadoPantalla
         mensaje={esSinConexion(grupo.error) ? mensajesGrupo.sinConexion : mensajesGrupo.errorGrupo}
@@ -186,23 +173,50 @@ export function PantallaGrupo() {
       <EsqueletoGrupo />
     );
   } else {
-    const fallida = [grupo, miembros].find((c) => c.isRefetchError);
+    const fallida = [grupo, ranking].find((c) => c.isRefetchError);
     contenido = (
-      <View style={{ gap: espacio.l }}>
+      <View style={{ gap: espacio.xl }}>
         {fallida && (
           <AvisoSinConexion
             actualizadoEn={new Date(fallida.dataUpdatedAt)}
             sinConexion={esSinConexion(fallida.error)}
           />
         )}
-        <Grupo
-          grupo={grupo.data}
-          miembros={{ datos: miembros.data, error: miembros.error, reintentar: () => void miembros.refetch() }}
-          aviso={aviso === 'ya-miembro' ? mensajesGrupo.yaEraMiembro : null}
+        <View style={{ gap: espacio.xs }}>
+          <Texto variante="titulo1" accessibilityRole="header">
+            {grupo.data.nombre}
+          </Texto>
+          {aviso === 'ya-miembro' && (
+            <Texto variante="meta" color="texto2" accessibilityLiveRegion="polite">
+              {mensajesGrupo.yaEraMiembro}
+            </Texto>
+          )}
+        </View>
+        <RankingGrupo
+          vista={vista}
+          jornada={
+            elegida && torneo.data
+              ? {
+                  nombre: elegida.nombre,
+                  torneo: torneo.data.nombre,
+                  anterior: jornadas[indice - 1]?.orden,
+                  siguiente: jornadas[indice + 1]?.orden,
+                }
+              : undefined
+          }
+          vacio={vacio}
+          ranking={{
+            datos: ranking.data,
+            error: errorRanking,
+            reintentar: () => void (vista === 'jornada' && torneo.isError ? torneo.refetch() : ranking.refetch()),
+          }}
         />
+        <InvitarYSalir grupo={grupo.data} />
       </View>
     );
   }
+
+  const miembros = ranking.data?.filas.length;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colores.fondo }}>
@@ -224,7 +238,7 @@ export function PantallaGrupo() {
       >
         <EncabezadoPantalla
           onVolver={router.canGoBack() ? () => router.back() : undefined}
-          meta={miembros.data ? `${miembros.data.length} de 30 miembros` : undefined}
+          meta={miembros !== undefined && !noMiembro ? `${miembros} de 30 miembros` : undefined}
         />
         {contenido}
       </ScrollView>

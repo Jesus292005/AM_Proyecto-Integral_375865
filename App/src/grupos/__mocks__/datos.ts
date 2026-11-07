@@ -1,6 +1,6 @@
 // Se activa con `jest.mock('<ruta>/grupos/datos')`. Por defecto no estoy en ningún grupo; cada
 // prueba puede cambiar las respuestas.
-import type { GrupoDetalle, Miembro, MiGrupo, PrediccionAjena, Union } from '../datos';
+import type { GrupoDetalle, MiGrupo, PrediccionAjena, Ranking, Union } from '../datos';
 
 export const obtenerMisGrupos = jest.fn(async (): Promise<MiGrupo[]> => []);
 export const obtenerGrupo = jest.fn(
@@ -10,7 +10,12 @@ export const obtenerGrupo = jest.fn(
     codigo_invitacion: 'ABCDEFGH',
   }),
 );
-export const obtenerMiembros = jest.fn(async (_grupoId: number): Promise<Miembro[]> => []);
+export const obtenerRanking = jest.fn(
+  async (_grupoId: number, _jornadaId: number | null): Promise<Ranking> => ({
+    filas: [],
+    incluyeSimulados: false,
+  }),
+);
 export const obtenerPrediccionesDelGrupo = jest.fn(
   async (_partidoId: number): Promise<PrediccionAjena[]> => [],
 );

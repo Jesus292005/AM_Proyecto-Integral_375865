@@ -7,10 +7,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AvisoSinConexion, Boton, Esqueleto, EstadoPantalla, TablaFila, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { useTema } from '../tema';
-import { obtenerMisGrupos } from './datos';
+import { obtenerMisGrupos, type MiGrupo } from './datos';
 import { mensajesGrupo } from './errores';
 
 const textoMiembros = (n: number) => (n === 1 ? '1 miembro' : `${n} miembros`);
+
+/** "Vas 2.º de 5" con mi posición en el torneo actual (F08 R8); sin ella, el número de miembros. */
+const textoDeGrupo = (grupo: MiGrupo) =>
+  grupo.mi_posicion === null ? textoMiembros(grupo.miembros) : `Vas ${grupo.mi_posicion}.º de ${grupo.miembros}`;
 
 function EsqueletoGrupos() {
   const { espacio } = useTema();
@@ -24,7 +28,7 @@ function EsqueletoGrupos() {
   );
 }
 
-/** S04: mis grupos con su número de miembros y las acciones de crear y unirse (F07 R9). */
+/** S04: mis grupos con mi posición (F08 R8) y las acciones de crear y unirse (F07 R9). */
 export function PantallaGrupos() {
   const { colores, espacio, medidas } = useTema();
   const [refrescando, setRefrescando] = useState(false);
@@ -66,7 +70,7 @@ export function PantallaGrupos() {
         {grupos.data.map((grupo) => (
           <TablaFila
             key={grupo.id}
-            accessibilityLabel={`${grupo.nombre}, ${textoMiembros(grupo.miembros)}`}
+            accessibilityLabel={`${grupo.nombre}, ${textoDeGrupo(grupo)}`}
             onPress={() =>
               router.navigate({ pathname: '/grupo/[grupoId]', params: { grupoId: String(grupo.id) } })
             }
@@ -77,7 +81,7 @@ export function PantallaGrupos() {
               </Texto>
             </View>
             <Texto variante="meta" color="textoTenue">
-              {textoMiembros(grupo.miembros)}
+              {textoDeGrupo(grupo)}
             </Texto>
           </TablaFila>
         ))}

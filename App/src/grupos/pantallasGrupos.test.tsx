@@ -8,16 +8,18 @@ import { Alert, type AlertButton } from 'react-native';
 import { clienteConsultas } from '../datos/clienteConsultas';
 import { ErrorDatos } from '../datos/errores';
 import { obtenerPartido } from '../partido/datos';
+import { obtenerPartidosDeJornada, obtenerTorneoActual, type PartidoDeLista } from '../partidos/datos';
+import { coloresGrafito } from '../tema/tokens';
 import { simularSesionGuardada } from '../pruebas/supabaseFalso';
 import {
   crearGrupo,
   obtenerGrupo,
-  obtenerMiembros,
   obtenerMisGrupos,
+  obtenerRanking,
   obtenerPrediccionesDelGrupo,
   salirDeGrupo,
   unirseAGrupo,
-  type Miembro,
+  type FilaRanking,
   type PrediccionAjena,
 } from './datos';
 import { ErrorGrupo } from './errores';
@@ -26,10 +28,30 @@ jest.mock('../supabase/cliente');
 jest.mock('./datos');
 jest.mock('../partido/datos');
 jest.mock('../puntos/datos');
+// La vista "Jornada" de S08 usa las jornadas del torneo actual (las de S02).
+jest.mock('../partidos/datos', () => ({
+  ...jest.requireActual<typeof import('../partidos/datos')>('../partidos/datos'),
+  obtenerTorneoActual: jest.fn(),
+  obtenerPartidosDeJornada: jest.fn(),
+}));
 
 const misGrupos = obtenerMisGrupos as jest.MockedFunction<typeof obtenerMisGrupos>;
 const grupoFalso = obtenerGrupo as jest.MockedFunction<typeof obtenerGrupo>;
-const miembrosFalsos = obtenerMiembros as jest.MockedFunction<typeof obtenerMiembros>;
+const rankingFalso = obtenerRanking as jest.MockedFunction<typeof obtenerRanking>;
+const torneoFalso = obtenerTorneoActual as jest.MockedFunction<typeof obtenerTorneoActual>;
+const partidosFalsos = obtenerPartidosDeJornada as jest.MockedFunction<typeof obtenerPartidosDeJornada>;
+
+const partidoDeJornada: PartidoDeLista = {
+  id: 1,
+  inicio: '2026-11-20T20:00:00Z',
+  estado: 'PROGRAMADO',
+  goles_local: null,
+  goles_visitante: null,
+  local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png' },
+  visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png' },
+  es_simulado: false,
+  predicho: false,
+};
 const prediccionesFalsas = obtenerPrediccionesDelGrupo as jest.MockedFunction<
   typeof obtenerPrediccionesDelGrupo
 >;
@@ -40,12 +62,18 @@ const partidoFalso = obtenerPartido as jest.MockedFunction<typeof obtenerPartido
 
 const GRUPO = 'Los del sillón';
 
-const miembro = (extra: Partial<Miembro>): Miembro => ({
+const fila = (extra: Partial<FilaRanking>): FilaRanking => ({
+  posicion: 1,
   usuario_id: 'u',
   nombre: 'Alguien',
   foto_url: null,
-  rol: 'MIEMBRO',
+  puntos_total: 0,
+  puntos_base: 0,
+  puntos_bono: 0,
+  marcadores_exactos: 0,
   es_yo: false,
+  incluye_simulados: false,
+  ultima_calificacion: null,
   ...extra,
 });
 
@@ -72,7 +100,16 @@ beforeEach(() => {
   grupoFalso
     .mockReset()
     .mockImplementation(async (id) => ({ id, nombre: GRUPO, codigo_invitacion: 'ABCDEFGH' }));
-  miembrosFalsos.mockReset().mockResolvedValue([]);
+  rankingFalso.mockReset().mockResolvedValue({ filas: [], incluyeSimulados: false });
+  torneoFalso.mockReset().mockResolvedValue({
+    nombre: 'Apertura 2026',
+    jornadas: [
+      { id: 11, orden: 1, nombre: 'Jornada 1' },
+      { id: 12, orden: 2, nombre: 'Jornada 2' },
+    ],
+    ordenActual: 2,
+  });
+  partidosFalsos.mockReset().mockResolvedValue([partidoDeJornada]);
   prediccionesFalsas.mockReset().mockResolvedValue([]);
   crearFalso.mockReset().mockResolvedValue(1);
   unirseFalso.mockReset().mockResolvedValue({ grupoId: 1, yaEraMiembro: false });
@@ -114,15 +151,15 @@ describe('S04 Grupos', () => {
     expect(screen.getByRole('button', { name: 'Unirse con código' })).toBeOnTheScreen();
   });
 
-  it('F07 CA9: lista mis grupos con su número de miembros', async () => {
+  it('F07 CA9, F08 R8: lista mis grupos con mi posición (o el número de miembros sin ella)', async () => {
     misGrupos.mockResolvedValue([
-      { id: 2, nombre: 'Oficina', miembros: 1 },
-      { id: 1, nombre: GRUPO, miembros: 4 },
+      { id: 2, nombre: 'Oficina', miembros: 1, mi_posicion: null },
+      { id: 1, nombre: GRUPO, miembros: 4, mi_posicion: 2 },
     ]);
     await abrir('/grupos');
 
     expect(await screen.findByRole('button', { name: 'Oficina, 1 miembro' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: `${GRUPO}, 4 miembros` })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: `${GRUPO}, Vas 2.º de 4` })).toBeOnTheScreen();
   });
 
   it('F07 CA9: un error al cargar ofrece reintentar', async () => {
@@ -257,17 +294,114 @@ describe('S06 Unirse a grupo', () => {
 });
 
 describe('S08 Grupo', () => {
-  it('F07 R10: miembros con la marca Admin, yo resaltado y el código con guion', async () => {
-    miembrosFalsos.mockResolvedValue([
-      miembro({ usuario_id: 'a', nombre: 'Ana', rol: 'ADMIN' }),
-      miembro({ usuario_id: 'b', nombre: 'Beto', es_yo: true }),
-    ]);
+  it('F08 CA9: ranking del torneo en una sola llamada, con mi fila resaltada y el código', async () => {
+    rankingFalso.mockResolvedValue({
+      filas: [
+        fila({ usuario_id: 'a', posicion: 1, nombre: 'Ana', puntos_total: 500 }),
+        fila({ usuario_id: 'b', posicion: 2, nombre: 'Beto', puntos_total: 300, es_yo: true }),
+      ],
+      incluyeSimulados: false,
+    });
     await abrir('/grupo/1');
 
-    expect(await screen.findByLabelText('Ana, Admin')).toBeOnTheScreen();
-    expect(screen.getByLabelText('Beto, tú')).toBeOnTheScreen();
+    expect(await screen.findByLabelText('1.º, Ana, 500 puntos')).toBeOnTheScreen();
+    expect(screen.getByLabelText('2.º, Beto, tú, 300 puntos')).toHaveStyle({
+      backgroundColor: coloresGrafito.superficie2,
+    });
+    expect(screen.getByLabelText('1.º, Ana, 500 puntos')).toHaveStyle({ backgroundColor: 'transparent' });
+    expect(screen.getByRole('tab', { name: 'Torneo' })).toBeSelected();
+    expect(screen.getByText('Base + bono de la IA. Desempate: marcadores exactos y bono.')).toBeOnTheScreen();
+    expect(screen.queryByText('Incluye partidos simulados')).not.toBeOnTheScreen();
     expect(screen.getByText('ABCD-EFGH')).toBeOnTheScreen();
     expect(screen.getByText('2 de 30 miembros')).toBeOnTheScreen();
+    expect(rankingFalso).toHaveBeenCalledTimes(1);
+    expect(rankingFalso).toHaveBeenCalledWith(1, null);
+  });
+
+  it('F08 CA9: la nota de simulados aparece solo con incluye_simulados', async () => {
+    rankingFalso.mockResolvedValue({
+      filas: [fila({ usuario_id: 'a', puntos_total: 100, incluye_simulados: true })],
+      incluyeSimulados: true,
+    });
+    await abrir('/grupo/1');
+
+    expect(await screen.findByText('Incluye partidos simulados')).toBeOnTheScreen();
+  });
+
+  it('F08 CA9: sin puntos aún, los miembros con 0 y el aviso', async () => {
+    rankingFalso.mockResolvedValue({
+      filas: [fila({ usuario_id: 'a', nombre: 'Ana' }), fila({ usuario_id: 'b', nombre: 'Beto' })],
+      incluyeSimulados: false,
+    });
+    await abrir('/grupo/1');
+
+    expect(await screen.findByText('Aún no hay partidos calificados en este torneo.')).toBeOnTheScreen();
+    expect(screen.getByLabelText('1.º, Ana, 0 puntos')).toBeOnTheScreen();
+  });
+
+  it('F08 CA9: la vista Jornada abre la actual y cambiar de jornada no agrega historial (D78)', async () => {
+    await abrir('/grupo/1');
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Jornada' }));
+
+    expect(await screen.findByRole('header', { name: 'Jornada 2' })).toBeOnTheScreen();
+    await waitFor(() => expect(rankingFalso).toHaveBeenLastCalledWith(1, 12));
+    expect(screen.getByText('Aún no hay partidos calificados en esta jornada.')).toBeOnTheScreen();
+
+    await tocar('Jornada anterior');
+    expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
+    await waitFor(() => expect(rankingFalso).toHaveBeenLastCalledWith(1, 11));
+    expect(screen.queryAllByRole('header', { name: GRUPO, includeHiddenElements: true })).toHaveLength(1);
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Torneo' }));
+    await waitFor(() => expect(rankingFalso).toHaveBeenLastCalledWith(1, null));
+    expect(screen.queryAllByRole('header', { name: GRUPO, includeHiddenElements: true })).toHaveLength(1);
+  });
+
+  it('F08 Estados: una jornada sin partidos lo dice con el selector activo', async () => {
+    partidosFalsos.mockResolvedValue([]);
+    await abrir('/grupo/1?vista=jornada');
+
+    expect(await screen.findByText('Esta jornada no tiene partidos.')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Jornada 2' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Jornada anterior' })).toBeEnabled();
+  });
+
+  it('F08 Estados: un torneo sin jornadas no se queda cargando', async () => {
+    torneoFalso.mockResolvedValue({ nombre: 'Apertura 2026', jornadas: [], ordenActual: null });
+    await abrir('/grupo/1?vista=jornada');
+
+    expect(await screen.findByText('Esta jornada no tiene partidos.')).toBeOnTheScreen();
+    expect(screen.queryByTestId('ranking-cargando')).not.toBeOnTheScreen();
+  });
+
+  it('F08 CA9: `?vista=jornada&jornada=1` abre esa jornada', async () => {
+    await abrir('/grupo/1?vista=jornada&jornada=1');
+
+    expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
+    await waitFor(() => expect(rankingFalso).toHaveBeenCalledWith(1, 11));
+  });
+
+  it('F08 Estados: sin torneo actual lo dice', async () => {
+    rankingFalso.mockRejectedValue(new ErrorGrupo('SIN_TORNEO_ACTUAL'));
+    await abrir('/grupo/1');
+
+    expect(await screen.findByText('No hay un torneo en curso.')).toBeOnTheScreen();
+  });
+
+  it('F08 CA9: un error de red ofrece reintentar', async () => {
+    rankingFalso.mockRejectedValueOnce(new ErrorDatos('Network request failed', true));
+    await abrir('/grupo/1');
+
+    expect(await screen.findByText('Sin conexión. Revisa tu internet e inténtalo de nuevo.')).toBeOnTheScreen();
+    await tocar('Reintentar');
+    expect(await screen.findByText('Aún no hay partidos calificados en este torneo.')).toBeOnTheScreen();
+  });
+
+  it('F08 CA6: si el ranking responde NO_MIEMBRO, la pantalla lo dice', async () => {
+    rankingFalso.mockRejectedValue(new ErrorGrupo('NO_MIEMBRO'));
+    await abrir('/grupo/1');
+
+    expect(await screen.findByText('No perteneces a este grupo.')).toBeOnTheScreen();
   });
 
   it('F07 CA9: si no soy miembro lo dice y ofrece ir a Grupos', async () => {
@@ -304,7 +438,7 @@ describe('S08 Grupo', () => {
 
 describe('S03, "En tus grupos" (F07 R7)', () => {
   beforeEach(() => {
-    misGrupos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 3 }]);
+    misGrupos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 3, mi_posicion: 1 }]);
   });
 
   it('F07 CA10: cerrado, una fila por persona con su predicción y su análisis', async () => {

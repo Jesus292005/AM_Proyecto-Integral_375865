@@ -9,6 +9,8 @@ export const CODIGOS_GRUPO = [
   'CODIGO_NO_EXISTE',
   'GRUPO_LLENO',
   'NO_MIEMBRO',
+  'JORNADA_INVALIDA',
+  'SIN_TORNEO_ACTUAL',
 ] as const;
 
 export type CodigoGrupo = (typeof CODIGOS_GRUPO)[number];
@@ -40,6 +42,13 @@ export const mensajesGrupo = {
   yaEraMiembro: 'Ya eras miembro de este grupo.',
   noMiembro: 'No perteneces a este grupo.',
   nadiePredijo: 'Nadie de tus grupos predijo este partido.',
+  errorRanking: 'No pudimos cargar el ranking. Inténtalo de nuevo.',
+  sinTorneo: 'No hay un torneo en curso.',
+  sinPuntosTorneo: 'Aún no hay partidos calificados en este torneo.',
+  sinPuntosJornada: 'Aún no hay partidos calificados en esta jornada.',
+  jornadaSinPartidos: 'Esta jornada no tiene partidos.',
+  notaRanking: 'Base + bono de la IA. Desempate: marcadores exactos y bono.',
+  incluyeSimulados: 'Incluye partidos simulados',
   fallaCrear: 'No se pudo crear el grupo. Inténtalo de nuevo.',
   fallaUnirse: 'No pudimos unirte al grupo. Inténtalo de nuevo.',
   fallaSalir: 'No pudimos sacarte del grupo. Inténtalo de nuevo.',
