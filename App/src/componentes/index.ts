@@ -14,4 +14,5 @@ export { Opciones } from './Opciones';
 export { PestanasTexto } from './PestanasTexto';
 export { Seccion } from './Seccion';
 export { SelectorMarcador } from './SelectorMarcador';
+export { TablaFila } from './TablaFila';
 export { Texto } from './Texto';

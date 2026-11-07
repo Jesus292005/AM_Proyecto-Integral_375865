@@ -15,6 +15,8 @@ interface Props {
   deshabilitado?: boolean;
   /** Mensaje de error: línea en `fallo` y el mensaje debajo (05-ui §5). */
   error?: string;
+  /** Teclado en mayúsculas y sin autocorrección (códigos, F07). */
+  mayusculas?: boolean;
 }
 
 /**
@@ -31,6 +33,7 @@ export function CampoTexto({
   multilinea = false,
   deshabilitado = false,
   error,
+  mayusculas = false,
 }: Props) {
   const { colores, espacio, medidas, tipografia } = useTema();
   const [enfocado, setEnfocado] = useState(false);
@@ -48,6 +51,8 @@ export function CampoTexto({
         multiline={multilinea}
         editable={!deshabilitado}
         placeholder={placeholder}
+        autoCapitalize={mayusculas ? 'characters' : 'sentences'}
+        autoCorrect={!mayusculas}
         placeholderTextColor={colores.textoTenue}
         accessibilityLabel={etiqueta}
         accessibilityState={{ disabled: deshabilitado }}

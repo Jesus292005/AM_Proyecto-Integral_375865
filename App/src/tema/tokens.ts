@@ -131,6 +131,8 @@ export const medidas = {
   altoBoton: 54,
   // Escudo de equipo en listas (S02).
   escudoLista: 28,
+  // Foto de usuario en listas (S08, S03 "En tus grupos").
+  fotoLista: 28,
   // Íconos de trazo (05-ui §7).
   icono: 16,
   trazoIcono: 2,
