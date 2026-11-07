@@ -1,5 +1,5 @@
 # F10 — Historial de mis predicciones con desglose de puntos
-> **Estado:** ✅ Aprobada v1.0 (2026-11-05, D94) · **Prioridad:** Must · **Módulo:** M3 · **Depende de:** F05, F06, F03 · **Pantallas:** S02 (puntos por partido), S03 (desglose) · **Decisiones:** D34, D35, D44, D52, D76, D78
+> **Estado:** ✅ **Terminada** (2026-11-07, D96: cumple CA1–CA5 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-05, D94) · **Prioridad:** Must · **Módulo:** M3 · **Depende de:** F05, F06, F03 · **Pantallas:** S02 (puntos por partido), S03 (desglose) · **Decisiones:** D34, D35, D44, D52, D76, D78
 
 ## Objetivo
 Que el usuario vea, partido por partido, cuántos puntos ganó y por qué: base (qué partes acertó), bono de la IA con su explicación y afirmaciones. Alcance reducido: el historial vive en las jornadas pasadas de S02 (D34) y el desglose en S03; **sin pantalla propia ni estadísticas personales** (B14). Todo número viene del servidor (D52).

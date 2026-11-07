@@ -1,5 +1,5 @@
 # F06 — Evaluación de la justificación con IA
-> **Estado:** ✅ Aprobada v1.1 (2026-11-06, D95: esfuerzo `medium` y nombre de equipo en cada estadística) · v1.0 (2026-11-05, D94) · **Prioridad:** Must · **Módulo:** M3 · **Depende de:** F04 (justificación), F05 (calificación), F02 (estadísticas y eventos), F09 (simulados para probar) · **Pantallas:** ninguna propia (F10 muestra el bono en S03) · **Decisiones:** D07, D08, D14, D29, D40, D51, D52, D54, D83, D85, D94, D95
+> **Estado:** ✅ **Terminada** (2026-11-07, D96: cumple CA1–CA10 y Jesús la aprobó en su teléfono) · spec aprobada v1.1 (2026-11-06, D95: esfuerzo `medium` y nombre de equipo en cada estadística) · v1.0 (2026-11-05, D94) · **Prioridad:** Must · **Módulo:** M3 · **Depende de:** F04 (justificación), F05 (calificación), F02 (estadísticas y eventos), F09 (simulados para probar) · **Pantallas:** ninguna propia (F10 muestra el bono en S03) · **Decisiones:** D07, D08, D14, D29, D40, D51, D52, D54, D83, D85, D94, D95
 
 Es la innovación del proyecto (P5): el bono premia **analizar bien**, no adivinar. Prompt y rúbrica los decide Jesús (D94 y revisión de T49).
 

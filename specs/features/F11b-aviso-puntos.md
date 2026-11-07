@@ -1,5 +1,5 @@
 # F11b — Notificación de puntos listos
-> **Estado:** ✅ Aprobada v1.0 (2026-11-05, D94) · **Prioridad:** Must · **Módulo:** M3 · **Depende de:** F11a (registro y envío), F05, F06 · **Pantallas:** S03 (destino) · **Decisiones:** D53, D69, D76, D78, D83, D85, D94
+> **Estado:** ✅ **Terminada** (2026-11-07, D96: cumple CA1–CA7 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-05, D94) · **Prioridad:** Must · **Módulo:** M3 · **Depende de:** F11a (registro y envío), F05, F06 · **Pantallas:** S03 (destino) · **Decisiones:** D53, D69, D76, D78, D83, D85, D94
 
 ## Decisiones (D94)
 3. El aviso de puntos **no** depende del ajuste "Recordatorios" de S09: llega a todo el que dio permiso y tiene dispositivo, en su propio canal de Android "Puntos de partidos", que se silencia desde los ajustes del teléfono.

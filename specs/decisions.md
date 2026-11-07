@@ -1,7 +1,7 @@
 # Registro de decisiones
 
 > Regla: una decisión **cerrada** no se vuelve a discutir salvo que aparezca información nueva; si cambia, se agrega una nueva fila que la reemplaza (no se borra la anterior).
-> Última actualización: 2026-11-06
+> Última actualización: 2026-11-07
 
 ## Decisiones cerradas
 
@@ -102,6 +102,7 @@
 | D93 | 2026-11-02 | **M2 Predecir terminado:** F03 (predicción), F04 (justificación), F09 (simulación) y F11a (recordatorios) cumplen todos sus criterios de aceptación, sus pruebas automatizadas pasan y Jesús las aprobó en su teléfono. S5 cerrada (T45). | Definición de "terminado" de 01-mvp §3. Guion del módulo validado por Jesús el 2026-11-02 con la build de T32 (`4d8d0853`): F03 CA10–CA12, F04 CA7, F09 CA9–CA10 y F11a CA8–CA9. |
 | D94 | 2026-11-05 | **Specs de M3 aprobadas** (F05, F06, F10, F11b v1.0) y **tareas de S6** (`tasks/S6.md` v1.0, T46–T62). Decisiones: (1) rúbrica del bono: la IA solo da veredictos con evidencia y el **servidor calcula** Precisión 70 + Alcance 30; lo que repite la predicción no cuenta; (2) modelo **Claude Haiku 5.5** con esfuerzo `low` (reemplaza esa parte de D51; 04-tech-stack v1.4), comparado con Haiku 4.5 en T48 y confirmado por Jesús en T49; (3) el aviso de puntos **no** depende del ajuste "Recordatorios", con su propio canal de Android. Incluye los permisos declarados en F05 R10, F06 R15, F10 R9 y F11b R8, y el tope de costo de F06 R10 (5 USD al mes). | Aprobación de Jesús (opción A en las 3). Haiku 4.5 sigue disponible a 1 / 5 USD por millón de tokens; Haiku 5.5 cuesta 0.10 / 0.50 USD (~5 veces menos por evaluación). |
 | D95 | 2026-11-06 | **F06, prompt v3:** Haiku 5.5 corre con esfuerzo **`medium`** (reemplaza el `low` de D94) y cada estadística lleva el nombre de su equipo junto a su valor ("Faltas: Puebla 9 · Querétaro 17"). F06 v1.1, 04-tech-stack v1.5. | Decisión de Jesús tras T48. En v1 y v2, Haiku 5.5 con `low` invirtió las columnas de faltas (17 contra 9, "fue al revés") y dio 67 a un análisis acertado; en v3 los 4 casos dieron lo esperado (91, 100, 0, 0) a ≈ 0.0006 USD por evaluación. |
+| D96 | 2026-11-07 | **M3 Calificar terminado:** F05 (puntos base), F06 (evaluación con IA), F10 (historial con desglose) y F11b (aviso de puntos) cumplen todos sus criterios de aceptación, sus pruebas automatizadas pasan y Jesús las aprobó en su teléfono. S6 cerrada (T62). | Definición de "terminado" de 01-mvp §3. Guion del módulo validado por Jesús el 2026-11-07 con la build de T32: F05 CA9, F06 CA9, F10 CA5 y F11b CA6–CA7. Verificación final: app 267/267, servidor 176/176, bd 25/25, pgTAP 306/306, `revisar:secretos` sin secretos. |
 
 ## Pendientes
 

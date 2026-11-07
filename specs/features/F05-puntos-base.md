@@ -1,5 +1,5 @@
 # F05 — Calificación automática de puntos base
-> **Estado:** ✅ Aprobada v1.0 (2026-11-05, D94) · **Prioridad:** Must · **Módulo:** M3 · **Depende de:** F02 (`listoParaCalificarEn`, marcador de 90 min), F03 (predicciones), F09 (simulados para probar) · **Pantallas:** ninguna propia (los puntos se ven con F10 en S02 y S03) · **Decisiones:** D05, D06, D07, D18, D19, D26, D27, D40, D43, D44, D46, D47, D48, D52, D54, D84, D85
+> **Estado:** ✅ **Terminada** (2026-11-07, D96: cumple CA1–CA9 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-05, D94) · **Prioridad:** Must · **Módulo:** M3 · **Depende de:** F02 (`listoParaCalificarEn`, marcador de 90 min), F03 (predicciones), F09 (simulados para probar) · **Pantallas:** ninguna propia (los puntos se ven con F10 en S02 y S03) · **Decisiones:** D05, D06, D07, D18, D19, D26, D27, D40, D43, D44, D46, D47, D48, D52, D54, D84, D85
 
 ## Objetivo
 Cuando un partido (real o simulado) termina y tiene sus datos, el servidor califica **una sola vez** cada predicción con la tabla fija de R05, sin que nadie abra la app. Es el "motor de puntos" en TypeScript (04-tech-stack T8): una función pura con una prueba por cada combinación.
