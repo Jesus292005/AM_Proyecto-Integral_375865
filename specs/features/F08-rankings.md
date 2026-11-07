@@ -1,5 +1,5 @@
 # F08 — Rankings del grupo: torneo y jornada
-> **Estado:** ✅ Aprobada v1.0 (2026-11-07, D97) · **Prioridad:** Must · **Módulo:** M4 · **Depende de:** F05, F06, F07 · **Pantallas:** S08 (ranking), S04 (mi posición) · **Decisiones:** D10, D40, D44, D45, D47, D52, D57, D78, D86, D97
+> **Estado:** ✅ **Terminada** (2026-11-07, D100: cumple CA1–CA11 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-07, D97) · **Prioridad:** Must · **Módulo:** M4 · **Depende de:** F05, F06, F07 · **Pantallas:** S08 (ranking), S04 (mi posición) · **Decisiones:** D10, D40, D44, D45, D47, D52, D57, D78, D86, D97
 
 ## Decisiones (D97)
 4. **Desempates:** a igual total, **más marcadores exactos**, luego **más puntos de bono**. Si sigue el empate, comparten posición (1, 1, 3) y se ordenan por nombre.

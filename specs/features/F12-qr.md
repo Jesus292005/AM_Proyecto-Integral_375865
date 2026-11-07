@@ -1,5 +1,5 @@
 # F12 — Unirse a un grupo escaneando QR
-> **Estado:** ✅ Aprobada v1.2 (2026-11-07, fix del guion: R6 pide el permiso al entrar y al volver de Ajustes) · v1.1 (2026-11-07, T72: la unión automática solo con una lectura de S07, R4) · v1.0 (2026-11-07, D97) · **Prioridad:** Must (D88) · **Módulo:** M4 · **Depende de:** F07 · **Pantallas:** S07, S06 (botón y llegada desde el QR), S08 (imagen del QR) · **Decisiones:** D37, D51, D53, D54, D76, D78, D88, D91
+> **Estado:** ✅ **Terminada** (2026-11-07, D100: cumple CA1–CA8 y Jesús la aprobó en su teléfono) · spec aprobada v1.2 (2026-11-07, fix del guion: R6 pide el permiso al entrar y al volver de Ajustes) · v1.1 (2026-11-07, T72: la unión automática solo con una lectura de S07, R4) · v1.0 (2026-11-07, D97) · **Prioridad:** Must (D88) · **Módulo:** M4 · **Depende de:** F07 · **Pantallas:** S07, S06 (botón y llegada desde el QR), S08 (imagen del QR) · **Decisiones:** D37, D51, D53, D54, D76, D78, D88, D91
 
 ## Decisiones
 Ninguna propia; aprobada con las de M4 (D97).
