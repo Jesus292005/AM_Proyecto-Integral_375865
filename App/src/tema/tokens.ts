@@ -133,6 +133,8 @@ export const medidas = {
   escudoLista: 28,
   // Foto de usuario en listas (S08, S03 "En tus grupos").
   fotoLista: 28,
+  // Lado del QR de invitación en S08, con su margen (F12 R2).
+  qrInvitacion: 200,
   // Íconos de trazo (05-ui §7).
   icono: 16,
   trazoIcono: 2,

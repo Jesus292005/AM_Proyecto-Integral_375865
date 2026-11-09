@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { Alert, RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, useWindowDimensions, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -35,7 +36,35 @@ function EsqueletoGrupo() {
   );
 }
 
-/** Código para invitar y salir del grupo (F07 R10). */
+/**
+ * QR con el código canónico, solo texto (F12 R1, R2, D37): módulos `fondo` sobre `texto` (los
+ * lectores no siempre leen QR invertidos) y 4 módulos de margen (un QR versión 1 tiene 21 de lado).
+ */
+function QRInvitacion({ codigo }: { codigo: string }) {
+  const { colores, medidas } = useTema();
+  const { width } = useWindowDimensions();
+  const lado = Math.min(medidas.qrInvitacion, width - 2 * medidas.margenPantalla);
+  const margen = Math.round((lado * 4) / 29);
+
+  return (
+    <View
+      accessible
+      accessibilityLabel="Código QR del grupo"
+      testID="qr-invitacion"
+      style={{ alignSelf: 'center' }}
+    >
+      <QRCode
+        value={formatearCodigo(codigo)}
+        size={lado - 2 * margen}
+        quietZone={margen}
+        color={colores.fondo}
+        backgroundColor={colores.texto}
+      />
+    </View>
+  );
+}
+
+/** Código y QR para invitar (F07 R10, F12 R2) y salir del grupo. */
 function InvitarYSalir({ grupo }: { grupo: GrupoDetalle }) {
   const { espacio } = useTema();
   const clienteConsultas = useQueryClient();
@@ -71,8 +100,9 @@ function InvitarYSalir({ grupo }: { grupo: GrupoDetalle }) {
         >
           {formatearCodigo(grupo.codigo_invitacion)}
         </Texto>
+        <QRInvitacion codigo={grupo.codigo_invitacion} />
         <Texto variante="meta" color="textoTenue">
-          Compártelo para que se unan desde Unirse a grupo.
+          Muéstralo para que lo escaneen desde Unirse a grupo.
         </Texto>
       </Seccion>
       <View style={{ gap: espacio.xs }}>
