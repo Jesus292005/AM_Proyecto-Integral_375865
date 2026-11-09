@@ -1,5 +1,5 @@
 # F13 — Rachas de aciertos
-> **Estado:** ✅ Aprobada v1.0 (2026-11-07, D101) · **Prioridad:** Should (entra solo si sobra tiempo en S7, D88, D98) · **Módulo:** M4 · **Depende de:** F05 · **Pantallas:** S09 (sección "Racha") · **Decisiones:** D40, D44, D47, D52, D98, D101, P4
+> **Estado:** ✅ **Terminada** (2026-11-09, D102: cumple CA1–CA8 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-07, D101) · **Prioridad:** Should (entra solo si sobra tiempo en S7, D88, D98) · **Módulo:** M4 · **Depende de:** F05 · **Pantallas:** S09 (sección "Racha") · **Decisiones:** D40, D44, D47, D52, D98, D101, P4
 
 ## Decisiones (D101)
 1. **Acierto:** predicción calificada con **puntos base > 0** (acertó al menos una parte, incluido el marcador fallado con partes acertadas, D27). 0 puntos base rompe la racha.

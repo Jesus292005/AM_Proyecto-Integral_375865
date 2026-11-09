@@ -48,7 +48,7 @@ Si una funcionalidad no aporta a este flujo o a la gamificación que lo hace atr
 
 **Prioridad de los Should (de mayor a menor, D42; F12 sale por D88):** F13 Rachas → F14 Insignias → F21 Previa → F19 Perfil público → F17 Inicio → F18 Equipo favorito → F15 Compartir. Could: F20 Carta (primero) → F16 Comentarios.
 
-**Dentro del plan (D88):** todos los Must y, solo si sobra tiempo en S7, F13 Rachas. **F14–F21 quedan fuera del plan**; siguen en esta tabla como Should/Could por si el plan se adelanta.
+**Dentro del plan (D88):** todos los Must y, solo si sobra tiempo en S7, F13 Rachas (entró y quedó terminada, D102). **F14–F21 quedan fuera del plan**; siguen en esta tabla como Should/Could por si el plan se adelanta.
 
 **Orden de recorte si falta tiempo (inverso):** F16 → F20 → F15 → F18 → F17 → F19 → F21 → F14 → F13. Ningún Must se recorta; si un Must está en riesgo, se reduce su alcance (y se actualiza su spec), no se elimina.
 
