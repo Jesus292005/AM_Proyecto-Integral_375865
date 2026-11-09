@@ -16,7 +16,7 @@ jest.mock('./partido/datos');
 // S10 ya es real (T38): la cuenta de prueba es de usuario normal.
 jest.mock('./perfil/datos');
 jest.mock('./simulacion/datos');
-// S04, S05, S06 y S08 ya son reales (T66, T67): un grupo "Los del sillón".
+// S04–S08 ya son reales (T66, T67, T72): un grupo "Los del sillón"; la cámara la simula `jest.setup.ts`.
 jest.mock('./grupos/datos');
 // S02 ya es real (T26): sus lecturas se simulan con una jornada de un partido.
 jest.mock('./partidos/datos', () => ({
@@ -81,7 +81,6 @@ async function seCerroS03() {
 const rutas = [
   { url: '/inicio', id: 'S11', titulo: 'Inicio' },
   { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
-  { url: '/grupos/escanear', id: 'S07', titulo: 'Escanear QR' },
   { url: '/usuario/5', id: 'S13', titulo: 'Perfil de usuario' },
   { url: '/perfil', id: 'S09', titulo: 'Perfil' },
 ] as const;
@@ -92,6 +91,7 @@ const rutasReales = [
   { url: '/grupos/nuevo', id: 'S05', titulo: 'Crear grupo' },
   { url: '/grupos/unirse', id: 'S06', titulo: 'Unirse a grupo' },
   { url: '/grupo/3', id: 'S08', titulo: GRUPO },
+  { url: '/grupos/escanear', id: 'S07', titulo: 'Escanear QR' },
 ] as const;
 
 describe('rutas', () => {
