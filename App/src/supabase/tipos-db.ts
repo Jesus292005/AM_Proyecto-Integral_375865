@@ -817,6 +817,15 @@ export type Database = {
       }
     }
     Views: {
+      mi_racha: {
+        Row: {
+          incluye_simulados: boolean | null
+          mejor_racha: number | null
+          racha_actual: number | null
+          ultima_calificacion: string | null
+        }
+        Relationships: []
+      }
       miembros_grupo: {
         Row: {
           es_yo: boolean | null
