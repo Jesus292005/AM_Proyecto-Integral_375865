@@ -1,6 +1,7 @@
 import type { Enlace } from '../../../../provisional/PantallaProvisional';
 import { PantallaProvisional } from '../../../../provisional/PantallaProvisional';
 import { AjusteRecordatorios } from '../../../../perfil/AjusteRecordatorios';
+import { SeccionRacha } from '../../../../perfil/SeccionRacha';
 import { useMiRol } from '../../../../perfil/useMiRol';
 import { BotonCerrarSesion } from '../../../../sesion/BotonCerrarSesion';
 
@@ -12,6 +13,7 @@ export default function Perfil() {
 
   return (
     <PantallaProvisional id="S09" titulo="Perfil" ubicacion="raizPestana" enlaces={enlaces}>
+      <SeccionRacha />
       <AjusteRecordatorios />
       <BotonCerrarSesion />
     </PantallaProvisional>
