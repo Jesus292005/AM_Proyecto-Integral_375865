@@ -1,7 +1,7 @@
 # Registro de decisiones
 
 > Regla: una decisión **cerrada** no se vuelve a discutir salvo que aparezca información nueva; si cambia, se agrega una nueva fila que la reemplaza (no se borra la anterior).
-> Última actualización: 2026-11-07
+> Última actualización: 2026-11-21
 
 ## Decisiones cerradas
 
@@ -112,6 +112,7 @@
 | D103 | 2026-11-21 | **Inicio (S11) y Perfil (S09) dejan de ser provisionales para la demo** (corrección del congelamiento, D98). Inicio muestra una frase y dos accesos: "Predecir partidos" (S02) y "Ver mis grupos" (S04); F17 sigue fuera del plan. Perfil queda con Racha, Recordatorios, "Simulación" (solo `ADMIN`) y "Cerrar sesión", sin el id de pantalla ni el enlace a Equipo favorito (F18 fuera del plan; S12 y S13 siguen provisionales y sin acceso desde la app). La navegación, las pestañas y la entrada por Inicio (D39, D76) no cambian. | La app abría en una pantalla de prueba con enlaces falsos ("Partido 1", "Grupo 1") y el id "S11"; no podía ir así a la demo. Cambiar la pestaña inicial a Partidos movía la entrada externa de D76 y las rutas compartidas, más riesgo a dos días de la demo. |
 | D104 | 2026-11-21 | **Plan del rediseño después de la demo** (01-mvp §7): M5 Base visual (F22–F24) → M6 Identidad (perfil, F18, F20, F14, F25 barra superior) → M7 Inicio (F17 v2) → M8 Grupos sociales (F26, F19) → M9 Avisos en la app (F27). **Ícono de grupo: círculo de color con la inicial del nombre en mayúscula**, sin fotos (sin almacenamiento de imágenes ni moderación). **Sin chat de grupo:** lo social va ligado a la mecánica (muro de análisis revelados, reacciones, analista de la jornada). Nada del rediseño entra antes de la demo del 23 de noviembre. | La app no engancha: la recompensa llega tarde, el análisis con IA está escondido, no hay identidad y lo social es solo una tabla. Propuesta de Claude aprobada por Jesús (2026-11-21), con el ícono de grupo elegido por él. |
 | D105 | 2026-11-21 | **Specs de M5 aprobadas** (F22, F23, F24 v1.0) y **05-ui v2.0**. Decisiones: (1) íconos con los **trazos de Lucide copiados** al componente `Icono` (licencia ISC, con crédito), sin instalar la librería; (2) colores de los 18 equipos: la tabla de F22 R4 es propuesta y Jesús la valida en el teléfono (F22 CA5); (3) S02 con **tira deslizable** de jornadas; (4) filtro "Sin predecir" **solo de la jornada que se ve**; (5) S03 abre en la **boleta** si ya hay predicción, con "Editar"; (6) vibración de éxito y de error con `expo-haptics` (única dependencia nativa de M5) y sin aviso flotante de éxito. | Aprobación de Jesús (opción A en las 4 preguntas). |
+| D106 | 2026-11-21 | **Tareas de S9 aprobadas** (`tasks/S9.md` v1.0, T80–T90, lotes L0–L5 de M5). Una sola development build con `expo-haptics` y medición contra D91 (T81); los colores de F22 R4 viven en `datos-equipos.ts` y `guardar_carga_inicial` los escribe (reemplaza "cargados manualmente" de D70); se aplican al remoto volviendo a correr P1 del Apertura 2026 (T83). | Aprobación de Jesús. |
 
 ## Pendientes
 
