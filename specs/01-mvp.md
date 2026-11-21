@@ -94,6 +94,24 @@ Ciclo de cada módulo: specs → revisión → tareas → implementación por lo
 
 Es el de `00-project.md` §9: en la demo, 3+ usuarios en un grupo predicen; el partido termina (real o simulado) y **sin intervención manual** reciben puntos base y bono con explicación; los rankings se actualizan; se otorga al menos una racha o insignia (si F13/F14 entraron).
 
+## 7. Después de la demo: rediseño (D104)
+
+El MVP cumple su criterio de éxito con M1–M4. El rediseño ataca por qué la app no engancha: la recompensa llega días después, el análisis con IA (lo que la distingue) está escondido, no hay identidad y lo social es solo una tabla. Mismo ciclo de los módulos anteriores (§4.1); un commit por tarea.
+
+| Módulo | Features | Qué se puede probar al terminarlo |
+|---|---|---|
+| **M5 Base visual** | F22 Identidad visual (íconos, escudos, colores) · F23 Navegación por jornadas · F24 Boleta de predicción | Navegar con íconos, saltar entre jornadas, filtrar lo que falta y ver la boleta al predecir |
+| **M6 Identidad** | Perfil nuevo (foto y nombre) · F18 Equipo favorito · F20 Carta de jugador · F14 Insignias · F25 Barra superior | Ver tu carta, tu equipo y tu racha en todas las pantallas principales |
+| **M7 Inicio** | F17 v2: pendientes con cuenta regresiva · tu última jornada · mejor análisis de tus grupos · tus grupos con posición | Abrir la app y saber qué hacer y cómo te fue |
+| **M8 Grupos sociales** | F26: lista con tarjetas, ícono de grupo (color + inicial), "+" con "Crear grupo" y "Unirse a un grupo"; dentro del grupo Ranking / Jornada / Miembros, muro de análisis revelados con reacciones, analista de la jornada, quién falta por predecir, invitar por enlace · F19 Perfil de otro usuario | Comentar con reacciones los análisis del grupo y ver el perfil de los demás |
+| **M9 Avisos en la app** | F27: historial de notificaciones, campana con contador en la barra, pantalla de avisos | Ver los avisos recientes dentro de la app |
+
+**Fuera del rediseño:** chat de grupo (compite con WhatsApp, exige moderación; D104), fotos de grupo (D104). Siguen en el backlog: duelos (B06), estadísticas personales (B14), eliminar cuenta (B18, obligatoria antes de publicar).
+
+**Dependencias nativas:** las de cada módulo entran juntas en una sola development build al inicio del módulo y se mide el tamaño contra D91 (M5: `expo-haptics`).
+
+**API-Football:** el plan Pro vence el 21 de diciembre de 2026; entre el fin del Apertura y el Clausura se desarrolla con simulados (F09).
+
 ## 6. Pendientes de este documento
 
 Ninguno. M-01 y M-02 aprobados (D32, D33).
