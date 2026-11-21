@@ -1,7 +1,7 @@
 # 04 — Herramientas (fase de Diseño)
 
-> **Estado:** ✅ Aprobado v1.5 (2026-11-06; esfuerzo `medium`, D95) · v1.4 (2026-11-05; modelo de IA Claude Haiku 5.5, D94) · v1.3 (2026-11-02; medición 2 y tope de 35 MB, D91) · v1.2 (2026-10-19; medición de tamaño y tope de D79)
-> **Última actualización:** 2026-11-06
+> **Estado:** ✅ Aprobado v1.6 (2026-11-21; `expo-haptics` para F24, D105) · v1.5 (2026-11-06; esfuerzo `medium`, D95) · v1.4 (2026-11-05; modelo de IA Claude Haiku 5.5, D94) · v1.3 (2026-11-02; medición 2 y tope de 35 MB, D91) · v1.2 (2026-10-19; medición de tamaño y tope de D79)
+> **Última actualización:** 2026-11-21
 > Base: specs 00–03 y `decisions.md`. Las herramientas se eligen por los requisitos ya definidos, no al revés.
 
 ---
@@ -48,6 +48,7 @@
 | Login con Google | `@react-native-google-signin/google-signin` + `signInWithIdToken` de Supabase | Inicio de sesión nativo de Android. | Navegador (OAuth web), peor experiencia |
 | Notificaciones | `expo-notifications` + servicio de push de Expo (usa FCM) | Gratis; el servidor manda a los tokens guardados en `Dispositivo`. | FCM directo (más configuración) |
 | QR | `expo-camera` (lectura) + `react-native-qrcode-svg` (generación) | Lectura de códigos integrada en la cámara de Expo. | — |
+| Vibración | `expo-haptics` (`notificationAsync`, éxito y error; F24 R6, D105) | Única dependencia nativa de M5; multiplataforma (D53) y sin permisos que pedir (Expo agrega `VIBRATE` solo). | `Vibration` de React Native (sin tipos de vibración) |
 | Compartir | `Share` de React Native | Hoja nativa de Android, sin dependencias. | — |
 | Compilación | **Development build** (EAS Build, plan gratis, o compilación local con Android Studio) | Google Sign-In nativo y push **no funcionan en Expo Go** (push remoto deshabilitado en Android desde SDK 53). | — |
 

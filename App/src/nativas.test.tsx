@@ -1,10 +1,12 @@
 import { render } from '@testing-library/react-native';
 import { CameraView } from 'expo-camera';
+import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
 import QRCode from 'react-native-qrcode-svg';
 
 // T31: las dependencias nativas de M2 (D88) cargan en jest con los simulacros de jest-expo, así las
-// pruebas de F11a y F12 no necesitan simular cada módulo a mano.
+// pruebas de F11a y F12 no necesitan simular cada módulo a mano. T80: lo mismo con `expo-haptics`
+// (F24 R6, D105), la única dependencia nativa de M5.
 
 describe('dependencias nativas en pruebas', () => {
   it('expo-notifications expone sus funciones sin el módulo nativo', () => {
@@ -19,5 +21,13 @@ describe('dependencias nativas en pruebas', () => {
 
   it('react-native-qrcode-svg se renderiza', () => {
     expect(() => render(<QRCode value="ABC123" />)).not.toThrow();
+  });
+
+  it('expo-haptics expone la vibración de éxito y de error sin el módulo nativo', async () => {
+    expect(Haptics.NotificationFeedbackType.Success).toBe('success');
+    expect(Haptics.NotificationFeedbackType.Error).toBe('error');
+    await expect(
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
+    ).resolves.toBeUndefined();
   });
 });
