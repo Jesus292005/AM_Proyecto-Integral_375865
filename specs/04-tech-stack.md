@@ -110,7 +110,7 @@
 
 | Artefacto | Tamaño | Nota |
 |---|---|---|
-| AAB de producción (EAS, build `21e83647`) | — | Development build: pendiente de registrar. |
+| AAB de producción (EAS, build `21e83647`) | — | Development build: `b7565d20`. Las dos desde `55c0066` con `expo-haptics` sin commitear (T80 quedó en `7c1f8b7`). |
 | **Descarga desde Google Play, `arm64-v8a`** | **33.13–33.35 MB** | 33,131,787–33,351,075 bytes. +0.56 MB contra la medición 2 (incluye el código de M2–M4, no solo `expo-haptics`). Margen contra D91: 1.65 MB. |
 | Descarga, otras arquitecturas | 31.81–34.48 MB | `armeabi-v7a` 31.81–32.03 · `x86_64` 34.06–34.28 · `x86` 34.26–34.48. |
 
