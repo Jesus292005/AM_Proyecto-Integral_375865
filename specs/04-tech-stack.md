@@ -106,6 +106,14 @@
 | **Descarga desde Google Play, `arm64-v8a`** | **32.57–32.79 MB** | 32,571,696–32,789,343 bytes. Margen contra D91: 2.2 MB. |
 | Descarga, otras arquitecturas | 31.25–33.92 MB | `armeabi-v7a` 31.25–31.47 · `x86_64` 33.50–33.72 · `x86` 33.70–33.92. |
 
+**Medición 3 (2026-11-21, T81)** — versión 1.0.0, con M1–M4 completos y `expo-haptics` (M5, D105).
+
+| Artefacto | Tamaño | Nota |
+|---|---|---|
+| AAB de producción (EAS, build `21e83647`) | — | Development build: pendiente de registrar. |
+| **Descarga desde Google Play, `arm64-v8a`** | **33.13–33.35 MB** | 33,131,787–33,351,075 bytes. +0.56 MB contra la medición 2 (incluye el código de M2–M4, no solo `expo-haptics`). Margen contra D91: 1.65 MB. |
+| Descarga, otras arquitecturas | 31.81–34.48 MB | `armeabi-v7a` 31.81–32.03 · `x86_64` 34.06–34.28 · `x86` 34.26–34.48. |
+
 Cómo repetirla: `npx eas-cli@24.12.1 build -p android --profile production`, descargar el `.aab` y correr `java -jar bundletool-all-1.18.3.jar build-apks --bundle=<archivo>.aab --output=app.apks` y `java -jar bundletool-all-1.18.3.jar get-size total --apks=app.apks --dimensions=ABI`.
 
 ### App delgada (lógica en el servidor)
