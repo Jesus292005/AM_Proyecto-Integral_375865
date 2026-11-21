@@ -79,14 +79,14 @@ async function seCerroS03() {
 
 // Pantallas provisionales (T03): muestran su id.
 const rutas = [
-  { url: '/inicio', id: 'S11', titulo: 'Inicio' },
   { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
   { url: '/usuario/5', id: 'S13', titulo: 'Perfil de usuario' },
-  { url: '/perfil', id: 'S09', titulo: 'Perfil' },
 ] as const;
 
 // Pantallas reales: se reconocen por su encabezado.
 const rutasReales = [
+  { url: '/inicio', id: 'S11', titulo: 'Inicio' },
+  { url: '/perfil', id: 'S09', titulo: 'Perfil' },
   { url: '/grupos', id: 'S04', titulo: 'Grupos' },
   { url: '/grupos/nuevo', id: 'S05', titulo: 'Crear grupo' },
   { url: '/grupos/unirse', id: 'S06', titulo: 'Unirse a grupo' },
@@ -138,7 +138,7 @@ describe('rutas', () => {
   it('la raíz redirige a Inicio', async () => {
     await abrir('/');
 
-    expect(await screen.findByText('S11')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
   });
 
   it('los parámetros de ruta llegan a la pantalla', async () => {
@@ -181,15 +181,28 @@ describe('menú inferior', () => {
   });
 
   it('un detalle abierto desde una pestaña se queda en esa pestaña y "volver" regresa', async () => {
-    await abrir('/inicio');
+    await abrir('/partidos');
 
-    await tocar('Partido 1');
+    await tocar(PARTIDO_S02);
     expect(await abrioS03()).toBeOnTheScreen();
-    expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
+    expect(screen.getByRole('tab', { name: 'Partidos' })).toBeSelected();
 
     await tocar('Volver');
     await seCerroS03();
-    expect(screen.getByText('S11')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
+  });
+
+  it('S11: los accesos de Inicio llevan a Partidos y a Grupos (D103)', async () => {
+    await abrir('/inicio');
+
+    await tocar('Predecir partidos');
+    expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Partidos' })).toBeSelected();
+
+    await tocar('Inicio', 'tab');
+    await tocar('Ver mis grupos');
+    expect(await screen.findByRole('header', { name: 'Grupos' })).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Grupos' })).toBeSelected();
   });
 
   it('tocar la pestaña activa desde un detalle regresa a su primera pantalla', async () => {
@@ -218,16 +231,17 @@ describe('menú inferior', () => {
   });
 
   it('tocar varias veces el mismo enlace no apila la pantalla (D78)', async () => {
-    await abrir('/inicio');
+    await abrir('/partidos');
 
     // Toques rápidos sobre el mismo botón, antes de que la pantalla nueva lo tape.
-    const enlace = await screen.findByRole('button', { name: 'Partido 1' });
+    const enlace = await screen.findByRole('button', { name: PARTIDO_S02 });
     for (let i = 0; i < 3; i++) await fireEvent.press(enlace);
     expect(await abrioS03()).toBeOnTheScreen();
+    expect(screen.queryAllByRole('header', { name: S03, includeHiddenElements: true })).toHaveLength(1);
 
     await tocar('Volver');
     await seCerroS03();
-    expect(screen.getByText('S11')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
   });
 
   it('cambiar la jornada actualiza Partidos sin agregar historial (D78)', async () => {

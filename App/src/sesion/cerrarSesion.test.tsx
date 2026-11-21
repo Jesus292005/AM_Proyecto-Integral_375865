@@ -121,7 +121,7 @@ it('"Cancelar" deja al usuario en S09 con la sesión abierta', async () => {
   expect(cancelar?.style).toBe('cancel');
   expect(cancelar?.onPress).toBeUndefined();
   expect(supabaseFalso.auth.signOut).not.toHaveBeenCalled();
-  expect(screen.getByText('S09')).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: 'Perfil' })).toBeOnTheScreen();
 });
 
 it('al confirmar cierra la sesión de este teléfono en Supabase y en Google, y va a S01 (CA4)', async () => {
@@ -132,7 +132,7 @@ it('al confirmar cierra la sesión de este teléfono en Supabase y en Google, y 
   expect(supabaseFalso.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
   expect(GoogleSignin.signOut).toHaveBeenCalledTimes(1);
   expect(await screen.findByText(S01)).toBeOnTheScreen();
-  expect(screen.queryByText('S09')).not.toBeOnTheScreen();
+  expect(screen.queryByRole('header', { name: 'Perfil' })).not.toBeOnTheScreen();
   expect(screen.queryAllByRole('tab')).toHaveLength(0);
 });
 
@@ -154,8 +154,8 @@ it('el siguiente inicio de sesión va a Inicio, no a Perfil', async () => {
 
   await iniciarSesion();
 
-  expect(await screen.findByText('S11')).toBeOnTheScreen();
-  expect(screen.queryByText('S09')).not.toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
+  expect(screen.queryByRole('header', { name: 'Perfil' })).not.toBeOnTheScreen();
 });
 
 // S03 se reconoce por el encabezado del partido que simula `partido/__mocks__/datos`.
@@ -174,7 +174,7 @@ it('olvida la ruta pedida antes de iniciar sesión (CA8) al cerrar sesión', asy
   await screen.findByText(S01);
   await iniciarSesion();
 
-  expect(await screen.findByText('S11')).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
   expect(screen.queryByRole('header', { name: S03 })).not.toBeOnTheScreen();
 });
 
@@ -185,7 +185,7 @@ it('si la sesión termina sola (no por cerrar sesión) se sigue conservando la r
   await screen.findByText(S01);
   await iniciarSesion();
 
-  expect(await screen.findByText('S09')).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: 'Perfil' })).toBeOnTheScreen();
 });
 
 it('sin internet para avisar al servidor, la sesión se borra del teléfono y va a S01', async () => {
@@ -217,7 +217,7 @@ describe('cuando Supabase conserva la sesión', () => {
     await cerrarSesion();
 
     expect(await screen.findByText(SIN_CONEXION)).toBeOnTheScreen();
-    expect(screen.getByText('S09')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Perfil' })).toBeOnTheScreen();
     expect(screen.queryByText(S01)).not.toBeOnTheScreen();
     expect(GoogleSignin.signOut).not.toHaveBeenCalled();
     expect(clienteConsultas.getQueryData(['dato-de-prueba'])).toBe('sigue siendo suyo');
@@ -231,7 +231,7 @@ describe('cuando Supabase conserva la sesión', () => {
     await cerrarSesion();
 
     expect(await screen.findByText(ERROR)).toBeOnTheScreen();
-    expect(screen.getByText('S09')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Perfil' })).toBeOnTheScreen();
     expect(consolaError).toHaveBeenCalled();
   });
 

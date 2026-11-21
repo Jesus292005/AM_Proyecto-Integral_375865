@@ -102,7 +102,7 @@ describe('acceso (F09 R1)', () => {
     rolFalso.mockResolvedValue('USUARIO');
     await abrir('/perfil');
 
-    await screen.findByRole('button', { name: 'Equipo favorito' });
+    await screen.findByRole('button', { name: 'Cerrar sesión' });
     await waitFor(() => expect(rolFalso).toHaveBeenCalled());
     expect(screen.queryByRole('button', { name: 'Simulación' })).not.toBeOnTheScreen();
   });

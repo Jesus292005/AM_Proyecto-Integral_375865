@@ -66,7 +66,7 @@ describe('al tocar una notificación', () => {
     datosTocados.mockReturnValue({ ruta: '/admin/simulacion' });
     await abrir();
 
-    expect(await screen.findByText('S11')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
     await waitFor(() => expect(olvidarNotificacionTocada).toHaveBeenCalled());
     expect(screen.queryByRole('header', { name: 'Simulación' })).not.toBeOnTheScreen();
   });

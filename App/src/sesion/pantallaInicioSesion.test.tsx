@@ -66,7 +66,7 @@ it('al elegir una cuenta inicia sesión y va a Inicio (F01 §5)', async () => {
 
   await tocar(CONTINUAR);
 
-  expect(await screen.findByText('S11')).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
   expect(supabaseFalso.auth.signInWithIdToken).toHaveBeenCalledWith({
     provider: 'google',
     token: tokenGoogleDePrueba,
@@ -110,7 +110,7 @@ it('sin internet muestra el mensaje y Reintentar funciona al volver la conexión
   reiniciarGoogle();
   await tocar('Reintentar');
 
-  expect(await screen.findByText('S11')).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
 });
 
 it('sin internet al validar en Supabase también muestra "sin conexión" (CA6)', async () => {
@@ -146,7 +146,7 @@ it('si Supabase rechaza el token muestra el error, lo registra y permite reinten
   simularTokenAceptado();
   await tocar('Reintentar');
 
-  expect(await screen.findByText('S11')).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
 });
 
 it('cancelar después de un error regresa al estado inicial (CA5)', async () => {

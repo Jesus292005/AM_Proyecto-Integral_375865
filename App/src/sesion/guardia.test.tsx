@@ -82,7 +82,7 @@ describe('sin sesión', () => {
 
     await iniciarSesion();
 
-    expect(await screen.findByText('S11')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
   });
 });
 
@@ -92,14 +92,14 @@ describe('con sesión guardada', () => {
   it('entra directo a Inicio sin pasar por S01 (CA3, F01 §6.1)', async () => {
     await abrir('/');
 
-    expect(await screen.findByText('S11')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
     expect(screen.queryByText(S01)).not.toBeOnTheScreen();
   });
 
   it('abrir /login lleva a Inicio', async () => {
     await abrir('/login');
 
-    expect(await screen.findByText('S11')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
     expect(screen.queryByText(S01)).not.toBeOnTheScreen();
   });
 
@@ -118,11 +118,11 @@ describe('con sesión guardada', () => {
 
   it('renovar el token no saca al usuario', async () => {
     await abrir('/perfil');
-    expect(await screen.findByText('S09')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Perfil' })).toBeOnTheScreen();
 
     await act(async () => emitirEventoSesion('TOKEN_REFRESHED', sesionDePrueba));
 
-    expect(screen.getByText('S09')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Perfil' })).toBeOnTheScreen();
   });
 });
 
@@ -131,7 +131,7 @@ it('sin internet y con sesión guardada entra a la app (F01 §6.3)', async () =>
 
   await abrir('/');
 
-  expect(await screen.findByText('S11')).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: 'Inicio' })).toBeOnTheScreen();
   expect(screen.queryByText(S01)).not.toBeOnTheScreen();
 });
 
@@ -142,5 +142,5 @@ it('mientras se lee la sesión no se muestra ninguna pantalla', async () => {
 
   await waitFor(() => expect(screen.queryByText(/^S\d+$/)).not.toBeOnTheScreen());
   expect(screen.queryByText(S01)).not.toBeOnTheScreen();
-  expect(screen.queryByText('S11')).not.toBeOnTheScreen();
+  expect(screen.queryByRole('header', { name: 'Inicio' })).not.toBeOnTheScreen();
 });
