@@ -82,6 +82,7 @@ Nunca digas que algo pasa sin haberlo corrido en esta sesión. Copia los número
 
 ## Commits
 - **Jesús ejecuta los commits** (D58). Al final del lote, entrega un solo bloque con los comandos: un commit por tarea (D59), `git add` de archivos concretos, formato `tipo(área): descripción` en español (`feat`, `fix`, `docs`, `test`, `chore`, `refactor`).
+- **Sin coautor:** los mensajes de commit no llevan `Co-Authored-By` ni ninguna otra línea de atribución o de sesión.
 - Nunca subir secretos. No leas los archivos `.env`.
 
 ## Reglas técnicas
