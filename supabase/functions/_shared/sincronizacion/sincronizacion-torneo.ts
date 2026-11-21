@@ -13,7 +13,7 @@ import {
   esquemaRespuestaPartidos,
   type PartidoApi,
 } from '../api-football/esquemas.ts';
-import { nombreCortoDeEquipo } from '../datos-equipos.ts';
+import { coloresDeEquipo, nombreCortoDeEquipo } from '../datos-equipos.ts';
 import type { Database, Tables } from '../tipos-db.ts';
 import {
   type DependenciasEjecucion,
@@ -56,7 +56,10 @@ export type CargaTorneo = {
     Tables<'torneo'>,
     'nombre' | 'temporada_proveedor' | 'prefijo_rondas' | 'fecha_inicio' | 'fecha_fin' | 'es_actual'
   >;
-  equipos: Pick<Tables<'equipo'>, 'proveedor_id' | 'nombre' | 'nombre_corto' | 'escudo_url'>[];
+  equipos: Pick<
+    Tables<'equipo'>,
+    'proveedor_id' | 'nombre' | 'nombre_corto' | 'escudo_url' | 'color_primario' | 'color_texto'
+  >[];
   jornadas: Pick<
     Tables<'jornada'>,
     'orden' | 'nombre' | 'nombres_proveedor' | 'fase' | 'fecha_inicio' | 'fecha_fin'
@@ -123,6 +126,7 @@ export function armarCargaTorneo(
       nombre,
       nombre_corto: nombreCortoDeEquipo(proveedorId, nombre),
       escudo_url: escudoUrl,
+      ...coloresDeEquipo(proveedorId),
     });
   };
   for (const { team } of equiposApi) agregarEquipo(team.id, team.name, team.logo);

@@ -33,7 +33,7 @@ async function foto(sql: Sql, carga: CargaTorneo) {
   `;
   if (torneo === undefined) throw new Error('No se guardó el torneo');
   const equiposGuardados = await sql`
-    select id::int, proveedor_id, nombre_corto from public.equipo
+    select id::int, proveedor_id, nombre_corto, color_primario, color_texto from public.equipo
     where proveedor_id = any(${ids}) order by proveedor_id
   `;
   const jornadas = await sql`
@@ -88,6 +88,50 @@ Deno.test('BD: repetir la carga no duplica nada ni cambia los ids (CA2, R1)', as
 
     deepStrictEqual(conteoDespues, conteoAntes);
     deepStrictEqual(despues, antes);
+  });
+});
+
+Deno.test('F22 CA1: la carga escribe los colores de los equipos y repetirla no los cambia', async () => {
+  await enTransaccion(async (sql) => {
+    await guardar(sql, apertura);
+    const colores = () =>
+      sql<{ proveedor_id: number; color_primario: string | null; color_texto: string | null }[]>`
+        select proveedor_id, color_primario, color_texto from public.equipo order by proveedor_id
+      `;
+    const primera = await colores();
+    equal(primera.length, 18);
+    ok(primera.every((e) => e.color_primario !== null && e.color_texto !== null));
+    deepStrictEqual(primera.find((e) => e.proveedor_id === 2287), {
+      proveedor_id: 2287,
+      color_primario: '#FFD100',
+      color_texto: '#0B2341',
+    });
+
+    await guardar(sql, apertura);
+    deepStrictEqual(await colores(), primera);
+  });
+});
+
+Deno.test('F22 CA1: un equipo que no está en datos-equipos.ts se guarda con colores en null', async () => {
+  await enTransaccion(async (sql) => {
+    await guardar(sql, {
+      ...apertura,
+      equipos: [
+        ...apertura.equipos,
+        {
+          proveedor_id: 99999,
+          nombre: 'Equipo Nuevo FC',
+          nombre_corto: 'Equipo Nuevo FC',
+          escudo_url: 'https://x.mx/e.png',
+          color_primario: null,
+          color_texto: null,
+        },
+      ],
+    });
+    const [nuevo] = await sql<{ color_primario: string | null; color_texto: string | null }[]>`
+      select color_primario, color_texto from public.equipo where proveedor_id = 99999
+    `;
+    deepStrictEqual(nuevo, { color_primario: null, color_texto: null });
   });
 });
 

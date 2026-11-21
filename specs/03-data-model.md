@@ -1,7 +1,7 @@
 # 03 — Modelo de datos (conceptual)
 
-> **Estado:** ✅ Aprobado v1.7 (2026-11-07; límites y código de `Grupo`, F07, D97) · v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
-> **Última actualización:** 2026-10-04
+> **Estado:** ✅ Aprobado v1.8 (2026-11-21; colores de `Equipo` en el servidor, F22 R4, D106) · v1.7 (2026-11-07; límites y código de `Grupo`, F07, D97) · v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
+> **Última actualización:** 2026-11-21
 > Base: [`01-mvp.md`](./01-mvp.md), [`02-navigation.md`](./02-navigation.md), [`decisions.md`](./decisions.md).
 > Este documento describe **qué datos existen y cómo se relacionan**. No decide dónde viven (base de datos, tablas, colecciones): eso es la fase de Diseño.
 > Requisitos de diseño heredados: varias ligas y temporadas (visión a futuro), datos marcados como simulados (D40), estadísticas suficientes para la carta (D41).
@@ -46,8 +46,9 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 
 **Jornada** — `id`, `torneoId`, `orden` (1–17 fase regular; 18+ rondas de liguilla), `nombre` ("Jornada 10", "Liguilla · Cuartos"), `nombresProveedor` (nombres de ronda de la API que agrupa), `fase` (`REGULAR` | `LIGUILLA`; una jornada por ronda de liguilla, D57), `fechaInicio`, `fechaFin`, `estaCerrada` (todos sus partidos calificados).
 
-**Equipo** — `id`, `proveedorId`, `nombre`, `nombreCorto`, `escudoUrl`, `colorPrimario?`, `colorTexto?` (cargados manualmente, D70).
+**Equipo** — `id`, `proveedorId`, `nombre`, `nombreCorto`, `escudoUrl`, `colorPrimario?`, `colorTexto?` (registrados en el servidor, D70, D106).
 > `nombreCorto` ("América", "Pumas") se carga a mano en el servidor por `proveedorId` (D81): el `code` de la API se repite o llega vacío. Si un equipo no está registrado, se usa el nombre de la API.
+> `colorPrimario` y `colorTexto` se registran igual, junto al nombre corto, y la sincronización con la API los escribe en cada carga (F22 R4, D106). Un equipo que no está registrado queda sin colores y la app usa el respaldo neutro (F22 R3).
 
 **Partido** — `id`, `proveedorId`, `torneoId`, `jornadaId`, `equipoLocalId`, `equipoVisitanteId`, `inicio` (fecha y hora), `cierrePredicciones` (D82), `estado` (`PROGRAMADO` | `EN_JUEGO` | `TERMINADO` | `POSPUESTO` | `CANCELADO`), `golesLocal?`, `golesVisitante?`, `golesLocalMedioTiempo?`, `golesVisitanteMedioTiempo?`, `esSimulado`, `partidoOrigenId?` (partido de 2024 del que se copió, si es simulado), `listoParaCalificarEn?` (D84), `calificadoEn?`, `sincronizadoEn`.
 > `cierrePredicciones` nace igual a `inicio`. Si el horario cambia antes del cierre, el nuevo inicio es el nuevo cierre; si cambia después, no se mueve y las predicciones siguen cerradas (F02 R9, D46). Es la hora límite para crear o editar una predicción (D21).

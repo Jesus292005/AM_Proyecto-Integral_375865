@@ -2,6 +2,7 @@ import { deepStrictEqual, equal, ok } from 'node:assert/strict';
 
 import type { RespuestaHttp } from '../api-football/cliente.ts';
 import { esquemaRespuestaEquipos, esquemaRespuestaPartidos } from '../api-football/esquemas.ts';
+import { coloresDeEquipo } from '../datos-equipos.ts';
 import errorTemporada2026 from '../ejemplos-api-football/error-temporada-2026.json' with {
   type: 'json',
 };
@@ -92,8 +93,34 @@ Deno.test('armado: cada equipo lleva su nombre corto', () => {
     nombre: 'Club America',
     nombre_corto: 'América',
     escudo_url: 'https://media.api-sports.io/football/teams/2287.png',
+    color_primario: '#FFD100',
+    color_texto: '#0B2341',
   });
   equal(buscar(carga.equipos, (e) => e.proveedor_id === 14002).nombre_corto, 'Mazatlán');
+});
+
+Deno.test('F22 CA1: los equipos de la carga llevan los colores de datos-equipos.ts (R4)', () => {
+  const { carga } = armar();
+  ok(carga.equipos.every((e) => e.color_primario !== null && e.color_texto !== null));
+  const pumas = buscar(carga.equipos, (e) => e.proveedor_id === 2286);
+  equal(pumas.color_primario, '#0E2B5C');
+  equal(pumas.color_texto, '#D4AF37');
+  for (const equipo of carga.equipos) {
+    ok(/^#[0-9A-F]{6}$/.test(equipo.color_primario ?? ''), equipo.nombre_corto);
+    ok(/^#[0-9A-F]{6}$/.test(equipo.color_texto ?? ''), equipo.nombre_corto);
+  }
+});
+
+Deno.test('F22 CA1: Atlante (2026, no está en los datos de 2024) también tiene colores', () => {
+  deepStrictEqual(coloresDeEquipo(2312), { color_primario: '#1B3E8C', color_texto: '#FFFFFF' });
+});
+
+Deno.test('F22 CA1: un equipo que no está en datos-equipos.ts queda sin colores', () => {
+  const nuevo = { team: { id: 99999, name: 'Equipo Nuevo FC', code: null, logo: 'https://x.mx/e.png' } };
+  const { carga } = armar(apertura, [...equipos, nuevo]);
+  const equipo = buscar(carga.equipos, (e) => e.proveedor_id === 99999);
+  equal(equipo.color_primario, null);
+  equal(equipo.color_texto, null);
 });
 
 Deno.test('armado: la jornada del play-in agrupa las dos rondas de la API con sus fechas', () => {
@@ -134,6 +161,8 @@ Deno.test('armado: un equipo que no vino en /teams se crea con los datos del par
     nombre: 'Club America',
     nombre_corto: 'América',
     escudo_url: 'https://media.api-sports.io/football/teams/2287.png',
+    color_primario: '#FFD100',
+    color_texto: '#0B2341',
   });
 });
 
