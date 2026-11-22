@@ -181,11 +181,6 @@ export function obtenerMejorAnalisis(): Promise<MejorAnalisis | null> {
   return leerMejorAnalisis(supabase.rpc('mejor_analisis_jornada'));
 }
 
-/** "Analista de la jornada" de un grupo en una jornada: las mismas reglas de R10 (F26 R10). */
-export function obtenerAnalistaDeJornada(grupoId: number, jornadaId: number): Promise<MejorAnalisis | null> {
-  return leerMejorAnalisis(supabase.rpc('mejor_analisis_jornada', { id_grupo: grupoId, id_jornada: jornadaId }));
-}
-
 async function leerMejorAnalisis(
   llamada: PromiseLike<{ data: unknown; error: { message: string } | null; status: number }>,
 ): Promise<MejorAnalisis | null> {

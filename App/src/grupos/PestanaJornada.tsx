@@ -5,17 +5,16 @@ import { View } from 'react-native';
 
 import { Boton, Esqueleto, EstadoPantalla, Seccion, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
-import { obtenerAnalistaDeJornada } from '../inicio/datos';
-import { TarjetaAnalisis } from '../inicio/TarjetaAnalisis';
 import { elegirJornada } from '../partidos/agruparPorDia';
 import { obtenerPartidosDeJornada, obtenerTorneoActual } from '../partidos/datos';
 import { useAhora } from '../partido/useAhora';
 import { SelectorJornada } from '../partidos/SelectorJornada';
 import { useTema } from '../tema';
-import { obtenerMuro, obtenerRanking } from './datos';
+import { obtenerFiguraDeJornada, obtenerMuro, obtenerRanking } from './datos';
 import { mensajesGrupo } from './errores';
 import { MuroJornada } from './MuroJornada';
 import { RankingGrupo } from './RankingGrupo';
+import { TarjetaFigura } from './TarjetaFigura';
 
 function EsqueletoTarjetas() {
   const { espacio } = useTema();
@@ -42,8 +41,8 @@ function ErrorSeccion({ error, mensaje, reintentar }: { error: Error; mensaje: s
 }
 
 /**
- * Pestaña Jornada de S08 (F26 R9): selector de jornada (F08 R9) y, en secciones independientes, el
- * Analista de la jornada (R10), el ranking de la jornada (F08, decisión 4) y el muro (R11–R14).
+ * Pestaña Jornada de S08 (F26 R9): selector de jornada (F08 R9) y, en secciones independientes, la
+ * Figura de la jornada (R10 v1.1, D114), el ranking de la jornada (F08, decisión 4) y el muro (R11–R14).
  */
 export function PestanaJornada({ grupoId, jornadaRuta }: { grupoId: number; jornadaRuta: string | undefined }) {
   const { espacio } = useTema();
@@ -61,9 +60,9 @@ export function PestanaJornada({ grupoId, jornadaRuta }: { grupoId: number; jorn
     enabled: elegida !== undefined,
   });
   const conJornada = jornadaId !== null;
-  const analista = useQuery({
-    queryKey: ['grupo', grupoId, 'analista', jornadaId],
-    queryFn: () => obtenerAnalistaDeJornada(grupoId, jornadaId ?? 0),
+  const figura = useQuery({
+    queryKey: ['grupo', grupoId, 'figura', jornadaId],
+    queryFn: () => obtenerFiguraDeJornada(grupoId, jornadaId ?? 0),
     enabled: conJornada,
   });
   const ranking = useQuery({
@@ -111,24 +110,20 @@ export function PestanaJornada({ grupoId, jornadaRuta }: { grupoId: number; jorn
   }
 
   const nombre = elegida.nombre;
-  const sinCalificados = ranking.data !== undefined && ranking.data.filas.every((f) => f.ultima_calificacion === null);
 
-  let contenidoAnalista: ReactNode;
-  // El vacío depende de si hay partidos calificados: se espera al ranking de la jornada.
-  if (analista.data !== undefined && (analista.data !== null || ranking.data !== undefined || ranking.isError)) {
-    contenidoAnalista =
-      analista.data === null ? (
-        <Texto variante="cuerpo">
-          {sinCalificados ? mensajesGrupo.analistaSinCalificados(nombre) : mensajesGrupo.analistaNadie(nombre)}
-        </Texto>
+  let contenidoFigura: ReactNode;
+  if (figura.data !== undefined) {
+    contenidoFigura =
+      figura.data === null ? (
+        <Texto variante="cuerpo">{mensajesGrupo.figuraVacia(nombre)}</Texto>
       ) : (
-        <TarjetaAnalisis analisis={analista.data} conPerfil />
+        <TarjetaFigura figura={figura.data} />
       );
-  } else if (analista.isError) {
-    contenidoAnalista = (
-      <ErrorSeccion error={analista.error} mensaje={mensajesGrupo.errorAnalista} reintentar={() => void analista.refetch()} />
+  } else if (figura.isError) {
+    contenidoFigura = (
+      <ErrorSeccion error={figura.error} mensaje={mensajesGrupo.errorFigura} reintentar={() => void figura.refetch()} />
     );
-  } else contenidoAnalista = <EsqueletoTarjetas />;
+  } else contenidoFigura = <EsqueletoTarjetas />;
 
   // Ningún partido de la jornada ha cerrado: los análisis aún no se revelan (R04).
   const nadaCerrado =
@@ -150,7 +145,7 @@ export function PestanaJornada({ grupoId, jornadaRuta }: { grupoId: number; jorn
   return (
     <View style={{ gap: espacio.l }}>
       {selector}
-      <Seccion etiqueta={mensajesGrupo.analista}>{contenidoAnalista}</Seccion>
+      <Seccion etiqueta={mensajesGrupo.figura}>{contenidoFigura}</Seccion>
       <Seccion etiqueta={mensajesGrupo.rankingJornada}>
         <RankingGrupo
           vista="jornada"

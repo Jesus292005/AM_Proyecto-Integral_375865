@@ -52,7 +52,7 @@ Inicio de sesión (S01)
 | S05 | Crear grupo | F07 | Nombre del grupo → al crear, navega a S08. | Nombre vacío/inválido, error al crear |
 | S06 | Unirse a un grupo | F07, F12 | Campo de código + botón "Escanear QR". | Código vacío, código inválido, ya soy miembro, error |
 | S07 | Escanear QR | F12 | Cámara; al leer un QR válido regresa a S06 con el código lleno. Solo dentro de la app (D37). | Permiso de cámara negado, QR no válido |
-| S08 | Detalle de grupo | F07, F08, F12, F26 | Encabezado con ícono, nombre, # miembros y "Editar" (solo `ADMIN`, S15). Pestañas **Ranking** (torneo, F08) / **Jornada** (analista de la jornada, ranking de la jornada y muro de análisis revelados con reacciones, F26 decisión 4) / **Miembros** (posición, quién falta por predecir, invitar con código, QR y "Compartir invitación", salir). Tocar a un miembro abre S13 (D38). | Por pestaña y por sección: cargando, vacío, error |
+| S08 | Detalle de grupo | F07, F08, F12, F26 | Encabezado con ícono, nombre, # miembros y "Editar" (solo `ADMIN`, S15). Pestañas **Ranking** (torneo, F08) / **Jornada** (figura de la jornada, ranking de la jornada y muro de análisis revelados con reacciones, F26 decisión 4) / **Miembros** (posición, quién falta por predecir, invitar con código, QR y "Compartir invitación", salir). Tocar a un miembro abre S13 (D38). | Por pestaña y por sección: cargando, vacío, error |
 | S09 | Perfil (propio) | F01, F11, F13, F14, F18, F20, F28 | Encabezado con foto (de Google), nombre visible y equipo favorito (o "Elige tu equipo"); carta (F20), racha (F13) y Vitrina de insignias (F14). Ajustes: equipo favorito (S12), nombre (S14), recordatorios. Cerrar sesión. Acceso a S10 solo si soy administrador (F28 R1–R2). | Por sección: cargando, error (una sección que falla no rompe las demás) |
 | S14 | Cambiar nombre | F28 | Campo con el nombre actual (3–20 caracteres) y "Guardar"; al guardar vuelve a S09 (F28 R3–R4). | Nombre inválido, error al guardar, sin internet |
 | S13 | Perfil de otro usuario | F19 | Mismo diseño que S09 en **solo lectura**: foto, nombre, equipo, carta, racha y Vitrina (sin grupo ni jornada de las insignias). Solo para quien comparte grupo con esa persona. **No** muestra predicciones. | Cargando, error, no encontrado (también sin grupo en común) |
@@ -79,7 +79,7 @@ Inicio de sesión (S01)
 | `/grupos/escanear` | S07 | — | S06 | S06 con `codigo` |
 | `/grupo/:grupoId` | S08 | `grupoId`, `pestana?` (`ranking`/`jornada`/`miembros`, F26; `vista=jornada` de antes abre Jornada), `jornada?` (el `orden`, como en S02; F08), `aviso?` (`ya-miembro`, F07) | S04, S05, S06, S11, notificación | S13, S15 |
 | `/grupos/editar/:grupoId` | S15 | `grupoId` | S08 (solo `ADMIN`) | Atrás (S08) |
-| `/usuario/:usuarioId` | S13 | `usuarioId` | S08 (Miembros, muro, analista) | Atrás |
+| `/usuario/:usuarioId` | S13 | `usuarioId` | S08 (Miembros, muro, figura de la jornada) | Atrás |
 | `/perfil` | S09 | — | Pestaña | S12, S14, S10, Login (cerrar sesión) |
 | `/admin/simulacion` | S10 | — | S09 (solo administrador) | Atrás |
 

@@ -131,8 +131,6 @@ function TarjetaMuro({
             etiqueta={reacciones[tipo].nombre}
             conteo={analisis.reacciones[tipo]}
             activa={analisis.miReaccion === tipo}
-            // F26 R13: a lo propio no se reacciona; los conteos sí se ven.
-            deshabilitada={autor.es_yo}
             onPress={() => onReaccionar(tipo)}
           />
         ))}

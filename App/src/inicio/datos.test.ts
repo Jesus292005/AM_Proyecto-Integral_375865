@@ -1,7 +1,6 @@
 // T109: lecturas de S11 (F17 R4, R6, R8, R10) con Zod (D54).
 import { supabase } from '../supabase/cliente';
 import {
-  obtenerAnalistaDeJornada,
   obtenerMejorAnalisis,
   obtenerMiUltimaJornada,
   obtenerPendientes,
@@ -155,13 +154,6 @@ describe('mejor análisis (R10)', () => {
 
     expect(await obtenerMejorAnalisis()).toMatchObject({ nombre: 'Pepe', puntos_bono: 82, en_curso: true, ...equipos });
     expect(rpc).toHaveBeenCalledWith('mejor_analisis_jornada');
-  });
-
-  it('F26 CA9: el analista de la jornada pide ese grupo y esa jornada', async () => {
-    rpc.mockResolvedValue({ data: [fila], error: null, status: 200 });
-
-    expect(await obtenerAnalistaDeJornada(3, 12)).toMatchObject({ nombre: 'Pepe', puntos_bono: 82 });
-    expect(rpc).toHaveBeenCalledWith('mejor_analisis_jornada', { id_grupo: 3, id_jornada: 12 });
   });
 
   it('F17 R10: sin filas, null', async () => {

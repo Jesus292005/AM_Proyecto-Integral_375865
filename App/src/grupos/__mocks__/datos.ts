@@ -3,6 +3,7 @@
 import type {
   AnalisisDelMuro,
   Faltan,
+  FiguraDeJornada,
   GrupoDetalle,
   MiembroConRol,
   MiGrupo,
@@ -50,3 +51,6 @@ export const obtenerFaltan = jest.fn(
   async (_grupoId: number): Promise<Faltan> => ({ porMiembro: new Map(), abiertos: 0, jornada: 'Jornada 2' }),
 );
 export const obtenerRoles = jest.fn(async (_grupoId: number): Promise<MiembroConRol[]> => []);
+export const obtenerFiguraDeJornada = jest.fn(
+  async (_grupoId: number, _jornadaId: number): Promise<FiguraDeJornada | null> => null,
+);

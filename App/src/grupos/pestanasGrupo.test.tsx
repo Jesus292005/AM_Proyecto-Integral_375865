@@ -8,17 +8,17 @@ import { Share } from 'react-native';
 
 import { clienteConsultas } from '../datos/clienteConsultas';
 import { ErrorDatos } from '../datos/errores';
-import { obtenerAnalistaDeJornada } from '../inicio/datos';
-import { mejorAnalisisDePrueba } from '../inicio/__mocks__/datos';
 import { obtenerPartidosDeJornada, obtenerTorneoActual, type PartidoDeLista } from '../partidos/datos';
 import { simularSesionGuardada } from '../pruebas/supabaseFalso';
 import {
   obtenerFaltan,
+  obtenerFiguraDeJornada,
   obtenerMuro,
   obtenerRanking,
   obtenerRoles,
   reaccionar,
   type AnalisisDelMuro,
+  type FiguraDeJornada,
   type FilaRanking,
 } from './datos';
 import { aplicarReaccion } from './MuroJornada';
@@ -40,7 +40,7 @@ const muroFalso = obtenerMuro as jest.MockedFunction<typeof obtenerMuro>;
 const reaccionarFalso = reaccionar as jest.MockedFunction<typeof reaccionar>;
 const faltanFalso = obtenerFaltan as jest.MockedFunction<typeof obtenerFaltan>;
 const rolesFalsos = obtenerRoles as jest.MockedFunction<typeof obtenerRoles>;
-const analistaFalso = obtenerAnalistaDeJornada as jest.MockedFunction<typeof obtenerAnalistaDeJornada>;
+const figuraFalsa = obtenerFiguraDeJornada as jest.MockedFunction<typeof obtenerFiguraDeJornada>;
 const torneoFalso = obtenerTorneoActual as jest.MockedFunction<typeof obtenerTorneoActual>;
 const partidosFalsos = obtenerPartidosDeJornada as jest.MockedFunction<typeof obtenerPartidosDeJornada>;
 
@@ -90,6 +90,31 @@ const analisis = (extra: Partial<AnalisisDelMuro> & { id: number }): AnalisisDel
   ...extra,
 });
 
+const figura = (extra: Partial<FiguraDeJornada> = {}): FiguraDeJornada => ({
+  usuario_id: 'a',
+  nombre: 'Ana',
+  foto_url: null,
+  es_yo: false,
+  puntos_total: 360,
+  puntos_base: 350,
+  puntos_bono: 10,
+  lideres: 1,
+  jornada_nombre: 'Jornada 2',
+  en_curso: false,
+  incluye_simulados: false,
+  analisis: {
+    partido_id: 1,
+    goles_local: 2,
+    goles_visitante: 1,
+    local,
+    visitante,
+    justificacion: 'Puebla gana por la banda.',
+    bono: 10,
+    explicacion: 'Poco verificable.',
+  },
+  ...extra,
+});
+
 let navegar: jest.SpyInstance;
 
 beforeEach(() => {
@@ -101,7 +126,7 @@ beforeEach(() => {
   reaccionarFalso.mockReset().mockResolvedValue(undefined);
   faltanFalso.mockReset().mockResolvedValue({ porMiembro: new Map(), abiertos: 0, jornada: 'Jornada 2' });
   rolesFalsos.mockReset().mockResolvedValue([]);
-  analistaFalso.mockReset().mockResolvedValue(null);
+  figuraFalsa.mockReset().mockResolvedValue(null);
   torneoFalso.mockReset().mockResolvedValue({
     nombre: 'Apertura 2026',
     jornadas: [
@@ -163,8 +188,8 @@ describe('S08 pestañas (F26 R7)', () => {
 });
 
 describe('S08 Jornada (F26 R9–R12)', () => {
-  it('F26 CA9: analista, ranking de la jornada y muro agrupado por partido con sus notas', async () => {
-    analistaFalso.mockResolvedValue(mejorAnalisisDePrueba({ nombre: 'Ana', usuario_id: 'a', puntos_bono: 90 }));
+  it('F26 CA9: figura, ranking de la jornada y muro agrupado por partido con sus notas', async () => {
+    figuraFalsa.mockResolvedValue(figura());
     rankingFalso.mockResolvedValue({
       filas: [fila({ usuario_id: 'a', nombre: 'Ana', puntos_total: 190, ultima_calificacion: haceUnDia })],
       incluyeSimulados: false,
@@ -185,12 +210,15 @@ describe('S08 Jornada (F26 R9–R12)', () => {
     ]);
     await abrir('/grupo/1?pestana=jornada');
 
-    expect(await screen.findByText('Analista de la jornada')).toBeOnTheScreen();
-    expect(await screen.findByText('90/100')).toBeOnTheScreen();
+    expect(await screen.findByText('Figura de la jornada')).toBeOnTheScreen();
+    expect(await screen.findByLabelText('360 puntos en la jornada: base 350 y bono 10')).toBeOnTheScreen();
+    expect(screen.getByText('base 350 + bono 10')).toBeOnTheScreen();
+    expect(screen.getByText('10/100')).toBeOnTheScreen();
+    expect(screen.getByText('Puebla gana por la banda.')).toBeOnTheScreen();
     expect(screen.getByText('Ranking de la jornada')).toBeOnTheScreen();
     expect(await screen.findByLabelText('1.º, Ana, 190 puntos')).toBeOnTheScreen();
     await waitFor(() => expect(rankingFalso).toHaveBeenCalledWith(1, 12));
-    expect(analistaFalso).toHaveBeenCalledWith(1, 12);
+    expect(figuraFalsa).toHaveBeenCalledWith(1, 12);
     expect(muroFalso).toHaveBeenCalledWith(1, 12);
 
     expect(await screen.findByRole('button', { name: 'Puebla 2 - 1 Santos. Ver el partido' })).toBeOnTheScreen();
@@ -224,31 +252,39 @@ describe('S08 Jornada (F26 R9–R12)', () => {
     expect(await screen.findByText('Los análisis se revelan cuando cierra cada partido.')).toBeOnTheScreen();
   });
 
-  it('F26 CA9: vacíos del muro y del analista', async () => {
-    rankingFalso.mockResolvedValue({
-      filas: [fila({ usuario_id: 'a', ultima_calificacion: haceUnDia })],
-      incluyeSimulados: false,
-    });
+  it('F26 CA9: vacíos del muro y de la figura', async () => {
     await abrir('/grupo/1?pestana=jornada');
 
     expect(await screen.findByText('Nadie del grupo escribió un análisis en la Jornada 2.')).toBeOnTheScreen();
-    expect(await screen.findByText('Nadie del grupo llegó a 50 en la Jornada 2.')).toBeOnTheScreen();
+    expect(await screen.findByText('Aún no hay puntos en la Jornada 2.')).toBeOnTheScreen();
   });
 
-  it('F26 CA9: sin partidos calificados, el analista lo dice', async () => {
-    rankingFalso.mockResolvedValue({ filas: [fila({ usuario_id: 'a' })], incluyeSimulados: false });
+  it('F26 CA9: la figura dice si hay empate, si sigue en curso y no muestra análisis si no tiene', async () => {
+    figuraFalsa.mockResolvedValue(figura({ lideres: 3, en_curso: true, es_yo: true, analisis: null }));
     await abrir('/grupo/1?pestana=jornada');
 
-    expect(await screen.findByText('Aún no hay análisis calificados en la Jornada 2.')).toBeOnTheScreen();
+    expect(await screen.findByText('Empatado en el 1.º con 2 más · Hasta ahora')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Ver el perfil de Tú' })).toBeOnTheScreen();
+    expect(screen.queryByText(/Su mejor análisis/)).not.toBeOnTheScreen();
+  });
+
+  it('F26 CA9: tocar a la figura abre S13 y su análisis abre S03', async () => {
+    figuraFalsa.mockResolvedValue(figura());
+    await abrir('/grupo/1?pestana=jornada');
+
+    await tocar('Ver el perfil de Ana');
+    expect(navegar).toHaveBeenCalledWith({ pathname: '/usuario/[usuarioId]', params: { usuarioId: 'a' } });
+    await fireEvent.press(await screen.findByRole('button', { name: /^Su mejor análisis: 10 de 100/ }));
+    expect(navegar).toHaveBeenCalledWith({ pathname: '/partido/[partidoId]', params: { partidoId: '1' } });
   });
 
   it('F26 CA9: una parte con error no rompe las otras y se puede reintentar', async () => {
     muroFalso.mockRejectedValueOnce(new ErrorDatos('boom', false));
-    analistaFalso.mockResolvedValue(mejorAnalisisDePrueba({ puntos_bono: 75 }));
+    figuraFalsa.mockResolvedValue(figura());
     await abrir('/grupo/1?pestana=jornada');
 
     expect(await screen.findByText('No pudimos cargar los análisis. Inténtalo de nuevo.')).toBeOnTheScreen();
-    expect(await screen.findByText('75/100')).toBeOnTheScreen();
+    expect(await screen.findByLabelText('360 puntos en la jornada: base 350 y bono 10')).toBeOnTheScreen();
     await tocar('Reintentar');
     expect(await screen.findByText('Nadie del grupo escribió un análisis en la Jornada 2.')).toBeOnTheScreen();
   });
@@ -259,7 +295,7 @@ describe('S08 Jornada (F26 R9–R12)', () => {
 
     expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
     await waitFor(() => expect(muroFalso).toHaveBeenLastCalledWith(1, 11));
-    expect(analistaFalso).toHaveBeenLastCalledWith(1, 11);
+    expect(figuraFalsa).toHaveBeenLastCalledWith(1, 11);
     expect(rankingFalso).toHaveBeenLastCalledWith(1, 11);
   });
 });
@@ -315,7 +351,7 @@ describe('Reacciones (F26 R13, R14)', () => {
     expect(await screen.findByRole('button', { name: 'La clavó, 0' })).not.toBeSelected();
   });
 
-  it('F26 CA10: en mi análisis se ven los conteos pero las reacciones están deshabilitadas', async () => {
+  it('F26 CA10 (v1.1, D114): también se reacciona a mi análisis', async () => {
     muroFalso.mockResolvedValue([
       analisis({
         id: 5,
@@ -326,9 +362,9 @@ describe('Reacciones (F26 R13, R14)', () => {
     await abrir('/grupo/1?pestana=jornada');
 
     expect(await screen.findByText('Tú')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Bien visto, 3' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Bien visto, 3' })).toBeEnabled();
     await fireEvent.press(screen.getByRole('button', { name: 'Bien visto, 3' }));
-    expect(reaccionarFalso).not.toHaveBeenCalled();
+    expect(reaccionarFalso).toHaveBeenCalledWith(1, 5, 'BIEN_VISTO');
   });
 });
 

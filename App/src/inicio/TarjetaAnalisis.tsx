@@ -24,20 +24,17 @@ interface Props {
   analisis: MejorAnalisis;
   /** Inicio (F17 R11): "en {grupo}". En S08 (F26 R10) el grupo ya se sabe. */
   conGrupo?: boolean;
-  /** S08: tocar el nombre abre S13 (F26 R10, F19 R8); en Inicio no. */
-  conPerfil?: boolean;
 }
 
 /**
- * Tarjeta del mejor análisis (F17 R11) y del "Analista de la jornada" (F26 R10): foto, nombre,
- * nota, partido, justificación y comentario de la IA. Tocarla abre S03 del partido.
+ * Tarjeta del mejor análisis de Inicio (F17 R11): foto, nombre, nota, partido, justificación y
+ * comentario de la IA. Tocarla abre S03 del partido.
  */
-export function TarjetaAnalisis({ analisis, conGrupo = false, conPerfil = false }: Props) {
+export function TarjetaAnalisis({ analisis, conGrupo = false }: Props) {
   const { colores, espacio, medidas } = useTema();
   const quien = analisis.es_yo ? 'Tú' : analisis.nombre;
   const abrirPartido = () =>
     router.navigate({ pathname: '/partido/[partidoId]', params: { partidoId: String(analisis.partido_id) } });
-  const verPerfil = () => abrirPerfil(analisis.usuario_id);
 
   return (
     <Pressable
@@ -46,7 +43,7 @@ export function TarjetaAnalisis({ analisis, conGrupo = false, conPerfil = false 
       accessibilityLabel={[
         conGrupo
           ? `Mejor análisis: ${quien} en ${analisis.grupo_nombre}, ${analisis.puntos_bono} de 100`
-          : `Analista de la jornada: ${quien}, ${analisis.puntos_bono} de 100`,
+          : `Mejor análisis: ${quien}, ${analisis.puntos_bono} de 100`,
         textoPartido(analisis),
         analisis.justificacion,
         `Comentario de la IA: ${analisis.explicacion}`,
@@ -56,11 +53,6 @@ export function TarjetaAnalisis({ analisis, conGrupo = false, conPerfil = false 
       ]
         .filter(Boolean)
         .join('. ')}
-      // Con lector de pantalla, el perfil es una acción de la tarjeta (el nombre no se enfoca solo).
-      accessibilityActions={conPerfil ? [{ name: 'perfil', label: `Ver el perfil de ${quien}` }] : undefined}
-      onAccessibilityAction={(evento) => {
-        if (evento.nativeEvent.actionName === 'perfil') verPerfil();
-      }}
       style={({ pressed }) => ({
         gap: espacio.s,
         padding: espacio.m,
@@ -70,13 +62,7 @@ export function TarjetaAnalisis({ analisis, conGrupo = false, conPerfil = false 
       })}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
-        <Pressable
-          testID="analisis-autor"
-          disabled={!conPerfil}
-          onPress={verPerfil}
-          accessible={false}
-          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: espacio.s, minHeight: medidas.areaTactil }}
-        >
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
           <FotoUsuario url={analisis.foto_url} nombre={analisis.nombre} />
           <View style={{ flex: 1 }}>
             <Texto variante="cuerpoFuerte" numberOfLines={1}>
@@ -88,7 +74,7 @@ export function TarjetaAnalisis({ analisis, conGrupo = false, conPerfil = false 
               </Texto>
             )}
           </View>
-        </Pressable>
+        </View>
         <Texto variante="titulo2">{`${analisis.puntos_bono}/100`}</Texto>
       </View>
       <Texto variante="etiqueta" color="textoTenue">

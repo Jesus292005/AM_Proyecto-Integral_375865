@@ -4,6 +4,7 @@ import {
   crearGrupo,
   editarGrupo,
   obtenerFaltan,
+  obtenerFiguraDeJornada,
   obtenerGrupo,
   obtenerMuro,
   obtenerRoles,
@@ -320,5 +321,58 @@ describe('S08 (F26 R11, R13, R15, R16)', () => {
     expect(await obtenerRoles(4)).toEqual([{ usuario_id: 'a', rol: 'ADMIN' }]);
     expect(desde).toHaveBeenCalledWith('miembros_grupo');
     expect(c.llamadas).toContainEqual(['eq', 'grupo_id', 4]);
+  });
+});
+
+describe('figura de la jornada (F26 R10 v1.1, D114)', () => {
+  const filaFigura = {
+    usuario_id: 'a',
+    nombre: 'Ana',
+    foto_url: null,
+    es_yo: false,
+    puntos_total: 360,
+    puntos_base: 350,
+    puntos_bono: 10,
+    lideres: 1,
+    jornada_nombre: 'Jornada 2',
+    en_curso: true,
+    incluye_simulados: false,
+    partido_id: 9,
+    goles_local: 2,
+    goles_visitante: 1,
+    local_nombre_corto: 'Puebla',
+    local_escudo_url: 'https://x.mx/l.png',
+    local_color_primario: null,
+    local_color_texto: null,
+    visitante_nombre_corto: 'Santos',
+    visitante_escudo_url: 'https://x.mx/v.png',
+    visitante_color_primario: null,
+    visitante_color_texto: null,
+    justificacion: 'Por la banda.',
+    bono_analisis: 10,
+    explicacion: 'Poco verificable.',
+  };
+
+  it('F26 CA9: una llamada a figura_jornada con el 1.º y su mejor análisis', async () => {
+    rpc.mockResolvedValue({ data: [filaFigura], error: null, status: 200 });
+
+    const figura = await obtenerFiguraDeJornada(1, 12);
+    expect(rpc).toHaveBeenCalledWith('figura_jornada', { id_grupo: 1, id_jornada: 12 });
+    expect(figura).toMatchObject({
+      nombre: 'Ana',
+      puntos_total: 360,
+      analisis: { partido_id: 9, bono: 10, justificacion: 'Por la banda.', local: { nombre_corto: 'Puebla' } },
+    });
+  });
+
+  it('F26 R10 (v1.1): sin análisis evaluado, `analisis` es null; sin filas, null', async () => {
+    rpc.mockResolvedValueOnce({
+      data: [{ ...filaFigura, partido_id: null, justificacion: null, bono_analisis: null, explicacion: null }],
+      error: null,
+      status: 200,
+    });
+    expect((await obtenerFiguraDeJornada(1, 12))?.analisis).toBeNull();
+    rpc.mockResolvedValueOnce({ data: [], error: null, status: 200 });
+    expect(await obtenerFiguraDeJornada(1, 12)).toBeNull();
   });
 });
