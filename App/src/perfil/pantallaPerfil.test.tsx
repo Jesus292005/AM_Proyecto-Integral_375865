@@ -46,13 +46,22 @@ describe('S09 Perfil (F28)', () => {
     expect(screen.getAllByTestId('foto-usuario-inicial')[0]).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'Elige tu equipo' })).toBeOnTheScreen();
 
-    // Orden de R2: encabezado · Tu carta (con el nombre en la carta) · Racha · Ajustes (con el
-    // nombre como valor de "Nombre") · Cerrar sesión. La Vitrina llega en T101.
+    // Orden de R2: encabezado · Tu carta (con el nombre en la carta) · Racha · Vitrina · Ajustes
+    // (con el nombre como valor de "Nombre") · Cerrar sesión.
     await screen.findByTestId('carta-bloqueada');
     const textos = screen
-      .getAllByText(/^(Chucho|Tu carta|Racha|Ajustes|Cerrar sesión)$/)
+      .getAllByText(/^(Chucho|Tu carta|Racha|Vitrina|Ajustes|Cerrar sesión)$/)
       .map((t) => t.props.children);
-    expect(textos).toEqual(['Chucho', 'Tu carta', 'Chucho', 'Racha', 'Ajustes', 'Chucho', 'Cerrar sesión']);
+    expect(textos).toEqual([
+      'Chucho',
+      'Tu carta',
+      'Chucho',
+      'Racha',
+      'Vitrina',
+      'Ajustes',
+      'Chucho',
+      'Cerrar sesión',
+    ]);
     expect(screen.queryByRole('button', { name: 'Simulación' })).not.toBeOnTheScreen();
   });
 

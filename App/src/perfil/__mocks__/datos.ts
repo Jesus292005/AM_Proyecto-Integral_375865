@@ -1,6 +1,6 @@
 // Se activa con `jest.mock('<ruta>/perfil/datos')`. Por defecto la cuenta es de usuario normal, sin
 // foto ni equipo favorito, con los recordatorios activos y sin racha.
-import type { EquipoFavorito, MiCarta, MiPerfil, MiRacha, Rol } from '../datos';
+import type { EquipoFavorito, InsigniaDeVitrina, MiCarta, MiPerfil, MiRacha, Rol } from '../datos';
 
 export const obtenerMiRol = jest.fn(async (): Promise<Rol> => 'USUARIO');
 export const obtenerRecordatoriosActivos = jest.fn(async () => true);
@@ -51,3 +51,36 @@ export const cartaDePrueba = (cambios: Partial<MiCarta> = {}): MiCarta => ({
   ...cambios,
 });
 export const obtenerMiCarta = jest.fn(async (): Promise<MiCarta> => cartaDePrueba());
+
+const catalogo: [string, string, InsigniaDeVitrina['nivel'], string, boolean][] = [
+  ['PRIMER_ACIERTO', 'Primer acierto', 'BRONCE', 'check', false],
+  ['MARCADOR_EXACTO', 'Visionario', 'PLATA', 'diana', false],
+  ['ANALISTA', 'Analista', 'BRONCE', 'bombilla', false],
+  ['RACHA_5', 'En racha', 'PLATA', 'llama', false],
+  ['RACHA_10', 'Imparable', 'ORO', 'llama', false],
+  ['TOP_JORNADA', 'Top de la jornada', 'ORO', 'trofeo', true],
+  ['MEJOR_ANALISIS', 'Mejor análisis de la jornada', 'PLATA', 'bombilla', true],
+];
+
+/** El catálogo de F14 R1 sin nada ganado; `cambios` por código. */
+export const vitrinaDePrueba = (
+  cambios: Record<string, Partial<InsigniaDeVitrina>> = {},
+): InsigniaDeVitrina[] =>
+  catalogo.map(([codigo, nombre, nivel, icono, repetible], i) => ({
+    codigo,
+    nombre,
+    descripcion: `Cómo ganar ${nombre}.`,
+    nivel,
+    icono,
+    repetible,
+    orden: i + 1,
+    veces: 0,
+    nueva: false,
+    ultima_en: null,
+    ultima_simulada: null,
+    ultimo_grupo: null,
+    ultima_jornada: null,
+    ...cambios[codigo],
+  }));
+export const obtenerMisInsignias = jest.fn(async (): Promise<InsigniaDeVitrina[]> => vitrinaDePrueba());
+export const marcarInsigniasVistas = jest.fn(async () => {});

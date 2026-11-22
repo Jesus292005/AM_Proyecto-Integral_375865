@@ -19,6 +19,7 @@ import { useTema } from '../tema';
 import { AjusteRecordatorios } from './AjusteRecordatorios';
 import { SeccionCarta } from './SeccionCarta';
 import { SeccionRacha } from './SeccionRacha';
+import { SeccionVitrina } from './SeccionVitrina';
 import { useMiPerfil } from './useMiPerfil';
 
 const mensajes = {
@@ -147,6 +148,7 @@ export function PantallaPerfil() {
         <EncabezadoPerfil />
         <SeccionCarta />
         <SeccionRacha />
+        <SeccionVitrina />
         <Seccion etiqueta="Ajustes">
           <View>
             <FilaAjuste

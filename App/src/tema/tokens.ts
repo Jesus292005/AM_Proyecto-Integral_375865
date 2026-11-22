@@ -141,6 +141,10 @@ export const medidas = {
   fotoLista: 28,
   // Foto en el encabezado de S09 (05-ui v2.2, F28 R1).
   fotoPerfil: 72,
+  // Medalla de una insignia en la Vitrina (05-ui v2.3, F14 R6).
+  medallaInsignia: 56,
+  // Animación de una insignia nueva (05-ui §8, F14 R7), en milisegundos.
+  celebracionMs: 400,
   // Lado del QR de invitación en S08, con su margen (F12 R2).
   qrInvitacion: 200,
   // Íconos de trazo (05-ui §7).

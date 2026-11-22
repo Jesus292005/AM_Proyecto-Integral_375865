@@ -4,7 +4,9 @@ import {
   ErrorNombreInvalido,
   guardarEquipoFavorito,
   obtenerEquiposTorneoActual,
+  marcarInsigniasVistas,
   obtenerMiCarta,
+  obtenerMisInsignias,
   obtenerMiPerfil,
   obtenerMiRacha,
   obtenerMiRol,
@@ -13,6 +15,7 @@ import {
 jest.mock('../supabase/cliente', () => ({
   supabase: {
     from: jest.fn(),
+    rpc: jest.fn(async () => ({ data: 0, error: null, status: 200 })),
     auth: {
       getSession: jest.fn(async () => ({ data: { session: { user: { id: 'usuario-1' } } } })),
     },
@@ -161,5 +164,42 @@ describe('mi carta (F20 R5)', () => {
     desde.mockReturnValue(respuesta({ ...fila, nivel: 'DIAMANTE' }));
 
     await expect(obtenerMiCarta()).rejects.toThrow('forma inválida');
+  });
+});
+
+describe('Vitrina (F14 R8)', () => {
+  const fila = {
+    codigo: 'TOP_JORNADA',
+    nombre: 'Top de la jornada',
+    descripcion: 'Queda 1.º.',
+    nivel: 'ORO',
+    icono: 'trofeo',
+    repetible: true,
+    orden: 6,
+    veces: 2,
+    nueva: true,
+    ultima_en: '2026-11-20T03:00:00Z',
+    ultima_simulada: false,
+    ultimo_grupo: 'Los compas',
+    ultima_jornada: 'Jornada 17',
+  };
+
+  it('F14 CA4: lee mis_insignias en el orden de la Vitrina', async () => {
+    const llamadas: unknown[][] = [];
+    const cadena = {
+      select: () => cadena,
+      order: async (...a: unknown[]) => (llamadas.push(['order', ...a]), { data: [fila], error: null, status: 200 }),
+    };
+    desde.mockReturnValue(cadena);
+
+    expect(await obtenerMisInsignias()).toEqual([fila]);
+    expect(desde).toHaveBeenCalledWith('mis_insignias');
+    expect(llamadas).toContainEqual(['order', 'orden']);
+  });
+
+  it('F14 R7: marcar como vistas llama a la función del servidor', async () => {
+    await marcarInsigniasVistas();
+
+    expect(supabase.rpc).toHaveBeenCalledWith('marcar_insignias_vistas');
   });
 });

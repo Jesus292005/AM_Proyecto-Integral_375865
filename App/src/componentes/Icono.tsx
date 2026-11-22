@@ -53,15 +53,22 @@ const trazos = {
 
 export type NombreIcono = keyof typeof trazos;
 
+/** Para nombres que llegan del servidor (catálogo de insignias, F14 R2). */
+export function esNombreIcono(nombre: string): nombre is NombreIcono {
+  return Object.keys(trazos).includes(nombre);
+}
+
 interface Props {
   nombre: NombreIcono;
   color?: NombreColor;
+  /** Color fuera de la paleta: solo el texto sobre un metal (insignias, U6). */
+  colorDato?: string;
   /** `icono` (16) en contenido, `iconoMenu` (20) en el menú inferior (05-ui §7). */
   tamano?: 'icono' | 'iconoMenu';
 }
 
 /** Decorativo: el texto de al lado dice lo mismo (U5). */
-export function Icono({ nombre, color = 'texto', tamano = 'icono' }: Props) {
+export function Icono({ nombre, color = 'texto', colorDato, tamano = 'icono' }: Props) {
   const { colores, medidas } = useTema();
   const lado = medidas[tamano];
 
@@ -70,7 +77,7 @@ export function Icono({ nombre, color = 'texto', tamano = 'icono' }: Props) {
       <Path
         d={trazos[nombre]}
         testID={`icono-${nombre}-trazo`}
-        stroke={colores[color]}
+        stroke={colorDato ?? colores[color]}
         // El trazo se dibuja en la caja de 24: se escala para medir `trazoIcono` en pantalla.
         strokeWidth={(medidas.trazoIcono * 24) / lado}
         strokeLinecap="round"

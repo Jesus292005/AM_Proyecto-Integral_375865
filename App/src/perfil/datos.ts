@@ -180,3 +180,43 @@ export async function obtenerMiCarta(): Promise<MiCarta> {
   if (error) throw comoErrorDatos(error, status);
   return validar(esquemaCarta, data, 'Carta');
 }
+
+// ---------------------------------------------------------------------------
+// Vitrina de insignias (F14 R6–R8)
+// ---------------------------------------------------------------------------
+
+const esquemaInsignia = z.object({
+  codigo: z.string(),
+  nombre: z.string(),
+  descripcion: z.string(),
+  nivel: esquemaNivel,
+  icono: z.string(),
+  repetible: z.boolean(),
+  orden: z.number().int(),
+  veces: z.number().int(),
+  nueva: z.boolean(),
+  ultima_en: z.string().nullable(),
+  ultima_simulada: z.boolean().nullable(),
+  ultimo_grupo: z.string().nullable(),
+  ultima_jornada: z.string().nullable(),
+});
+
+export type InsigniaDeVitrina = z.infer<typeof esquemaInsignia>;
+
+/** Todo el catálogo con lo mío, en el orden de la Vitrina (F14 R6, R8). */
+export async function obtenerMisInsignias(): Promise<InsigniaDeVitrina[]> {
+  const { data, error, status } = await supabase
+    .from('mis_insignias')
+    .select(
+      'codigo, nombre, descripcion, nivel, icono, repetible, orden, veces, nueva, ultima_en, ultima_simulada, ultimo_grupo, ultima_jornada',
+    )
+    .order('orden');
+  if (error) throw comoErrorDatos(error, status);
+  return validar(z.array(esquemaInsignia), data, 'Insignias');
+}
+
+/** Marca como vistas mis insignias nuevas (F14 R7). */
+export async function marcarInsigniasVistas(): Promise<void> {
+  const { error, status } = await supabase.rpc('marcar_insignias_vistas');
+  if (error) throw comoErrorDatos(error, status);
+}
