@@ -324,55 +324,58 @@ describe('S08 (F26 R11, R13, R15, R16)', () => {
   });
 });
 
-describe('figura de la jornada (F26 R10 v1.1, D114)', () => {
+describe('figura de la jornada (F26 R10 v1.2, D115)', () => {
+  const partido = {
+    partido_id: 9,
+    estado: 'TERMINADO',
+    goles_local: 2,
+    goles_visitante: 1,
+    local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png', color_primario: null, color_texto: null },
+    visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png', color_primario: null, color_texto: null },
+    resultado: null,
+    rango_goles: 'G3',
+    marcador_local: null,
+    marcador_visitante: null,
+    puntos_resultado: 0,
+    puntos_rango_goles: 150,
+    puntos_marcador: 0,
+    puntos_base: 150,
+    justificacion: 'Habrá goles.',
+    estado_evaluacion: 'EVALUADA',
+    bono: 0,
+    explicacion: 'No se verificó.',
+    es_simulada: false,
+  };
   const filaFigura = {
     usuario_id: 'a',
     nombre: 'Ana',
     foto_url: null,
     es_yo: false,
-    puntos_total: 360,
-    puntos_base: 350,
-    puntos_bono: 10,
+    puntos_total: 150,
+    puntos_base: 150,
+    puntos_bono: 0,
     lideres: 1,
     jornada_nombre: 'Jornada 2',
     en_curso: true,
     incluye_simulados: false,
-    partido_id: 9,
-    goles_local: 2,
-    goles_visitante: 1,
-    local_nombre_corto: 'Puebla',
-    local_escudo_url: 'https://x.mx/l.png',
-    local_color_primario: null,
-    local_color_texto: null,
-    visitante_nombre_corto: 'Santos',
-    visitante_escudo_url: 'https://x.mx/v.png',
-    visitante_color_primario: null,
-    visitante_color_texto: null,
-    justificacion: 'Por la banda.',
-    bono_analisis: 10,
-    explicacion: 'Poco verificable.',
+    partidos: [partido],
   };
 
-  it('F26 CA9: una llamada a figura_jornada con el 1.º y su mejor análisis', async () => {
+  it('F26 CA9: una llamada a figura_jornada con el 1.º y sus partidos con puntos por parte', async () => {
     rpc.mockResolvedValue({ data: [filaFigura], error: null, status: 200 });
 
-    const figura = await obtenerFiguraDeJornada(1, 12);
+    expect(await obtenerFiguraDeJornada(1, 12)).toEqual(filaFigura);
     expect(rpc).toHaveBeenCalledWith('figura_jornada', { id_grupo: 1, id_jornada: 12 });
-    expect(figura).toMatchObject({
-      nombre: 'Ana',
-      puntos_total: 360,
-      analisis: { partido_id: 9, bono: 10, justificacion: 'Por la banda.', local: { nombre_corto: 'Puebla' } },
-    });
   });
 
-  it('F26 R10 (v1.1): sin análisis evaluado, `analisis` es null; sin filas, null', async () => {
+  it('F26 R10 (v1.2): sin filas, null; un partido con forma inválida es un error (D54)', async () => {
+    rpc.mockResolvedValueOnce({ data: [], error: null, status: 200 });
+    expect(await obtenerFiguraDeJornada(1, 12)).toBeNull();
     rpc.mockResolvedValueOnce({
-      data: [{ ...filaFigura, partido_id: null, justificacion: null, bono_analisis: null, explicacion: null }],
+      data: [{ ...filaFigura, partidos: [{ ...partido, estado: 'RARO' }] }],
       error: null,
       status: 200,
     });
-    expect((await obtenerFiguraDeJornada(1, 12))?.analisis).toBeNull();
-    rpc.mockResolvedValueOnce({ data: [], error: null, status: 200 });
-    expect(await obtenerFiguraDeJornada(1, 12)).toBeNull();
+    await expect(obtenerFiguraDeJornada(1, 12)).rejects.toThrow('forma inválida');
   });
 });

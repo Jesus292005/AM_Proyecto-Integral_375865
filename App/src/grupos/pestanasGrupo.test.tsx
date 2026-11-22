@@ -20,6 +20,7 @@ import {
   type AnalisisDelMuro,
   type FiguraDeJornada,
   type FilaRanking,
+  type PartidoDeFigura,
 } from './datos';
 import { aplicarReaccion } from './MuroJornada';
 import { pestanaDeRuta } from './PantallaGrupo';
@@ -90,6 +91,29 @@ const analisis = (extra: Partial<AnalisisDelMuro> & { id: number }): AnalisisDel
   ...extra,
 });
 
+const partidoDeFigura = (extra: Partial<PartidoDeFigura> = {}): PartidoDeFigura => ({
+  partido_id: 1,
+  estado: 'TERMINADO',
+  goles_local: 2,
+  goles_visitante: 1,
+  local,
+  visitante,
+  resultado: null,
+  rango_goles: null,
+  marcador_local: 2,
+  marcador_visitante: 1,
+  puntos_resultado: 0,
+  puntos_rango_goles: 0,
+  puntos_marcador: 350,
+  puntos_base: 350,
+  justificacion: 'Puebla gana por la banda.',
+  estado_evaluacion: 'EVALUADA',
+  bono: 10,
+  explicacion: 'Poco verificable.',
+  es_simulada: false,
+  ...extra,
+});
+
 const figura = (extra: Partial<FiguraDeJornada> = {}): FiguraDeJornada => ({
   usuario_id: 'a',
   nombre: 'Ana',
@@ -102,16 +126,7 @@ const figura = (extra: Partial<FiguraDeJornada> = {}): FiguraDeJornada => ({
   jornada_nombre: 'Jornada 2',
   en_curso: false,
   incluye_simulados: false,
-  analisis: {
-    partido_id: 1,
-    goles_local: 2,
-    goles_visitante: 1,
-    local,
-    visitante,
-    justificacion: 'Puebla gana por la banda.',
-    bono: 10,
-    explicacion: 'Poco verificable.',
-  },
+  partidos: [partidoDeFigura()],
   ...extra,
 });
 
@@ -213,8 +228,8 @@ describe('S08 Jornada (F26 R9–R12)', () => {
     expect(await screen.findByText('Figura de la jornada')).toBeOnTheScreen();
     expect(await screen.findByLabelText('360 puntos en la jornada: base 350 y bono 10')).toBeOnTheScreen();
     expect(screen.getByText('base 350 + bono 10')).toBeOnTheScreen();
-    expect(screen.getByText('10/100')).toBeOnTheScreen();
-    expect(screen.getByText('Puebla gana por la banda.')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Marcador exacto: acertada, 350 puntos')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Análisis 10/100. Ver su análisis' })).toBeOnTheScreen();
     expect(screen.getByText('Ranking de la jornada')).toBeOnTheScreen();
     expect(await screen.findByLabelText('1.º, Ana, 190 puntos')).toBeOnTheScreen();
     await waitFor(() => expect(rankingFalso).toHaveBeenCalledWith(1, 12));
@@ -222,6 +237,11 @@ describe('S08 Jornada (F26 R9–R12)', () => {
     expect(muroFalso).toHaveBeenCalledWith(1, 12);
 
     expect(await screen.findByRole('button', { name: 'Puebla 2 - 1 Santos. Ver el partido' })).toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', {
+        name: 'Puebla 2 - 1 Santos. Predijo: Marcador exacto: Puebla 2 - 1 Santos. 350 puntos. Ver el partido',
+      }),
+    ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Puebla 0 - 0 Santos · En juego. Ver el partido' })).toBeOnTheScreen();
     expect(screen.getAllByTestId('analisis-del-muro')).toHaveLength(3);
     expect(screen.getByText('80/100')).toBeOnTheScreen();
@@ -242,7 +262,7 @@ describe('S08 Jornada (F26 R9–R12)', () => {
     await tocar('Ver el perfil de Beto');
     expect(navegar).toHaveBeenCalledWith({ pathname: '/usuario/[usuarioId]', params: { usuarioId: 'b' } });
     await tocar('Puebla 2 - 1 Santos. Ver el partido');
-    expect(navegar).toHaveBeenCalledWith({ pathname: '/partido/[partidoId]', params: { partidoId: '1' } });
+    expect(navegar).toHaveBeenCalledWith({ pathname: '/grupo/[grupoId]/partido/[partidoId]', params: { grupoId: '1', partidoId: '1' } });
   });
 
   it('F26 CA9: antes del cierre el muro dice que los análisis se revelan al cierre', async () => {
@@ -260,22 +280,83 @@ describe('S08 Jornada (F26 R9–R12)', () => {
   });
 
   it('F26 CA9: la figura dice si hay empate, si sigue en curso y no muestra análisis si no tiene', async () => {
-    figuraFalsa.mockResolvedValue(figura({ lideres: 3, en_curso: true, es_yo: true, analisis: null }));
+    figuraFalsa.mockResolvedValue(figura({ lideres: 3, en_curso: true, es_yo: true, partidos: [] }));
     await abrir('/grupo/1?pestana=jornada');
 
     expect(await screen.findByText('Empatado en el 1.º con 2 más · Hasta ahora')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Ver el perfil de Tú' })).toBeOnTheScreen();
-    expect(screen.queryByText(/Su mejor análisis/)).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('partido-de-la-figura')).not.toBeOnTheScreen();
   });
 
-  it('F26 CA9: tocar a la figura abre S13 y su análisis abre S03', async () => {
+  it('F26 CA9 (v1.2): lo que acertó va primero y su análisis aparte, aunque saque 0/100', async () => {
+    figuraFalsa.mockResolvedValue(
+      figura({
+        partidos: [
+          partidoDeFigura({
+            marcador_local: null,
+            marcador_visitante: null,
+            resultado: 'VISITANTE',
+            rango_goles: 'G3',
+            puntos_resultado: 0,
+            puntos_rango_goles: 150,
+            puntos_marcador: 0,
+            puntos_base: 150,
+            bono: 0,
+            justificacion: 'Ganará Santos.',
+            explicacion: 'Ganó Puebla.',
+          }),
+          partidoDeFigura({ partido_id: 2, puntos_base: null, puntos_resultado: null, puntos_marcador: null, puntos_rango_goles: null, justificacion: null }),
+        ],
+      }),
+    );
+    await abrir('/grupo/1?pestana=jornada');
+
+    expect(await screen.findByLabelText('Goles en total: acertada, 150 puntos')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Resultado: fallada, 0 puntos')).toBeOnTheScreen();
+    expect(screen.getByText('Goles en total +150')).toBeOnTheScreen();
+    expect(screen.getByText('Por calificar')).toBeOnTheScreen();
+    // El análisis va cerrado: no tapa lo que acertó.
+    expect(screen.queryByText('Ganará Santos.')).not.toBeOnTheScreen();
+    await tocar('Análisis 0/100. Ver su análisis');
+    expect(screen.getByText('Ganará Santos.')).toBeOnTheScreen();
+    expect(screen.getByText('Comentario de la IA: Ganó Puebla.')).toBeOnTheScreen();
+  });
+
+  it('F26 CA9: tocar a la figura abre S13 y un partido suyo abre S03', async () => {
     figuraFalsa.mockResolvedValue(figura());
     await abrir('/grupo/1?pestana=jornada');
 
     await tocar('Ver el perfil de Ana');
     expect(navegar).toHaveBeenCalledWith({ pathname: '/usuario/[usuarioId]', params: { usuarioId: 'a' } });
-    await fireEvent.press(await screen.findByRole('button', { name: /^Su mejor análisis: 10 de 100/ }));
-    expect(navegar).toHaveBeenCalledWith({ pathname: '/partido/[partidoId]', params: { partidoId: '1' } });
+    await fireEvent.press(await screen.findByRole('button', { name: /^Puebla 2 - 1 Santos\. Predijo/ }));
+    expect(navegar).toHaveBeenCalledWith({ pathname: '/grupo/[grupoId]/partido/[partidoId]', params: { grupoId: '1', partidoId: '1' } });
+  });
+
+  it('F26 CA9 (v1.2): con el marcador fallado salen el marcador, el resultado y los goles (F10 R4)', async () => {
+    figuraFalsa.mockResolvedValue(
+      figura({
+        partidos: [
+          partidoDeFigura({ puntos_marcador: 0, puntos_resultado: 100, puntos_rango_goles: 0, puntos_base: 100 }),
+        ],
+      }),
+    );
+    await abrir('/grupo/1?pestana=jornada');
+
+    expect(await screen.findByLabelText('Marcador exacto: fallada, 0 puntos')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Resultado: acertada, 100 puntos')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Goles en total: fallada, 0 puntos')).toBeOnTheScreen();
+  });
+
+  it.each([
+    ['PENDIENTE', 'Análisis: nota pendiente'],
+    ['ERROR', 'Análisis: sin nota'],
+  ] as const)('F26 CA9 (v1.2): con la evaluación %s el análisis dice "%s"', async (estado, texto) => {
+    figuraFalsa.mockResolvedValue(
+      figura({ partidos: [partidoDeFigura({ estado_evaluacion: estado, bono: null, explicacion: null })] }),
+    );
+    await abrir('/grupo/1?pestana=jornada');
+
+    expect(await screen.findByRole('button', { name: `${texto}. Ver su análisis` })).toBeOnTheScreen();
   });
 
   it('F26 CA9: una parte con error no rompe las otras y se puede reintentar', async () => {

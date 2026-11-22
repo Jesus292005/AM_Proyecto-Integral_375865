@@ -98,7 +98,35 @@ const esquemaFaltan = z.object({
   abiertos: entero,
   jornada_nombre: z.string().nullable(),
 });
-// F26 R10 v1.1 (D114): el 1.º del ranking de la jornada con su mejor análisis, si tiene.
+// F26 R10 v1.2 (D115): el 1.º del ranking de la jornada con cada partido cerrado que predijo.
+const esquemaEquipo = z.object({
+  nombre_corto: z.string(),
+  escudo_url: z.string(),
+  color_primario: z.string().nullable(),
+  color_texto: z.string().nullable(),
+});
+const esquemaPartidoFigura = z.object({
+  partido_id: entero,
+  estado: z.enum(['PROGRAMADO', 'EN_JUEGO', 'TERMINADO', 'POSPUESTO', 'CANCELADO']),
+  goles_local: entero.nullable(),
+  goles_visitante: entero.nullable(),
+  local: esquemaEquipo,
+  visitante: esquemaEquipo,
+  resultado: z.enum(['LOCAL', 'EMPATE', 'VISITANTE']).nullable(),
+  rango_goles: z.enum(['G0_1', 'G2', 'G3', 'G4_MAS']).nullable(),
+  marcador_local: entero.nullable(),
+  marcador_visitante: entero.nullable(),
+  // Vacíos mientras el partido no está calificado.
+  puntos_resultado: entero.nullable(),
+  puntos_rango_goles: entero.nullable(),
+  puntos_marcador: entero.nullable(),
+  puntos_base: entero.nullable(),
+  justificacion: z.string().nullable(),
+  estado_evaluacion: z.enum(['PENDIENTE', 'EVALUADA', 'ERROR']).nullable(),
+  bono: entero.nullable(),
+  explicacion: z.string().nullable(),
+  es_simulada: z.boolean(),
+});
 const esquemaFigura = z.object({
   usuario_id: z.string(),
   nombre: z.string(),
@@ -111,20 +139,7 @@ const esquemaFigura = z.object({
   jornada_nombre: z.string(),
   en_curso: z.boolean(),
   incluye_simulados: z.boolean(),
-  partido_id: entero.nullable(),
-  goles_local: entero.nullable(),
-  goles_visitante: entero.nullable(),
-  local_nombre_corto: z.string().nullable(),
-  local_escudo_url: z.string().nullable(),
-  local_color_primario: z.string().nullable(),
-  local_color_texto: z.string().nullable(),
-  visitante_nombre_corto: z.string().nullable(),
-  visitante_escudo_url: z.string().nullable(),
-  visitante_color_primario: z.string().nullable(),
-  visitante_color_texto: z.string().nullable(),
-  justificacion: z.string().nullable(),
-  bono_analisis: entero.nullable(),
-  explicacion: z.string().nullable(),
+  partidos: z.array(esquemaPartidoFigura),
 });
 // S08 Miembros (F07 R10): el rol de cada miembro; nombre, foto y posición vienen del ranking.
 const esquemaMiembro = z.object({ usuario_id: z.string(), rol: esquemaRol });
@@ -156,30 +171,8 @@ export type AnalisisDelMuro = {
   reacciones: Record<TipoReaccion, number>;
   miReaccion: TipoReaccion | null;
 };
-export type FiguraDeJornada = {
-  usuario_id: string;
-  nombre: string;
-  foto_url: string | null;
-  es_yo: boolean;
-  puntos_total: number;
-  puntos_base: number;
-  puntos_bono: number;
-  lideres: number;
-  jornada_nombre: string;
-  en_curso: boolean;
-  incluye_simulados: boolean;
-  /** Su mejor análisis evaluado de la jornada; null si no tiene. */
-  analisis: {
-    partido_id: number;
-    goles_local: number | null;
-    goles_visitante: number | null;
-    local: EquipoDePartido;
-    visitante: EquipoDePartido;
-    justificacion: string;
-    bono: number;
-    explicacion: string;
-  } | null;
-};
+export type PartidoDeFigura = z.infer<typeof esquemaPartidoFigura>;
+export type FiguraDeJornada = z.infer<typeof esquemaFigura>;
 export type Faltan = { porMiembro: Map<string, number>; abiertos: number; jornada: string | null };
 export type MiembroConRol = z.infer<typeof esquemaMiembro>;
 
@@ -278,42 +271,12 @@ export async function obtenerMuro(grupoId: number, jornadaId: number): Promise<A
   }));
 }
 
-/** S08 Jornada: la figura de la jornada (F26 R10 v1.1); null si nadie tiene puntos. */
+/** S08 Jornada: la figura de la jornada con lo que acertó (F26 R10 v1.2); null si nadie tiene puntos. */
 export async function obtenerFiguraDeJornada(grupoId: number, jornadaId: number): Promise<FiguraDeJornada | null> {
   const { data, error, status } = await supabase.rpc('figura_jornada', { id_grupo: grupoId, id_jornada: jornadaId });
   if (error) throw comoErrorAccion(error, status);
-  const [f] = validar(z.array(esquemaFigura).max(1), data, 'Figura de la jornada');
-  if (f === undefined) return null;
-  const equipo = (nombre: string | null, escudo: string | null, primario: string | null, texto: string | null) =>
-    nombre === null || escudo === null ? null : { nombre_corto: nombre, escudo_url: escudo, color_primario: primario, color_texto: texto };
-  const local = equipo(f.local_nombre_corto, f.local_escudo_url, f.local_color_primario, f.local_color_texto);
-  const visitante = equipo(f.visitante_nombre_corto, f.visitante_escudo_url, f.visitante_color_primario, f.visitante_color_texto);
-  return {
-    usuario_id: f.usuario_id,
-    nombre: f.nombre,
-    foto_url: f.foto_url,
-    es_yo: f.es_yo,
-    puntos_total: f.puntos_total,
-    puntos_base: f.puntos_base,
-    puntos_bono: f.puntos_bono,
-    lideres: f.lideres,
-    jornada_nombre: f.jornada_nombre,
-    en_curso: f.en_curso,
-    incluye_simulados: f.incluye_simulados,
-    analisis:
-      f.partido_id !== null && f.justificacion !== null && f.bono_analisis !== null && f.explicacion !== null && local && visitante
-        ? {
-            partido_id: f.partido_id,
-            goles_local: f.goles_local,
-            goles_visitante: f.goles_visitante,
-            local,
-            visitante,
-            justificacion: f.justificacion,
-            bono: f.bono_analisis,
-            explicacion: f.explicacion,
-          }
-        : null,
-  };
+  const [figura] = validar(z.array(esquemaFigura).max(1), data, 'Figura de la jornada');
+  return figura ?? null;
 }
 
 /** Poner, cambiar (otro tipo) o quitar (null) mi reacción a un análisis del muro (F26 R13). */

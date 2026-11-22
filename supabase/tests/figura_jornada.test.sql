@@ -1,5 +1,5 @@
--- Figura de la jornada: `figura_jornada(grupo, jornada)` (F26 R10 v1.1, R18, CA4; D114). Todo se
--- deshace al final.
+-- Figura de la jornada: `figura_jornada(grupo, jornada)` (F26 R10 v1.2, R18, CA4; D114, D115).
+-- Todo se deshace al final.
 --
 -- Grupo G = A, B y C · grupo H = D. Torneo actual con J1 (9941 y 9942 terminados, 9943 abierto) y
 -- J2 (sin calificaciones); JO de otro torneo.
@@ -64,6 +64,9 @@ join public.partido p on p.proveedor_id = x.partido;
 update public.partido set cierre_predicciones = now() - interval '2 hours', estado = 'TERMINADO',
   goles_local = 1, goles_visitante = 0, calificado_en = now()
 where proveedor_id in (9941, 9942);
+-- Por inicio: 9941 antes que 9942 (el orden de la lista de la figura).
+update public.partido set inicio = now() - interval '3 hours' where proveedor_id = 9941;
+update public.partido set inicio = now() - interval '150 minutes' where proveedor_id = 9942;
 
 insert into public.calificacion (prediccion_id, puntos_resultado, puntos_rango_goles, puntos_marcador, es_simulada)
 select pr.id, x.r, 0, x.m, false
@@ -80,6 +83,12 @@ from (values ('b', 9941, 10), ('a', 9941, 90), ('b', 9943, 100)) as x (u, partid
 join public.partido p on p.proveedor_id = x.partido
 join public.prediccion pr on pr.partido_id = p.id
   and pr.usuario_id = ('00000000-0000-0000-0000-00000000000' || x.u)::uuid;
+
+-- 9942 de B: evaluación con ERROR que trae bono y explicación; la figura no debe darlos.
+insert into public.evaluacion_ia (prediccion_id, estado, puntos_bono, explicacion, error, es_simulada)
+select pr.id, 'ERROR', 70, 'No debe salir', 'Falla', false
+from public.prediccion pr join public.partido p on p.id = pr.partido_id
+where p.proveedor_id = 9942 and pr.usuario_id = '00000000-0000-0000-0000-00000000000b';
 
 select set_config('prueba.g', (select id::text from public.grupo where nombre = 'Grupo G'), true);
 select set_config('prueba.j1', (select id::text from public.jornada where nombre = 'J1'), true);
@@ -106,11 +115,17 @@ select is(
   'F26 CA4 (v1.1): coincide con el 1.º de ranking_grupo de esa jornada'
 );
 select results_eq(
-  $$ select f.justificacion, f.bono_analisis, f.explicacion, p.proveedor_id, f.goles_local::int, f.local_nombre_corto
+  $$ select p.proveedor_id, (x ->> 'puntos_marcador')::int, (x ->> 'puntos_base')::int, (x ->> 'bono')::int,
+       x ->> 'justificacion', x ->> 'explicacion', (x ->> 'goles_local')::int, x -> 'local' ->> 'nombre_corto',
+       (x ->> 'marcador_local') is null
      from public.figura_jornada(current_setting('prueba.g')::bigint, current_setting('prueba.j1')::bigint) f
-     join public.partido p on p.id = f.partido_id $$,
-  $$ values ('Análisis 9941 de b', 10, 'Comentario 9941 de b', 9941, 1, 'Local') $$,
-  'F26 R10 (v1.1): con su mejor análisis evaluado de un partido cerrado (no el abierto ni el sin evaluar)'
+     cross join lateral jsonb_array_elements(f.partidos) with ordinality as e (x, n)
+     join public.partido p on p.id = (x ->> 'partido_id')::bigint
+     order by e.n $$,
+  $$ values
+    (9941, 350, 350, 10, 'Análisis 9941 de b', 'Comentario 9941 de b', 1, 'Local', true),
+    (9942, 0, 0, null::int, 'Análisis 9942 de b', null::text, 1, 'Local', true) $$,
+  'F26 CA4 (v1.2): trae cada partido cerrado que predijo, con sus puntos por parte y su análisis (no el abierto; con ERROR, sin bono ni explicación)'
 );
 select is_empty(
   $$ select 1 from public.figura_jornada(current_setting('prueba.g')::bigint, current_setting('prueba.j2')::bigint) $$,
@@ -125,10 +140,11 @@ select throws_ok(
 reset role;
 update public.partido set estado = 'CANCELADO' where proveedor_id = 9941;
 set local role authenticated;
-select is_empty(
-  $$ select 1 from public.figura_jornada(current_setting('prueba.g')::bigint, current_setting('prueba.j1')::bigint)
-     where partido_id is not null $$,
-  'F26 CA4: no muestra el análisis de un partido cancelado'
+select is(
+  (select jsonb_array_length(partidos)
+   from public.figura_jornada(current_setting('prueba.g')::bigint, current_setting('prueba.j1')::bigint)),
+  1,
+  'F26 CA4: no trae un partido cancelado'
 );
 reset role;
 update public.partido set estado = 'TERMINADO' where proveedor_id = 9941;
@@ -163,8 +179,11 @@ select throws_ok(
 reset role;
 
 select ok(
-  pg_get_function_result('public.figura_jornada(bigint, bigint)'::regprocedure) !~ '(afirmaciones|correo|resultado|marcador_local|rango_goles)',
-  'F26 R18: no trae afirmaciones, correo ni la predicción'
+  pg_get_function_result('public.figura_jornada(bigint, bigint)'::regprocedure) !~ '(afirmaciones|correo)'
+    and not exists (
+      select 1 from pg_proc where proname = 'figura_jornada' and prosrc ~ '(afirmaciones|correo)'
+    ),
+  'F26 R18: no trae afirmaciones ni correo'
 );
 select is(
   (select count(*)::int from pg_proc where proname = 'figura_jornada'

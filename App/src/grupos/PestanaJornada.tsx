@@ -117,7 +117,7 @@ export function PestanaJornada({ grupoId, jornadaRuta }: { grupoId: number; jorn
       figura.data === null ? (
         <Texto variante="cuerpo">{mensajesGrupo.figuraVacia(nombre)}</Texto>
       ) : (
-        <TarjetaFigura figura={figura.data} />
+        <TarjetaFigura grupoId={grupoId} figura={figura.data} />
       );
   } else if (figura.isError) {
     contenidoFigura = (
