@@ -1,5 +1,5 @@
 # F23 — Navegación por jornadas
-> **Estado:** ✅ Aprobada v1.0 (2026-11-21, D105) · pendiente de implementar · **Prioridad:** Must del rediseño · **Módulo:** M5 Base visual · **Depende de:** F02, F03, F22 · **Pantallas:** S02 · **Decisiones:** D57, D78, D86, D104, D105
+> **Estado:** ✅ **Terminada** (2026-11-21, D107: cumple CA1–CA5 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-21, D105) · **Prioridad:** Must del rediseño · **Módulo:** M5 Base visual · **Depende de:** F02, F03, F22 · **Pantallas:** S02 · **Decisiones:** D57, D78, D86, D104, D105
 
 ## Decisiones (D105)
 1. **Selector:** **(A, recomendada)** una **tira horizontal** con todas las jornadas del torneo que se desliza y se centra sola en la elegida: un toque y llegas. **(B)** un botón con el nombre de la jornada que abre una lista para elegir. A deja ver dónde estás dentro del torneo sin abrir nada.

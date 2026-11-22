@@ -1,5 +1,5 @@
 # F22 — Identidad visual: íconos, escudos y colores de equipos
-> **Estado:** ✅ Aprobada v1.0 (2026-11-21, D105) · pendiente de implementar · **Prioridad:** Must del rediseño · **Módulo:** M5 Base visual · **Depende de:** F02 · **Pantallas:** todas (menú inferior), S02, S03 · **Decisiones:** D52, D67, D68, D70, D86, D91, D104, D105
+> **Estado:** ✅ **Terminada** (2026-11-21, D107: cumple CA1–CA6 y Jesús la aprobó en su teléfono (colores de R4 aprobados sin cambios)) · spec aprobada v1.0 (2026-11-21, D105) · **Prioridad:** Must del rediseño · **Módulo:** M5 Base visual · **Depende de:** F02 · **Pantallas:** todas (menú inferior), S02, S03 · **Decisiones:** D52, D67, D68, D70, D86, D91, D104, D105
 
 ## Decisiones (D105)
 1. **Íconos:** **(A, recomendada)** copiar los trazos de [Lucide](https://lucide.dev) (licencia ISC, se da crédito) al componente `Icono` que ya existe, dibujados con `react-native-svg`. **(B)** instalar `lucide-react-native`. A no agrega dependencias ni peso: Metro no quita los íconos que no se usan, así que B metería los ~1,500 al paquete (D52).

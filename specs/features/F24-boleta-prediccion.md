@@ -1,5 +1,5 @@
 # F24 — Boleta de predicción
-> **Estado:** ✅ Aprobada v1.0 (2026-11-21, D105) · pendiente de implementar · **Prioridad:** Must del rediseño · **Módulo:** M5 Base visual · **Depende de:** F03, F04, F22 · **Pantallas:** S03 · **Decisiones:** D20, D21, D82, D91, D104, D105
+> **Estado:** ✅ **Terminada** (2026-11-21, D107: cumple CA1–CA8 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-21, D105) · **Prioridad:** Must del rediseño · **Módulo:** M5 Base visual · **Depende de:** F03, F04, F22 · **Pantallas:** S03 · **Decisiones:** D20, D21, D82, D91, D104, D105
 
 ## Decisiones (D105)
 1. **Al abrir un partido que ya predije (antes del cierre):** **(A, recomendada)** se ve la **boleta**; el formulario solo con "Editar". **(B)** se ve el formulario, como hoy. A deja claro que ya está hecho y evita cambios por accidente.
