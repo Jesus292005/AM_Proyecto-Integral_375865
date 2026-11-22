@@ -1,5 +1,5 @@
 # F26 — Grupos sociales
-> **Estado:** ✅ **Terminada** (2026-11-23, D116: cumple CA1–CA14 y Jesús la aprobó en su teléfono) · spec aprobada v1.2 (2026-11-23, D115: la figura muestra lo que acertó; S03 en la pestaña Grupos) · v1.1 (2026-11-23, D114: Figura de la jornada y reacciones a lo propio) · v1.0 (2026-11-22, D113) · pendiente de implementar · **Prioridad:** Must del rediseño · **Módulo:** M8 Grupos sociales · **Depende de:** F06, F07, F08, F12, F17, F22 · **Pantallas:** S04, S05, S06, S08, S15 (nueva) · **Decisiones:** D30, D35, D37, D44, D45, D52, D53, D76, D78, D86, D91, D97, D104, D111, R04, R09
+> **Estado:** ✅ **Terminada** (2026-11-22, D116: cumple CA1–CA14 y Jesús la aprobó en su teléfono) · spec aprobada v1.2 (2026-11-22, D115: la figura muestra lo que acertó; S03 en la pestaña Grupos) · v1.1 (2026-11-22, D114: Figura de la jornada y reacciones a lo propio) · v1.0 (2026-11-22, D113) · pendiente de implementar · **Prioridad:** Must del rediseño · **Módulo:** M8 Grupos sociales · **Depende de:** F06, F07, F08, F12, F17, F22 · **Pantallas:** S04, S05, S06, S08, S15 (nueva) · **Decisiones:** D30, D35, D37, D44, D45, D52, D53, D76, D78, D86, D91, D97, D104, D111, R04, R09
 
 ## Decisiones (D113: opción A en todas)
 | # | Pregunta | A (recomendada) | B | Consecuencia |
