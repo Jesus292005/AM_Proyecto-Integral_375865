@@ -1,7 +1,7 @@
 # Registro de decisiones
 
 > Regla: una decisión **cerrada** no se vuelve a discutir salvo que aparezca información nueva; si cambia, se agrega una nueva fila que la reemplaza (no se borra la anterior).
-> Última actualización: 2026-11-21
+> Última actualización: 2026-11-22
 
 ## Decisiones cerradas
 
@@ -117,6 +117,7 @@
 | D108 | 2026-11-21 | **Specs de M6 aprobadas** (F28 Perfil propio —número nuevo para el "Perfil nuevo" de 01-mvp §7—, F18, F20, F14 y F25 v1.0) y **tareas de S10** (T91–T103). F18, F20 y F14 pasan a Must del rediseño. Decisiones: (1) el nombre visible se puede cambiar (3–20 caracteres) y ya no lo sobrescribe Google (cambia F01 Q1); (2) el equipo favorito se cambia cuando quiera; (3) la carta es histórica; (4) los simulados otorgan insignias, marcadas; (5) "Top de la jornada" solo en grupos con al menos 3 miembros que predijeron. Permisos aprobados: F28 R6 (`update (nombre)` propio), F18 R4, F20 R6 y F14 R9 (sin `security definer`; `otorgar_insignias()` solo para la tarea programada). Sin dependencias nativas nuevas. | Aprobación de Jesús (opción A en las 5). |
 | D109 | 2026-11-21 | **Ajustes de L1 de M6 (S10):** (1) las insignias de jornada (F14 R3 v1.1) no se dan sin puntos, solo cuentan jornadas que terminaron después de crearse el grupo y solo las de los últimos 30 días; (2) F01 Q1 copia nombre y foto desde la identidad de Google (`auth.identities`) y ya no desde `raw_user_meta_data`, que el usuario puede cambiar con `auth.updateUser` (cierra un hueco que existía desde T06). | Hallazgos del revisor de L1; aprobación de Jesús (opción A en las dos). |
 | D110 | 2026-11-22 | **M6 Identidad terminado:** F28 (perfil propio), F18 (equipo favorito), F20 (carta de jugador), F14 (insignias y Vitrina) y F25 (barra superior) cumplen sus criterios (F28 CA1–CA6, F18 CA1–CA5, F20 CA1–CA4, F14 CA1–CA6, F25 CA1–CA4), sus pruebas automatizadas pasan y Jesús las aprobó en su teléfono. Ajustes que pidió en el guion: detalle de una insignia y de la media y los atributos de la carta en una hoja modal (F14 v1.2 R6, F20 v1.1 R8, 05-ui v2.5), y nombres sin espacios en un renglón que se reduce. Sin dependencias nativas nuevas (build `b7565d20`). | Definición de "terminado" de 01-mvp §3. S10 T91–T103. Verificación final: app 475/475, servidor 179/179, bd 27/27, pgTAP 493/493, `revisar:secretos` sin secretos. |
+| D111 | 2026-11-22 | **Spec de M7 aprobada** (F17 Inicio v2.0, Must del rediseño) y **tareas de S11** (T104–T114). Decisiones: (1) Pendientes = partidos abiertos sin mi predicción de la jornada actual y la siguiente; (2) "Mi última jornada" y "Mejor análisis" usan la jornada más reciente con algún partido calificado, aunque siga en curso; (3) un solo "Mejor análisis", el mejor de todos mis grupos; (4) solo con bono de 50 o más (como F14 R1). Permisos aprobados: F17 R13 (`mejor_analisis_jornada()` `security definer` entrega justificación, bono y explicación de la IA de quien comparte grupo, solo después del cierre, R04). Reemplaza D103 para S11. Trabajo en la rama `m7`; nada en el remoto antes del 24 de noviembre. Sin dependencias nativas nuevas. | Aprobación de Jesús (opción A en las 4). |
 
 ## Pendientes
 

@@ -1,0 +1,65 @@
+# F17 — Inicio (v2)
+> **Estado:** ✅ Aprobada v2.0 (2026-11-22, D111) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Should, D39, D104) · **Módulo:** M7 Inicio · **Depende de:** F02, F03, F05, F06, F07, F08, F18, F23, F25 · **Pantallas:** S11 · **Decisiones:** D10, D35, D39, D52, D76, D78, D86, D103, D104, R04, R09
+
+## Decisiones (D111: opción A en las 4)
+| # | Pregunta | A (recomendada) | B | Consecuencia |
+|---|---|---|---|---|
+| 1 | ¿Qué partidos entran en "Pendientes de predecir"? | **Los de la jornada actual (D86) y la siguiente.** | Los que cierran en los próximos 7 días. | Con A el bloque nunca queda vacío por una fecha FIFA y no junta ~150 partidos del calendario. Con B, en una pausa de dos semanas el bloque dice "nada pendiente" aunque la próxima jornada ya esté abierta. |
+| 2 | ¿Qué jornada muestran "Mi última jornada" y "Mejor análisis"? | **La más reciente del torneo con algún partido calificado**, aunque siga en curso (con "En curso" / "Hasta ahora"). | Solo la última jornada **cerrada** (F05 R7). | A da la recompensa minutos después del partido (lo que busca el rediseño, D104); el mejor análisis puede cambiar durante la jornada y no coincidir aún con la insignia de F14, que espera al cierre. Con B coincide con la insignia, pero llega hasta una semana tarde. |
+| 3 | ¿Cuántos "Mejor análisis" se muestran? | **Uno solo:** el mejor entre todos mis grupos, con el nombre del grupo. | Uno por grupo, en tarjetas que se deslizan. | A mantiene Inicio corto. Con B, alguien en 5 grupos ve 5 tarjetas (a menudo la misma persona repetida). |
+| 4 | ¿Desde qué nota se muestra un "Mejor análisis"? | **50 o más**, el mismo mínimo de la insignia (F14 R1). | El mayor de la jornada, aunque sea bajo. | Con A el bloque y la insignia hablan de lo mismo y una nota de 20 no se presume como "el mejor"; en jornadas flojas el bloque dice que nadie llegó a 50. |
+
+## Objetivo
+Que al abrir la app sepas qué te falta por hacer y cómo te fue (01-mvp §7, M7). Reemplaza la pantalla temporal de D103 y los 3 bloques de 02-navigation S11 por 5 bloques que salen del servidor (D52).
+
+## Reglas
+| ID | Regla | Origen |
+|---|---|---|
+| R1 | **Estructura:** `BarraSuperior` (F25) y debajo, en este orden y sin configurar: (1) Pendientes de predecir, (2) Tu equipo, (3) Mi última jornada, (4) Mejor análisis de la jornada, (5) Mis grupos. Cada bloque es una `Seccion` con su propia consulta y sus estados; un bloque con error muestra su mensaje y "Reintentar" dentro de él y los demás se pintan (02-navigation S11). | D39, D104 |
+| R2 | **Recarga:** cada bloque se vuelve a pedir al enfocar la pestaña (`useReleerAlVolver`, como F13 R7) y al deslizar hacia abajo para recargar. Sin actualización en vivo. | F13 R7 |
+| R3 | **Jornada de referencia** (bloques 3 y 4): según la decisión 2, la jornada del torneo actual con mayor `orden` que tenga algún partido con `calificadoEn` (simulados incluidos, F09 R3). `en_curso` = la jornada no está cerrada (`estaCerrada`). La calcula el servidor en una función interna que usan los dos bloques. | D52, F05 R7 |
+| R4 | **Bloque 1 · Pendientes (servidor):** vista `mis_pendientes` (`security_invoker`): partidos del torneo actual de la jornada actual (`jornada_actual`, D86) y la siguiente (decisión 1), con estado `PROGRAMADO` o `POSPUESTO`, `cierrePredicciones` > `now()` (F03 R1) y **sin** predicción mía; con `id`, jornada (`orden`, `nombre`), equipos (nombre corto, escudo, colores), `inicio`, `cierre_predicciones` y `es_simulado`, ordenados por cierre. Distinto del filtro de F23, que es de una sola jornada. | D52, D86, F03 R1, F23 R4 |
+| R5 | **Bloque 1 · Pendientes (app):** arriba, "{n} sin predecir" y "El próximo cierra en" con el contador de F03 R8 para el primer cierre (más de 24 h: fecha y hora; menos: `hh:mm:ss`). Debajo, los **3 primeros** como fila de partido (escudos, nombres cortos, día y hora, jornada; "Simulado" si aplica); tocar una abre S03 (`router.navigate`, D78). Si hay más de 3, "Ver los {n}" abre S02 en la jornada del cuarto. Cuando el contador llega a 0, el bloque se vuelve a pedir. | F03 R8, D78 |
+| R6 | **Bloque 2 · Tu equipo (servidor):** vista `proximo_partido_equipo` (`security_invoker`): del equipo favorito (F18), el partido del torneo actual **en juego** o, si no hay, el siguiente por jugar (`PROGRAMADO` o `POSPUESTO` con `inicio` ≥ `now()`), sin simulados; con equipos, `inicio`, `cierre_predicciones`, `estado`, jornada y `tengo_prediccion`. Cero filas si no hay equipo o no le quedan partidos. | F18 R5, D52 |
+| R7 | **Bloque 2 · Tu equipo (app):** tarjeta con escudos (`escudoEncabezado`) y nombres cortos con su franja de color (F22), jornada, día y hora; abierto: "Predecir" (o "Ver tu predicción" si `tengo_prediccion`) → S03; en juego: "En juego" → S03. **Sin equipo:** "Elige tu equipo favorito para seguir sus partidos aquí." + "Elegir equipo" → S12. **Sin más partidos:** "{equipo} no tiene más partidos en este torneo." El equipo sale del perfil (F28 R7, misma caché). | F18, F22 |
+| R8 | **Bloque 3 · Mi última jornada (servidor):** vista `mi_ultima_jornada` (`security_invoker`, una fila o ninguna): jornada de referencia (R3) con `en_curso`; mis `puntos_base`, `puntos_bono` (solo evaluados, como `mis_puntos`), `puntos_total`, predicciones calificadas y bonos pendientes; mi **mejor análisis** de esa jornada (mayor bono evaluado: `partido_id` y `puntos_bono`); `incluye_simulados`. Y `mis_grupos` agrega `mi_posicion_antes`: mi posición en el ranking del torneo de cada grupo **sin** la jornada de referencia (solo jornadas de `orden` menor), con la misma función interna de F08 R8; vacía si la jornada de referencia es la primera. | R09, D10, F08 R8, F10 R2 |
+| R9 | **Bloque 3 · Mi última jornada (app):** título con el nombre de la jornada y "En curso" si aplica; total en `marcadorXL` con "base {b} + bono {x}" en `meta`; "Tu mejor análisis: {nota}/100" que abre S03 de ese partido (sin bono evaluado: "Sin análisis evaluado"); por grupo, "{grupo} · {pos}.º" con flecha arriba en `acierto` ("Subiste {n}"), abajo en `fallo` ("Bajaste {n}") o "Igual"; sin `mi_posicion_antes`, nada. Si no predije en esa jornada: "No predijiste en la {jornada}." y los cambios de posición igual. La parte de grupos usa la consulta del bloque 5: si falla, el bloque 3 muestra solo los puntos. | P4 |
+| R10 | **Bloque 4 · Mejor análisis (servidor):** función `mejor_analisis_jornada()`: en la jornada de referencia, la predicción con `EvaluacionIA` `EVALUADA` de **mayor bono, con 50 o más** (decisión 4), entre los **miembros actuales** de mis grupos (yo incluido) y solo de partidos cuyo `cierrePredicciones` ya pasó (R04). Desempate: más puntos base del partido y después la evaluada primero. Devuelve `partido_id`, equipos y marcador, `usuario_id`, `nombre`, `foto_url`, `es_yo`, `justificacion`, `puntos_bono`, `explicacion`, el grupo compartido de menor `id` (`grupo_id`, `grupo_nombre`), jornada, `en_curso` y `es_simulada`. Una fila o ninguna (decisión 3). | R04, R09, D35, F14 R1 |
+| R11 | **Bloque 4 · Mejor análisis (app):** `FotoUsuario`, nombre ("Tú" si `es_yo`), "en {grupo}", el partido con su marcador, la justificación (`cuerpo`), la nota en `titulo2` ("{n}/100") y el comentario de la IA (`explicacion`); "Hasta ahora" si la jornada sigue en curso; "Simulado" si aplica. Tocar la tarjeta abre S03 del partido. **Vacíos:** sin grupos, "Únete a un grupo para ver el mejor análisis de la jornada."; nadie con 50 o más, "Nadie de tus grupos llegó a 50 en la {jornada}."; sin jornada de referencia, "Aún no hay partidos calificados en este torneo." | F06 |
+| R12 | **Bloque 5 · Mis grupos:** `mis_grupos` (F07, F08 R8), todos (máx. 10, D97): nombre, "{n} miembros" y "Vas {pos}.º de {n}" ("Sin puntos aún" sin posición); tocar uno abre S08 (`router.navigate`). Sin grupos: "Compite con tus amigos en un grupo." + "Crear grupo" (S05) y "Unirse" (S06). | F07, F08 |
+| R13 | **Permisos (nivel 3, aprobados con esta spec, D111):** `select` de `mis_pendientes`, `proximo_partido_equipo` y `mi_ultima_jornada` a `authenticated` (`security_invoker`, leen con las RLS que ya existen). Función interna de la jornada de referencia: lee solo `partido` y `jornada` (ya legibles). `mi_posicion_antes` usa una función interna `security definer` de solo lectura como `mi_posicion_en_grupo` (F08 R11), que devuelve solo mi posición. `mejor_analisis_jornada()` es `security definer` con `search_path` vacío: comprueba `auth.uid()` y entrega **justificación, bono y explicación de la IA de otro usuario** solo si comparte un grupo conmigo hoy y el partido ya cerró (R04, D35); nunca `afirmaciones`, correo ni predicciones abiertas. `execute` para `authenticated`; `anon` sin acceso a nada de esto. | D14, D35, R04 |
+| R14 | **Rendimiento:** las vistas usan los índices de `partido (torneo_id, jornada_id)` y `prediccion (usuario_id, partido_id)`; se agrega uno solo si el plan de consulta lo pide. La app nunca trae predicciones ni evaluaciones ajenas para elegir el mejor análisis. | D52, F08 R10 |
+| R15 | **Documentos:** 02-navigation S11 pasa a los 5 bloques (v1.6) y D103 deja de aplicar a S11. | D103 |
+
+## Flujo
+**Servidor:** migraciones con las vistas de R4, R6 y R8, la función interna de R3, `mis_grupos.mi_posicion_antes` (R8), `mejor_analisis_jornada()` (R10) y sus permisos (R13).
+
+**App**
+1. S11 monta la barra (F25) y los 5 bloques; cada uno pide su consulta en paralelo (Zod en cada una, D54).
+2. Cada bloque pinta su contenido o su estado (abajo); tocar algo navega a S03, S02, S12, S05, S06 o S08 dentro de la pestaña Inicio cuando la ruta lo permite (D76).
+3. Al volver a la pestaña o deslizar para recargar, los bloques se vuelven a pedir; el contador de pendientes corre con el reloj del teléfono (`useAhora`) y al llegar a 0 recarga su bloque.
+
+## Estados de pantalla
+| Estado | Qué se ve |
+|---|---|
+| Cargando (por bloque) | Esqueleto del tamaño de su contenido: 3 filas (bloque 1), una tarjeta (2 y 4), un número grande y 2 filas (3), 2 filas (5). |
+| Error / sin conexión (por bloque) | Mensaje corto y "Reintentar" dentro del bloque (05-ui §6); sin conexión, el aviso de la app una sola vez arriba. |
+| Pendientes vacío | "Ya predijiste todo lo que está abierto." + "Ver partidos" → S02. |
+| Mi última jornada sin datos | "Aún no hay partidos calificados en este torneo." |
+| Sin torneo actual | Bloques 1–4: "No hay un torneo en curso."; el bloque 5 se pinta igual. |
+
+## Criterios de aceptación
+| ID | Criterio | Tipo |
+|---|---|---|
+| CA1 | `mis_pendientes` devuelve solo partidos abiertos (`PROGRAMADO`/`POSPUESTO`, antes del cierre) sin predicción mía de la jornada actual y la siguiente, ordenados por cierre; no trae los cerrados, en juego, con predicción mía ni los de dos jornadas adelante; `anon` no la lee. | [prueba] pgTAP |
+| CA2 | `proximo_partido_equipo` devuelve el partido en juego o el siguiente del equipo favorito con `tengo_prediccion` correcto; sin equipo o sin más partidos, cero filas; nunca un simulado. | [prueba] pgTAP |
+| CA3 | La jornada de referencia es la de mayor `orden` con algún partido calificado; `mi_ultima_jornada` suma base + bono evaluado de esa jornada y elige mi mejor análisis; `mis_grupos.mi_posicion_antes` coincide con la posición de `ranking_grupo` sin esa jornada y es vacía en la jornada 1. | [prueba] pgTAP |
+| CA4 | `mejor_analisis_jornada()` devuelve el mayor bono evaluado ≥ 50 de la jornada entre los miembros actuales de mis grupos, con el desempate de R10; no devuelve a quien salió del grupo, a alguien de un grupo ajeno, un bono < 50, pendiente o con `ERROR`, ni un partido antes de su cierre; no trae columnas de más; `anon` no la ejecuta. | [prueba] pgTAP |
+| CA5 | S11 muestra la barra y los 5 bloques en orden; un bloque con error muestra su mensaje y "Reintentar" sin afectar a los demás; cada bloque pinta cargando y vacío. | [prueba] jest |
+| CA6 | Pendientes: muestra "{n} sin predecir", el contador del primer cierre y 3 filas; tocar una abre S03 con `navigate`; "Ver los {n}" abre S02; al llegar a 0 se vuelve a pedir. Tu equipo: con partido, sin equipo (→ S12) y sin más partidos. | [prueba] jest |
+| CA7 | Mi última jornada pinta total, base + bono, nota del mejor análisis, "En curso" y subir / bajar / igual por grupo; Mejor análisis pinta justificación, nota y comentario con "Hasta ahora" y sus 3 vacíos; Mis grupos pinta posiciones y el vacío con "Crear grupo" y "Unirse". | [prueba] jest |
+| CA8 | Con 3 cuentas en un grupo y simulados: predecir un pendiente desde Inicio y verlo salir del bloque; al terminar los simulados, en ≤ 5 min las 3 cuentas ven sus puntos de la jornada, si subieron o bajaron, y el mismo mejor análisis (que no aparece antes del cierre). | [teléfono] |
+| CA9 | S11 se ve completa en el teléfono y en un emulador de 320–360 dp (D75); los nombres largos se cortan con "…". | [teléfono] |
+
+## Fuera de alcance
+Reordenar u ocultar bloques, muro de análisis, reacciones y analista de la jornada en el grupo (F26, M8), avisos y campana (F27, M9), previa del partido en Inicio (F21), notificaciones nuevas, rankings de torneos anteriores, actualización en vivo.
