@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { useTema, type NombreColor } from '../tema';
+import { Icono, type NombreIcono } from './Icono';
 import { Texto } from './Texto';
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
   /** Muestra un indicador y bloquea el botón (evita intentos duplicados). */
   cargando?: boolean;
   accessibilityLabel?: string;
+  /** Ícono antes del título, del mismo color (05-ui U8); p. ej. `lapiz` en "Editar" (F24 R4). */
+  icono?: NombreIcono;
 }
 
 export function Boton({
@@ -20,6 +23,7 @@ export function Boton({
   deshabilitado = false,
   cargando = false,
   accessibilityLabel,
+  icono,
 }: Props) {
   const { colores, espacio, medidas } = useTema();
   const bloqueado = deshabilitado || cargando;
@@ -51,6 +55,7 @@ export function Boton({
         style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: espacio.xs }}
       >
         {cargando && <ActivityIndicator color={colores[colorTexto]} testID="boton-cargando" />}
+        {icono && !cargando && <Icono nombre={icono} color={colorTexto} />}
         <Texto variante="titulo2" color={colorTexto}>
           {titulo}
         </Texto>

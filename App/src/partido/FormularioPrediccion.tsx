@@ -11,9 +11,6 @@ import {
   SelectorMarcador,
   Texto,
 } from '../componentes';
-import { formatearHora } from '../formato/fechas';
-import { aceptarRecordatorios, debePreguntar } from '../notificaciones/registro';
-import { guardarAhoraNo } from '../notificaciones/sistema';
 import { useTema } from '../tema';
 import {
   ErrorPrediccionesCerradas,
@@ -38,8 +35,6 @@ import {
 const mensajes = {
   errorGuardar: 'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.',
   errorQuitar: 'No se pudo quitar. Revisa tu conexión e inténtalo de nuevo.',
-  // F11a R1.
-  preguntaRecordatorios: '¿Te avisamos 1 h antes de que cierren los partidos que no has predicho?',
   // F04 R5: sin puntos.
   ayudaAnalisis: 'Opcional. Si tu análisis se parece a lo que pase, ganas bono aunque falles.',
 } as const;
@@ -69,16 +64,24 @@ interface Props {
   guardada: Prediccion | null;
   /** El servidor respondió `PREDICCIONES_CERRADAS` (F03 R6). */
   onCerrado: () => void;
+  /** Se guardó (la predicción nueva) o se quitó (null): S03 decide si muestra la boleta (F24). */
+  onTerminar: (nueva: Prediccion | null) => void;
+  /** Solo al editar una guardada: vuelve a la boleta sin guardar (F24 R4). */
+  onCancelar?: () => void;
 }
 
-/** Formulario de S03 antes del cierre (F03 Flujo 2–5). */
-export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
-  const { colores, espacio, medidas } = useTema();
+/** Formulario de S03 antes del cierre (F03 Flujo 2–5); al editar, con "Cancelar" (F24 R4). */
+export function FormularioPrediccion({
+  partido,
+  guardada,
+  onCerrado,
+  onTerminar,
+  onCancelar,
+}: Props) {
+  const { espacio } = useTema();
   const clienteConsultas = useQueryClient();
   const [formulario, setFormulario] = useState<Formulario>(() => formularioInicial(guardada));
   const [falla, setFalla] = useState<string | null>(null);
-  // F11a R1: la explicación previa al permiso, solo después de guardar.
-  const [preguntar, setPreguntar] = useState(false);
 
   const alGuardarse = (nueva: Prediccion | null) => {
     clienteConsultas.setQueryData(clavesPrediccion.mia(partido.id), nueva);
@@ -94,9 +97,7 @@ export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
     mutationFn: (eleccion: EleccionPrediccion) => guardarPrediccion(partido.id, eleccion),
     onSuccess: (nueva) => {
       alGuardarse(nueva);
-      debePreguntar()
-        .then(setPreguntar)
-        .catch((error: unknown) => console.warn('[notificaciones] No se leyó el permiso', error));
+      onTerminar(nueva);
     },
     onError: alFallar(mensajes.errorGuardar),
   });
@@ -106,6 +107,7 @@ export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
       alGuardarse(null);
       guardar.reset();
       setFormulario(formularioInicial(null));
+      onTerminar(null);
     },
     onError: alFallar(mensajes.errorQuitar),
   });
@@ -205,40 +207,8 @@ export function FormularioPrediccion({ partido, guardada, onCerrado }: Props) {
             {falla}
           </Texto>
         )}
-        {guardar.isSuccess && falla === null && (
-          <Texto variante="meta" color="textoTenue" accessibilityLiveRegion="polite">
-            {`Predicción guardada · ${formatearHora(new Date(guardar.data.actualizada_en))}`}
-          </Texto>
-        )}
-        {preguntar && (
-          <View
-            accessibilityRole="alert"
-            style={{
-              gap: espacio.s,
-              padding: espacio.m,
-              borderRadius: medidas.radio,
-              backgroundColor: colores.superficie,
-            }}
-          >
-            <Texto variante="cuerpo">{mensajes.preguntaRecordatorios}</Texto>
-            <Boton
-              titulo="Sí, avísame"
-              onPress={() => {
-                setPreguntar(false);
-                aceptarRecordatorios().catch((error: unknown) =>
-                  console.warn('[notificaciones] No se activaron los recordatorios', error),
-                );
-              }}
-            />
-            <Boton
-              titulo="Ahora no"
-              variante="secundario"
-              onPress={() => {
-                setPreguntar(false);
-                void guardarAhoraNo();
-              }}
-            />
-          </View>
+        {onCancelar && (
+          <Boton titulo="Cancelar" variante="secundario" onPress={onCancelar} deshabilitado={ocupado} />
         )}
         {guardada && (
           <Boton

@@ -18,12 +18,14 @@ import { esSinConexion } from '../datos/errores';
 import { formatearDia, formatearHora } from '../formato/fechas';
 import { obtenerMisPuntosDePartido } from '../puntos/datos';
 import { PuntosDelPartido } from '../puntos/PuntosDelPartido';
+import { debePreguntar } from '../notificaciones/registro';
 import { useTema } from '../tema';
+import { BoletaPrediccion } from './BoletaPrediccion';
 import { obtenerMiPrediccion, obtenerPartido, type PartidoDetalle } from './datos';
 import { contadorCierre, prediccionAbierta, type Prediccion } from './eleccion';
 import { clavesPrediccion, FormularioPrediccion } from './FormularioPrediccion';
 import { PrediccionesDelGrupo } from '../grupos/PrediccionesDelGrupo';
-import { datosDePrediccion } from './presentacion';
+import { PreguntaRecordatorios } from './PreguntaRecordatorios';
 import { useAhora } from './useAhora';
 
 const mensajes = {
@@ -36,18 +38,7 @@ const mensajes = {
   noPredijo: 'No predijiste este partido.',
 } as const;
 
-function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
-  return (
-    <View>
-      <Texto variante="meta" color="textoTenue">
-        {etiqueta}
-      </Texto>
-      <Texto variante="cuerpoFuerte">{valor}</Texto>
-    </View>
-  );
-}
-
-/** Mi predicción en solo lectura, después del cierre (Flujo 6). */
+/** Cerrado (F24 R5): la boleta de solo lectura, o que no hubo predicción. */
 function PrediccionCerrada({
   partido,
   guardada,
@@ -55,28 +46,11 @@ function PrediccionCerrada({
   partido: PartidoDetalle;
   guardada: Prediccion | null;
 }) {
-  const { espacio } = useTema();
-
+  if (guardada !== null) return <BoletaPrediccion partido={partido} prediccion={guardada} />;
   return (
-    <View style={{ gap: espacio.xl }}>
-      <Seccion etiqueta="Tu predicción">
-        {guardada === null ? (
-          <Texto variante="cuerpo">{mensajes.noPredijo}</Texto>
-        ) : (
-          <View style={{ gap: espacio.s }}>
-            {datosDePrediccion(partido, guardada).map((dato) => (
-              <Dato key={dato.etiqueta} etiqueta={dato.etiqueta} valor={dato.valor} />
-            ))}
-          </View>
-        )}
-      </Seccion>
-      {/* F04 Flujo 3: en solo lectura; sin justificación no hay sección. */}
-      {guardada?.justificacion != null && (
-        <Seccion etiqueta="Tu análisis">
-          <Texto variante="cuerpo">{guardada.justificacion}</Texto>
-        </Seccion>
-      )}
-    </View>
+    <Seccion etiqueta="Tu predicción">
+      <Texto variante="cuerpo">{mensajes.noPredijo}</Texto>
+    </Seccion>
   );
 }
 
@@ -130,7 +104,7 @@ function estadoEncabezado(
   return { tipo: 'porJugar', cierre, contador: contadorCierre(cierre, ahora) };
 }
 
-/** S03: detalle del partido con el formulario de predicción (F03). */
+/** S03: detalle del partido con la boleta y el formulario de predicción (F03, F24). */
 export function PantallaPartido() {
   const { partidoId } = useLocalSearchParams<'/partido/[partidoId]'>();
   const id = Number(partidoId);
@@ -139,6 +113,10 @@ export function PantallaPartido() {
   const ahora = useAhora();
   const [cerradoPorServidor, setCerradoPorServidor] = useState(false);
   const [cerroEnPantalla, setCerroEnPantalla] = useState(false);
+  // F24: con predicción y abierto se ve la boleta; el formulario solo al tocar "Editar".
+  const [editando, setEditando] = useState(false);
+  // F11a R1: la explicación previa al permiso, solo después de guardar.
+  const [preguntar, setPreguntar] = useState(false);
 
   const partido = useQuery({
     queryKey: ['partido', id],
@@ -168,6 +146,16 @@ export function PantallaPartido() {
     if (estabaAbierto.current && !abierto && !cerradoPorServidor) setCerroEnPantalla(true);
     estabaAbierto.current = abierto;
   }, [abierto, cerradoPorServidor]);
+
+  // Guardar o quitar cierra la edición: con predicción queda la boleta (F24 R2), sin ella el
+  // formulario vacío (R4).
+  function alTerminar(nueva: Prediccion | null) {
+    setEditando(false);
+    if (nueva === null) return;
+    debePreguntar()
+      .then(setPreguntar)
+      .catch((error: unknown) => console.warn('[notificaciones] No se leyó el permiso', error));
+  }
 
   function alCerrarEnServidor() {
     setCerradoPorServidor(true);
@@ -227,15 +215,26 @@ export function PantallaPartido() {
           estado={estadoEncabezado(datos, abierto, ahora)}
         />
         {aviso !== null && <Aviso mensaje={aviso} />}
-        {abierto ? (
+        {/* Cerrado en plena edición: el formulario desaparece con lo no guardado y queda la
+            boleta de lo último guardado (F24 R5). */}
+        {!abierto ? (
+          <PrediccionCerrada partido={datos} guardada={guardada} />
+        ) : guardada !== null && !editando ? (
+          <BoletaPrediccion
+            partido={datos}
+            prediccion={guardada}
+            onEditar={() => setEditando(true)}
+          />
+        ) : (
           <FormularioPrediccion
             partido={datos}
             guardada={guardada}
             onCerrado={alCerrarEnServidor}
+            onTerminar={alTerminar}
+            onCancelar={guardada !== null ? () => setEditando(false) : undefined}
           />
-        ) : (
-          <PrediccionCerrada partido={datos} guardada={guardada} />
         )}
+        {abierto && preguntar && <PreguntaRecordatorios onCerrar={() => setPreguntar(false)} />}
         {!abierto && guardada !== null && conPuntos && puntos.data !== null && (
           <PuntosDelPartido
             {...(puntos.data !== undefined

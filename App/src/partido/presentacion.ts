@@ -39,3 +39,28 @@ export function datosDePrediccion(
   if (rango_goles !== null) datos.push({ etiqueta: 'Goles en total', valor: textoRango[rango_goles] });
   return datos;
 }
+
+// F24 R1: rango con "goles" para leerse solo en la boleta.
+const rangoEnBoleta = {
+  G0_1: '0–1 goles',
+  G2: '2 goles',
+  G3: '3 goles',
+  G4_MAS: '4 o más goles',
+} as const;
+
+/**
+ * Lo elegido en una línea, para la boleta (F24 R1): el marcador ("América 2 – 1 Chivas") o el
+ * resultado y el rango ("Gana América · 2 goles").
+ */
+export function textoBoleta(partido: Equipos, prediccion: PrediccionLegible): string {
+  const { marcador_local, marcador_visitante, resultado, rango_goles } = prediccion;
+  if (marcador_local !== null && marcador_visitante !== null) {
+    return `${partido.local.nombre_corto} ${marcador_local} – ${marcador_visitante} ${partido.visitante.nombre_corto}`;
+  }
+  return [
+    resultado !== null && textoResultado(partido, resultado),
+    rango_goles !== null && rangoEnBoleta[rango_goles],
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}

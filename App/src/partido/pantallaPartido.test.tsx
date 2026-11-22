@@ -17,6 +17,7 @@ import {
   type PartidoDetalle,
 } from './datos';
 import { guardarAhoraNo, leerAhoraNo, leerPermiso, pedirPermiso } from '../notificaciones/sistema';
+import { formatearHora } from '../formato/fechas';
 import { obtenerMisPuntosDePartido } from '../puntos/datos';
 import { temaGrafito } from '../tema/tokens';
 import type { Prediccion } from './eleccion';
@@ -89,12 +90,19 @@ async function abrir(url = '/partido/5') {
 }
 
 const opcion = (nombre: string) => screen.getByRole('radio', { name: nombre });
+const campo = () => screen.getByLabelText('Tu análisis');
 const boton = (nombre: string) => screen.getByRole('button', { name: nombre });
 const tocar = (elemento: Parameters<typeof fireEvent.press>[0]) => fireEvent.press(elemento);
 
 async function abrirFormulario() {
   await abrir();
   await screen.findByRole('header', { name: 'América contra Chivas' });
+}
+
+/** Con una predicción guardada S03 abre en la boleta (F24 R3): "Editar" abre el formulario. */
+async function abrirEdicion() {
+  await abrirFormulario();
+  await tocar(boton('Editar predicción'));
 }
 
 describe('encabezado (F22)', () => {
@@ -164,7 +172,7 @@ describe('formulario (F03 CA7)', () => {
 
   it('F03 CA7: guarda solo la pestaña activa (resultado y goles)', async () => {
     prediccionFalsa.mockResolvedValue(guardada({ marcador_local: 1, marcador_visitante: 1 }));
-    await abrirFormulario();
+    await abrirEdicion();
 
     // Abre en la pestaña de lo guardado.
     expect(screen.getByRole('tab', { name: 'Marcador exacto' })).toBeSelected();
@@ -185,7 +193,7 @@ describe('formulario (F03 CA7)', () => {
 
   it('F03 CA7: sin cambios respecto a lo guardado, "Actualizar" está deshabilitado', async () => {
     prediccionFalsa.mockResolvedValue(guardada({ resultado: 'VISITANTE', rango_goles: 'G3' }));
-    await abrirFormulario();
+    await abrirEdicion();
 
     expect(opcion('Chivas')).toBeChecked();
     expect(opcion('3')).toBeChecked();
@@ -205,16 +213,83 @@ describe('formulario (F03 CA7)', () => {
     expect(boton('Un gol más para América')).toBeDisabled();
     expect(boton('Un gol menos para América')).toBeEnabled();
   });
+});
 
-  it('al guardar muestra la hora y el botón pasa a "Actualizar"', async () => {
+describe('boleta (F24)', () => {
+  const boleta = () => screen.queryByTestId('boleta-prediccion');
+
+  it('F24 CA1: guardar un marcador cierra el formulario y muestra la boleta con su hora', async () => {
     await abrirFormulario();
 
-    await tocar(opcion('Empate'));
+    await tocar(screen.getByRole('tab', { name: 'Marcador exacto' }));
+    await tocar(boton('Un gol más para América'));
+    await tocar(boton('Un gol más para América'));
+    await tocar(boton('Un gol más para Chivas'));
+    await fireEvent.changeText(campo(), 'América llega mejor.');
     await tocar(boton('Guardar predicción'));
 
-    expect(await screen.findByText(/^Predicción guardada · /)).toBeOnTheScreen();
-    expect(boton('Actualizar')).toBeDisabled();
-    expect(opcion('Empate')).toBeChecked();
+    expect(await screen.findByText('América 2 – 1 Chivas')).toBeOnTheScreen();
+    expect(screen.getByText('América llega mejor.')).toBeOnTheScreen();
+    expect(
+      screen.getByText(`Guardada · ${formatearHora(new Date('2026-11-02T18:30:00Z'))}`),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole('radio')).not.toBeOnTheScreen();
+    expect(boton('Editar predicción')).toBeOnTheScreen();
+  });
+
+  it('F24 CA1: con resultado y rango la boleta dice "Gana América · 2 goles" y "Sin análisis"', async () => {
+    await abrirFormulario();
+
+    await tocar(opcion('América'));
+    await tocar(opcion('2'));
+    await tocar(boton('Guardar predicción'));
+
+    expect(await screen.findByText('Gana América · 2 goles')).toBeOnTheScreen();
+    expect(screen.getByText('Sin análisis')).toBeOnTheScreen();
+  });
+
+  it('F24 CA2: un partido ya predicho y abierto abre en la boleta', async () => {
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'EMPATE', rango_goles: 'G0_1' }));
+    await abrirFormulario();
+
+    expect(boleta()).toBeOnTheScreen();
+    expect(screen.getByText('Empate · 0–1 goles')).toBeOnTheScreen();
+    expect(screen.queryByRole('radio')).not.toBeOnTheScreen();
+  });
+
+  it('F24 CA2: un partido sin predicción abre en el formulario', async () => {
+    await abrirFormulario();
+
+    expect(boleta()).not.toBeOnTheScreen();
+    expect(boton('Guardar predicción')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeOnTheScreen();
+  });
+
+  it('F24 CA3: "Editar" abre el formulario con lo guardado y "Cancelar" vuelve sin cambios', async () => {
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
+    await abrirEdicion();
+
+    expect(opcion('América')).toBeChecked();
+    await tocar(opcion('Empate'));
+    await tocar(boton('Cancelar'));
+
+    expect(await screen.findByText('Gana América')).toBeOnTheScreen();
+    expect(guardarFalso).not.toHaveBeenCalled();
+    // Lo no guardado se descartó: al volver a editar está lo guardado.
+    await tocar(boton('Editar predicción'));
+    expect(opcion('América')).toBeChecked();
+  });
+
+  it('F24 CA3: "Actualizar" vuelve a la boleta con lo nuevo', async () => {
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
+    await abrirEdicion();
+
+    await tocar(opcion('Empate'));
+    await tocar(boton('Actualizar'));
+
+    const nueva = await screen.findByTestId('boleta-prediccion');
+    expect(within(nueva).getByText('Empate')).toBeOnTheScreen();
+    expect(screen.queryByRole('radio')).not.toBeOnTheScreen();
   });
 });
 
@@ -222,7 +297,7 @@ describe('errores al guardar (F03 CA8)', () => {
   it('F03 CA8: ante PREDICCIONES_CERRADAS pasa a cerrado con su mensaje y lo último guardado', async () => {
     prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
     guardarFalso.mockRejectedValue(new ErrorPrediccionesCerradas());
-    await abrirFormulario();
+    await abrirEdicion();
 
     await tocar(opcion('Empate'));
     await tocar(boton('Actualizar'));
@@ -252,12 +327,12 @@ describe('errores al guardar (F03 CA8)', () => {
 });
 
 describe('quitar (decisión 1, D90)', () => {
-  it('pide confirmación, quita y deja el formulario vacío', async () => {
+  it('F24 CA3: pide confirmación, quita y deja el formulario vacío', async () => {
     jest.spyOn(Alert, 'alert').mockImplementation((_titulo, _mensaje, botones?: AlertButton[]) =>
       botones?.find((b) => b.text === 'Quitar')?.onPress?.(),
     );
     prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
-    await abrirFormulario();
+    await abrirEdicion();
 
     await tocar(boton('Quitar predicción'));
 
@@ -270,7 +345,7 @@ describe('quitar (decisión 1, D90)', () => {
   it('cancelar no quita nada', async () => {
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
-    await abrirFormulario();
+    await abrirEdicion();
 
     await tocar(boton('Quitar predicción'));
 
@@ -316,7 +391,7 @@ describe('cierre (F03 R8, Flujo 6)', () => {
     await abrir();
 
     expect(await screen.findByText('Predicciones cerradas')).toBeOnTheScreen();
-    expect(screen.getByText('América 3 - 0 Chivas')).toBeOnTheScreen();
+    expect(screen.getByText('América 3 – 0 Chivas')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: /Guardar|Actualizar|Quitar/ })).not.toBeOnTheScreen();
   });
 
@@ -373,7 +448,6 @@ describe('cierre (F03 R8, Flujo 6)', () => {
 });
 
 describe('justificación (F04)', () => {
-  const campo = () => screen.getByLabelText('Tu análisis');
 
   it('F04 CA5: el campo muestra el contador y no deja escribir más de 500 caracteres', async () => {
     await abrirFormulario();
@@ -405,7 +479,7 @@ describe('justificación (F04)', () => {
 
   it('F04 CA6: cambiar solo la justificación habilita "Actualizar"', async () => {
     prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL', justificacion: 'Juega en casa.' }));
-    await abrirFormulario();
+    await abrirEdicion();
 
     expect(campo().props.value).toBe('Juega en casa.');
     expect(boton('Actualizar')).toBeDisabled();
@@ -455,13 +529,13 @@ describe('justificación (F04)', () => {
     expect(screen.queryByLabelText('Tu análisis')).not.toBeOnTheScreen();
   });
 
-  it('cerrado sin justificación: no muestra la sección', async () => {
+  it('F24 R1: cerrado sin justificación, la boleta dice "Sin análisis"', async () => {
     partidoFalso.mockImplementation(async () => partido({ estado: 'EN_JUEGO' }));
     prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
     await abrir();
 
     expect(await screen.findByText('Gana América')).toBeOnTheScreen();
-    expect(screen.queryByText('Tu análisis')).not.toBeOnTheScreen();
+    expect(screen.getByText('Sin análisis')).toBeOnTheScreen();
   });
 });
 
