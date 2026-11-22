@@ -820,6 +820,16 @@ export type Database = {
       }
     }
     Views: {
+      equipos_torneo_actual: {
+        Row: {
+          color_primario: string | null
+          color_texto: string | null
+          escudo_url: string | null
+          id: number | null
+          nombre_corto: string | null
+        }
+        Relationships: []
+      }
       mi_racha: {
         Row: {
           incluye_simulados: boolean | null
