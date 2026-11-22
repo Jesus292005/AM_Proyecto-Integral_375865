@@ -90,10 +90,10 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 
 ### Gamificación
 
-**Insignia** (catálogo) — `id`, `codigo` ("TOP_JORNADA", "MEJOR_ANALISIS", "VISIONARIO"…), `nombre`, `descripcion`, `icono`, `repetible`.
-> El catálogo exacto se define en la spec de F14.
+**Insignia** (catálogo) — `id`, `codigo` ("TOP_JORNADA", "MEJOR_ANALISIS", "MARCADOR_EXACTO"…), `nombre`, `descripcion`, `nivel` (`BRONCE` | `PLATA` | `ORO`), `icono`, `repetible`, `orden`.
+> El catálogo está en F14 R1 (D108).
 
-**InsigniaObtenida** — `usuarioId`, `insigniaId`, `obtenidaEn`, `grupoId?`, `jornadaId?`, `partidoId?`, `esSimulada`.
+**InsigniaObtenida** — `usuarioId`, `insigniaId`, `obtenidaEn`, `grupoId?`, `jornadaId?`, `partidoId?`, `esSimulada`, `vistaEn?` (vacío = nueva, F14 R7).
 > Una insignia repetible (p. ej. top de la jornada) genera un registro por cada vez que se gana.
 
 ### Operación

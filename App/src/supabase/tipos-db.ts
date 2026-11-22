@@ -317,6 +317,125 @@ export type Database = {
           },
         ]
       }
+      insignia: {
+        Row: {
+          codigo: string
+          descripcion: string
+          icono: string
+          id: number
+          nivel: Database["public"]["Enums"]["nivel_metal"]
+          nombre: string
+          orden: number
+          repetible: boolean
+        }
+        Insert: {
+          codigo: string
+          descripcion: string
+          icono: string
+          id?: never
+          nivel: Database["public"]["Enums"]["nivel_metal"]
+          nombre: string
+          orden: number
+          repetible: boolean
+        }
+        Update: {
+          codigo?: string
+          descripcion?: string
+          icono?: string
+          id?: never
+          nivel?: Database["public"]["Enums"]["nivel_metal"]
+          nombre?: string
+          orden?: number
+          repetible?: boolean
+        }
+        Relationships: []
+      }
+      insignia_obtenida: {
+        Row: {
+          es_simulada: boolean
+          grupo_id: number | null
+          id: number
+          insignia_id: number
+          jornada_id: number | null
+          obtenida_en: string
+          partido_id: number | null
+          usuario_id: string
+          vista_en: string | null
+        }
+        Insert: {
+          es_simulada: boolean
+          grupo_id?: number | null
+          id?: never
+          insignia_id: number
+          jornada_id?: number | null
+          obtenida_en?: string
+          partido_id?: number | null
+          usuario_id: string
+          vista_en?: string | null
+        }
+        Update: {
+          es_simulada?: boolean
+          grupo_id?: number | null
+          id?: never
+          insignia_id?: number
+          jornada_id?: number | null
+          obtenida_en?: string
+          partido_id?: number | null
+          usuario_id?: string
+          vista_en?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insignia_obtenida_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insignia_obtenida_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "mis_grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insignia_obtenida_insignia_id_fkey"
+            columns: ["insignia_id"]
+            isOneToOne: false
+            referencedRelation: "insignia"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insignia_obtenida_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "jornada"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insignia_obtenida_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insignia_obtenida_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insignia_obtenida_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jornada: {
         Row: {
           esta_cerrada: boolean
@@ -904,6 +1023,24 @@ export type Database = {
         }
         Relationships: []
       }
+      mis_insignias: {
+        Row: {
+          codigo: string | null
+          descripcion: string | null
+          icono: string | null
+          nivel: Database["public"]["Enums"]["nivel_metal"] | null
+          nombre: string | null
+          nueva: boolean | null
+          orden: number | null
+          repetible: boolean | null
+          ultima_en: string | null
+          ultima_jornada: string | null
+          ultima_simulada: boolean | null
+          ultimo_grupo: string | null
+          veces: number | null
+        }
+        Relationships: []
+      }
       mis_puntos: {
         Row: {
           afirmaciones: Json | null
@@ -1030,6 +1167,7 @@ export type Database = {
       jornada_actual: { Args: { ahora?: string }; Returns: number }
       liberar_evaluaciones: { Args: { ids: number[] }; Returns: undefined }
       llamadas_ia_hoy: { Args: { ahora: string }; Returns: number }
+      marcar_insignias_vistas: { Args: never; Returns: number }
       mi_posicion_en_grupo: { Args: { id_grupo: number }; Returns: number }
       normalizar_codigo_invitacion: {
         Args: { codigo: string }
