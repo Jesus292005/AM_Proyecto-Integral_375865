@@ -1,7 +1,7 @@
 // Verifica que cada ruta de 02-navigation §3 existe y abre su pantalla (T03), y el comportamiento
 // del menú inferior (D76). Corre con una sesión guardada; la guardia y S01 se prueban en
 // `sesion/guardia.test.tsx` (T11).
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 
@@ -171,6 +171,16 @@ describe('rutas', () => {
 });
 
 describe('menú inferior', () => {
+  it('F22 CA2: cada destino lleva su ícono (casa, calendario, usuarios, usuario)', async () => {
+    await abrir('/inicio');
+
+    const iconos = { Inicio: 'casa', Partidos: 'calendario', Grupos: 'usuarios', Perfil: 'usuario' };
+    for (const [destino, icono] of Object.entries(iconos)) {
+      const tab = await screen.findByRole('tab', { name: destino });
+      expect(within(tab).getByTestId(`icono-${icono}`)).toBeOnTheScreen();
+    }
+  });
+
   it('cambia de pestaña', async () => {
     await abrir('/inicio');
 

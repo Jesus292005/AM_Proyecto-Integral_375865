@@ -1,7 +1,22 @@
 import { Tabs } from 'expo-router';
 
-import { MenuInferior } from '../../../componentes';
+import { MenuInferior, type NombreIcono } from '../../../componentes';
 import { useTema } from '../../../tema';
+
+// Ícono de cada destino del menú (F22 R1).
+const iconos: Record<string, NombreIcono> = {
+  '(inicio)': 'casa',
+  '(partidos)': 'calendario',
+  '(grupos)': 'usuarios',
+  '(perfil)': 'usuario',
+};
+
+function iconoDe(ruta: string): NombreIcono {
+  const icono = iconos[ruta];
+  // Una pestaña nueva sin ícono debe fallar en las pruebas, no salir con otro ícono.
+  if (icono === undefined) throw new Error(`La pestaña ${ruta} no tiene ícono (F22 R1).`);
+  return icono;
+}
 
 export default function LayoutPestanas() {
   const { colores } = useTema();
@@ -16,6 +31,7 @@ export default function LayoutPestanas() {
             destinos={state.routes.map((r) => ({
               clave: r.key,
               etiqueta: descriptors[r.key]?.options.title ?? r.name,
+              icono: iconoDe(r.name),
             }))}
             activo={activa?.key ?? ''}
             onSeleccionar={(clave) => {

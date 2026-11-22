@@ -81,3 +81,7 @@ npm run revisar:secretos
 ## Especificaciones
 
 Empieza por [`specs/00-project.md`](./specs/00-project.md) y [`specs/decisions.md`](./specs/decisions.md). Las tareas de cada semana están en [`specs/tasks/`](./specs/tasks).
+
+## Créditos
+
+- Íconos: trazos de [Lucide](https://lucide.dev) (licencia ISC, © Lucide Contributors), copiados al componente `Icono` de la app en lugar de instalar la librería (F22, D105).

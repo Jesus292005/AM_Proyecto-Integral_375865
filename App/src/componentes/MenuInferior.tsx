@@ -2,11 +2,13 @@ import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTema } from '../tema';
+import { Icono, type NombreIcono } from './Icono';
 import { Texto } from './Texto';
 
 export interface DestinoMenu {
   clave: string;
   etiqueta: string;
+  icono: NombreIcono;
 }
 
 interface Props {
@@ -15,7 +17,10 @@ interface Props {
   onSeleccionar: (clave: string) => void;
 }
 
-/** Menú inferior de texto (05-ui §5): el destino activo en `texto` con barra superior en acento. */
+/**
+ * Menú inferior (05-ui §5, F22 R1): ícono encima del texto; el destino activo en `texto` con barra
+ * superior en acento, los demás en `textoTenue`.
+ */
 export function MenuInferior({ destinos, activo, onSeleccionar }: Props) {
   const { colores, espacio, medidas } = useTema();
   const { bottom } = useSafeAreaInsets();
@@ -31,7 +36,7 @@ export function MenuInferior({ destinos, activo, onSeleccionar }: Props) {
         paddingBottom: bottom,
       }}
     >
-      {destinos.map(({ clave, etiqueta }) => {
+      {destinos.map(({ clave, etiqueta, icono }) => {
         const seleccionado = clave === activo;
         return (
           <Pressable
@@ -45,12 +50,14 @@ export function MenuInferior({ destinos, activo, onSeleccionar }: Props) {
               minHeight: medidas.areaTactil,
               alignItems: 'center',
               justifyContent: 'center',
+              gap: espacio.xxs,
               paddingVertical: espacio.s,
               borderTopWidth: medidas.barraActiva,
               borderTopColor: seleccionado ? colores.acento : 'transparent',
               opacity: pressed ? medidas.opacidadPresionado : 1,
             })}
           >
+            <Icono nombre={icono} tamano="iconoMenu" color={seleccionado ? 'texto' : 'textoTenue'} />
             <Texto variante="menu" color={seleccionado ? 'texto' : 'textoTenue'} numberOfLines={1}>
               {etiqueta}
             </Texto>

@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { processColor, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ProveedorTema } from '../tema';
@@ -7,11 +7,11 @@ import { temaGrafito } from '../tema/tokens';
 import { MenuInferior } from './MenuInferior';
 
 const destinos = [
-  { clave: 'inicio', etiqueta: 'Inicio' },
-  { clave: 'partidos', etiqueta: 'Partidos' },
-  { clave: 'grupos', etiqueta: 'Grupos' },
-  { clave: 'perfil', etiqueta: 'Perfil' },
-];
+  { clave: 'inicio', etiqueta: 'Inicio', icono: 'casa' },
+  { clave: 'partidos', etiqueta: 'Partidos', icono: 'calendario' },
+  { clave: 'grupos', etiqueta: 'Grupos', icono: 'usuarios' },
+  { clave: 'perfil', etiqueta: 'Perfil', icono: 'usuario' },
+] as const;
 
 const metricas = {
   frame: { x: 0, y: 0, width: 360, height: 640 },
@@ -52,6 +52,22 @@ describe('MenuInferior', () => {
     expect(StyleSheet.flatten(screen.getByText('Grupos').props.style).color).toBe(
       colores.textoTenue,
     );
+  });
+
+  it('F22 CA2: cada destino lleva su ícono, del mismo color que su texto', async () => {
+    await renderMenu();
+    const { colores, medidas } = temaGrafito;
+
+    for (const { etiqueta, icono } of destinos) {
+      const tab = screen.getByRole('tab', { name: etiqueta });
+      const svg = within(tab).getByTestId(`icono-${icono}`);
+      expect(svg.props.width).toBe(medidas.iconoMenu);
+      const color = etiqueta === 'Partidos' ? colores.texto : colores.textoTenue;
+      // react-native-svg entrega el color ya convertido al formato nativo.
+      expect(within(tab).getByTestId(`icono-${icono}-trazo`).props.stroke.payload).toBe(
+        processColor(color),
+      );
+    }
   });
 
   it('avisa qué destino se tocó', async () => {

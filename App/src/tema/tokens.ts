@@ -137,6 +137,8 @@ export const medidas = {
   qrInvitacion: 200,
   // Íconos de trazo (05-ui §7).
   icono: 16,
+  // Ícono del menú inferior (05-ui v2.0 §4, F22 R1).
+  iconoMenu: 20,
   trazoIcono: 2,
   // Tamaño de letra del sistema respetado hasta 1.3× (05-ui §3, accesibilidad).
   escalaTextoMaxima: 1.3,
