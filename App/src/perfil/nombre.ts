@@ -20,3 +20,11 @@ export function esNombreValido(nombre: string): boolean {
     ALGUNA_LETRA_O_NUMERO.test(limpio)
   );
 }
+
+/**
+ * Renglones para mostrar un nombre en grande: con espacios, hasta 2 (se parte entre palabras);
+ * sin espacios, 1 y la letra se reduce para que quepa, en vez de partir la palabra a la mitad.
+ */
+export function renglonesDeNombre(nombre: string): 1 | 2 {
+  return normalizarNombre(nombre).includes(' ') ? 2 : 1;
+}

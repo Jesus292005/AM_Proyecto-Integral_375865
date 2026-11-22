@@ -70,6 +70,23 @@ describe('Tu carta (F20)', () => {
     );
   });
 
+  it('F20 R7: un nombre largo sin espacios va en un renglón y se reduce para caber', async () => {
+    perfilFalso.mockResolvedValue(perfilDePrueba({ nombre: 'Masturbinho' }));
+    await abrirPerfil();
+
+    const nombre = await screen.findByTestId('carta-nombre');
+    expect(nombre.props.numberOfLines).toBe(1);
+    expect(nombre.props.adjustsFontSizeToFit).toBe(true);
+    expect(screen.getByTestId('perfil-nombre').props.numberOfLines).toBe(1);
+  });
+
+  it('F20 R7: un nombre con espacios puede usar dos renglones', async () => {
+    perfilFalso.mockResolvedValue(perfilDePrueba({ nombre: 'El Chucho' }));
+    await abrirPerfil();
+
+    expect((await screen.findByTestId('carta-nombre')).props.numberOfLines).toBe(2);
+  });
+
   it('F20 CA3: sin evaluaciones, ANA sale como "—"', async () => {
     cartaFalsa.mockResolvedValue({ ...oro, analisis: null, nivel: 'PLATA', media: 70 });
     await abrirPerfil();

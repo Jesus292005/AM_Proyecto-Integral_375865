@@ -1,4 +1,4 @@
-import { esNombreValido, normalizarNombre } from './nombre';
+import { esNombreValido, normalizarNombre, renglonesDeNombre } from './nombre';
 
 describe('nombre visible en la app (F28 R4)', () => {
   it('F28 CA4: junta espacios repetidos y quita los de los extremos, como el servidor', () => {
@@ -15,5 +15,16 @@ describe('nombre visible en la app (F28 R4)', () => {
     ['      ', false],
   ])('F28 CA4: "%s" válido = %s', (nombre, valido) => {
     expect(esNombreValido(nombre)).toBe(valido);
+  });
+});
+
+describe('renglones del nombre en grande (S09 y carta)', () => {
+  it('sin espacios, un renglón (la letra se reduce en lugar de partir la palabra)', () => {
+    expect(renglonesDeNombre('Masturbinho')).toBe(1);
+    expect(renglonesDeNombre('  Masturbinho  ')).toBe(1);
+  });
+
+  it('con espacios, hasta dos renglones (se parte entre palabras)', () => {
+    expect(renglonesDeNombre('El Chucho')).toBe(2);
   });
 });

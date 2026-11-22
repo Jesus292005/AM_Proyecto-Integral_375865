@@ -20,6 +20,7 @@ import { AjusteRecordatorios } from './AjusteRecordatorios';
 import { SeccionCarta } from './SeccionCarta';
 import { SeccionRacha } from './SeccionRacha';
 import { SeccionVitrina } from './SeccionVitrina';
+import { renglonesDeNombre } from './nombre';
 import { useMiPerfil } from './useMiPerfil';
 
 const mensajes = {
@@ -73,7 +74,12 @@ function EncabezadoPerfil() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.m }}>
         <FotoUsuario url={foto_url} nombre={nombre} tamano="fotoPerfil" />
         <View style={{ flex: 1, gap: espacio.xxs }}>
-          <Texto variante="titulo1" numberOfLines={2} adjustsFontSizeToFit>
+          <Texto
+            variante="titulo1"
+            numberOfLines={renglonesDeNombre(nombre)}
+            adjustsFontSizeToFit
+            testID="perfil-nombre"
+          >
             {nombre}
           </Texto>
           {equipo ? (

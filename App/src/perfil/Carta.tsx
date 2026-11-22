@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import { DegradadoMetal, EscudoEquipo, FotoUsuario, Texto } from '../componentes';
 import { useTema } from '../tema';
 import type { MiCarta, MiPerfil, Nivel } from './datos';
+import { renglonesDeNombre } from './nombre';
 
 export type CodigoAtributo = 'PRE' | 'PUN' | 'ANA' | 'CON';
 
@@ -102,7 +103,13 @@ export function Carta({ carta, perfil, elegido, onElegir }: Props) {
         </View>
         <FotoUsuario url={perfil.foto_url} nombre={perfil.nombre} tamano="fotoPerfil" />
         <View style={{ flex: 1, gap: espacio.xxs }}>
-          <Texto variante="titulo2" colorDato={colorTexto} numberOfLines={2}>
+          <Texto
+            variante="titulo2"
+            colorDato={colorTexto}
+            numberOfLines={renglonesDeNombre(perfil.nombre)}
+            adjustsFontSizeToFit
+            testID="carta-nombre"
+          >
             {perfil.nombre}
           </Texto>
           {perfil.equipo && <EscudoEquipo equipo={perfil.equipo} tamano="escudoLista" />}
