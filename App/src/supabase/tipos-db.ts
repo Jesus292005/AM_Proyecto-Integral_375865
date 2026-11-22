@@ -830,6 +830,19 @@ export type Database = {
         }
         Relationships: []
       }
+      mi_carta: {
+        Row: {
+          analisis: number | null
+          calificadas: number | null
+          constancia: number | null
+          incluye_simulados: boolean | null
+          media: number | null
+          nivel: Database["public"]["Enums"]["nivel_metal"] | null
+          precision: number | null
+          punteria: number | null
+        }
+        Relationships: []
+      }
       mi_racha: {
         Row: {
           incluye_simulados: boolean | null
@@ -1126,6 +1139,7 @@ export type Database = {
         | "ERROR"
         | "DETENIDA_POR_TOPE"
       fase_jornada: "REGULAR" | "LIGUILLA"
+      nivel_metal: "BRONCE" | "PLATA" | "ORO"
       rango_goles: "G0_1" | "G2" | "G3" | "G4_MAS"
       resultado_prediccion: "LOCAL" | "EMPATE" | "VISITANTE"
       rol_grupo: "ADMIN" | "MIEMBRO"
@@ -1279,6 +1293,7 @@ export const Constants = {
         "DETENIDA_POR_TOPE",
       ],
       fase_jornada: ["REGULAR", "LIGUILLA"],
+      nivel_metal: ["BRONCE", "PLATA", "ORO"],
       rango_goles: ["G0_1", "G2", "G3", "G4_MAS"],
       resultado_prediccion: ["LOCAL", "EMPATE", "VISITANTE"],
       rol_grupo: ["ADMIN", "MIEMBRO"],
