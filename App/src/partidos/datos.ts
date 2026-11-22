@@ -52,6 +52,8 @@ export type EquipoDePartido = {
 export type PartidoDeLista = {
   id: number;
   inicio: string;
+  /** Para el filtro "Sin predecir" (F23 R4, F03 R1). */
+  cierre_predicciones: string;
   estado: EstadoPartido;
   goles_local: number | null;
   goles_visitante: number | null;
@@ -65,7 +67,7 @@ export type PartidoDeLista = {
 
 // Un solo literal: supabase-js deduce el tipo del resultado a partir de este texto.
 const COLUMNAS_PARTIDO =
-  'id, inicio, estado, es_simulado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url, color_primario, color_texto), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url, color_primario, color_texto), mis_predicciones:prediccion(id)';
+  'id, inicio, cierre_predicciones, estado, es_simulado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url, color_primario, color_texto), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url, color_primario, color_texto), mis_predicciones:prediccion(id)';
 
 /** Partidos de una jornada con sus dos equipos, por hora de inicio. */
 export async function obtenerPartidosDeJornada(jornadaId: number): Promise<PartidoDeLista[]> {

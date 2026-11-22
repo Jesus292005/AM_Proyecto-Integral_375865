@@ -61,6 +61,7 @@ function partido(
   return {
     id,
     inicio,
+    cierre_predicciones: inicio,
     estado: 'PROGRAMADO',
     goles_local: null,
     goles_visitante: null,
@@ -285,6 +286,101 @@ describe('S02 tira de jornadas (F23)', () => {
 
     await screen.findByRole('header', { name: 'Jornada 2' });
     expect(within(screen.getByTestId('tira-jornadas')).getAllByRole('tab')).toHaveLength(1);
+  });
+});
+
+describe('S02 filtro "Sin predecir" (F23)', () => {
+  const EN_UNA_HORA = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const HACE_UNA_HORA = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const abiertoEn = (fecha: string) => ({ inicio: fecha, cierre_predicciones: fecha });
+
+  // J2: dos pendientes (uno pospuesto, que sigue abierto por F03 R1) y cuatro que no lo son.
+  const jornadaConPendientes = [
+    partido(201, EN_UNA_HORA, 'Puebla', 'Santos', abiertoEn(EN_UNA_HORA)),
+    partido(202, EN_UNA_HORA, 'Chivas', 'Atlas', { ...abiertoEn(EN_UNA_HORA), predicho: true }),
+    partido(203, HACE_UNA_HORA, 'León', 'Toluca', abiertoEn(HACE_UNA_HORA)),
+    partido(204, HACE_UNA_HORA, 'Tigres', 'Pumas', {
+      ...abiertoEn(HACE_UNA_HORA),
+      estado: 'TERMINADO',
+      goles_local: 1,
+      goles_visitante: 0,
+    }),
+    partido(205, EN_UNA_HORA, 'Necaxa', 'Pachuca', { ...abiertoEn(EN_UNA_HORA), estado: 'POSPUESTO' }),
+    // En juego con el cierre aún en el futuro: no es "por jugar" (F03 R1).
+    partido(206, EN_UNA_HORA, 'Mazatlán', 'Querétaro', { ...abiertoEn(EN_UNA_HORA), estado: 'EN_JUEGO' }),
+  ];
+  // J1: un pendiente. Final: todo predicho.
+  const jornada1 = [partido(111, EN_UNA_HORA, 'Juárez', 'Tijuana', abiertoEn(EN_UNA_HORA))];
+  const finalPredicha = [
+    partido(211, EN_UNA_HORA, 'América', 'Cruz Azul', { ...abiertoEn(EN_UNA_HORA), predicho: true }),
+  ];
+
+  beforeEach(() => {
+    partidosFalsos.mockImplementation(async (id) =>
+      id === 12 ? jornadaConPendientes : id === 11 ? jornada1 : finalPredicha,
+    );
+  });
+
+  const filtro = () => screen.getByRole('checkbox', { name: 'Sin predecir' });
+  const equipos = () =>
+    screen.getAllByRole('button', { name: / contra / }).map((f) => f.props.accessibilityLabel);
+
+  it('F23 CA2: solo deja los partidos por jugar, abiertos y sin mi predicción', async () => {
+    await abrir('/partidos');
+    await fila(/Puebla/);
+    expect(await fila(/Tigres 1, Pumas 0/)).toBeOnTheScreen();
+    expect(equipos()).toHaveLength(5);
+
+    await fireEvent.press(filtro());
+
+    expect(filtro()).toBeChecked();
+    await waitFor(() => expect(equipos()).toHaveLength(2));
+    expect(equipos().join(' | ')).toMatch(/Puebla contra Santos.*Necaxa contra Pachuca/);
+    // Fuera: predicho (Chivas), cerrado (León), en juego (Mazatlán) y terminado (Tigres).
+    expect(screen.queryByRole('button', { name: /Tigres/ })).not.toBeOnTheScreen();
+  });
+
+  it('F23 CA2: sin pendientes lo dice y "Ver todos" apaga el filtro', async () => {
+    await abrir('/partidos?jornada=21');
+    await fila(/América/);
+
+    await fireEvent.press(filtro());
+
+    expect(
+      await screen.findByText('Ya predijiste todo lo que se puede en esta jornada.'),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver todos' }));
+    expect(filtro()).not.toBeChecked();
+    expect(await fila(/América/)).toBeOnTheScreen();
+  });
+
+  it('F23 CA3: el filtro sigue activo al cambiar de jornada', async () => {
+    await abrir('/partidos');
+    await fila(/Puebla/);
+    await fireEvent.press(filtro());
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Jornada 1' }));
+
+    expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
+    expect(filtro()).toBeChecked();
+    expect(await fila(/Juárez/)).toBeOnTheScreen();
+  });
+
+  it('F23 R4: abrir un partido no lo apaga; salir de la pestaña sí', async () => {
+    await abrir('/partidos');
+    await fila(/Puebla/);
+    await fireEvent.press(filtro());
+    await fireEvent.press(await fila(/Puebla/));
+    await screen.findByRole('header', { name: 'Puebla 1, Santos 0' });
+    await fireEvent.press(screen.getByRole('button', { name: 'Volver' }));
+    await screen.findByRole('header', { name: 'Jornada 2' });
+    expect(filtro()).toBeChecked();
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Grupos' }));
+    await screen.findByRole('header', { name: 'Grupos' });
+    await fireEvent.press(screen.getByRole('tab', { name: 'Partidos' }));
+
+    await waitFor(() => expect(filtro()).not.toBeChecked());
   });
 });
 

@@ -8,6 +8,7 @@ function partido(id: number, inicio: string): PartidoDeLista {
   return {
     id,
     inicio,
+    cierre_predicciones: inicio,
     estado: 'PROGRAMADO',
     goles_local: null,
     goles_visitante: null,

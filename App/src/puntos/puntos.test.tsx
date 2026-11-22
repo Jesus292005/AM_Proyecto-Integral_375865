@@ -30,6 +30,7 @@ function partido(extra: Partial<PartidoDeLista> = {}): PartidoDeLista {
   return {
     id: 1,
     inicio: '2024-07-13T20:00:00Z',
+    cierre_predicciones: '2024-07-13T20:00:00Z',
     estado: 'TERMINADO',
     goles_local: 2,
     goles_visitante: 1,

@@ -44,6 +44,7 @@ const partidosFalsos = obtenerPartidosDeJornada as jest.MockedFunction<typeof ob
 const partidoDeJornada: PartidoDeLista = {
   id: 1,
   inicio: '2026-11-20T20:00:00Z',
+  cierre_predicciones: '2026-11-20T20:00:00Z',
   estado: 'PROGRAMADO',
   goles_local: null,
   goles_visitante: null,

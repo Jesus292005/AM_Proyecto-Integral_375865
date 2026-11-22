@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
-import { type ReactNode, useState } from 'react';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { type ReactNode, useEffect, useState } from 'react';
 import { RefreshControl, SectionList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AvisoSinConexion, Esqueleto, EstadoPantalla, Texto } from '../componentes';
+import { AvisoSinConexion, ChipFiltro, Esqueleto, EstadoPantalla, Texto } from '../componentes';
 import { useTema } from '../tema';
 import { agruparPorDia, elegirJornada } from './agruparPorDia';
 import { esSinConexion } from '../datos/errores';
+import { prediccionAbierta } from '../partido/eleccion';
 import { obtenerMisPuntos } from '../puntos/datos';
 import { obtenerPartidosDeJornada, obtenerTorneoActual } from './datos';
 import { FilaPartido } from './FilaPartido';
@@ -16,6 +17,8 @@ import { EsqueletoTira, TiraJornadas } from './TiraJornadas';
 const mensajes = {
   // F02 B6.
   vacio: 'No hay partidos en esta jornada.',
+  // F23 R5.
+  sinPendientes: 'Ya predijiste todo lo que se puede en esta jornada.',
   // Mismos textos que F01 §10.
   sinConexion: 'Sin conexión. Revisa tu internet e inténtalo de nuevo.',
   error: 'No pudimos cargar los partidos. Inténtalo de nuevo.',
@@ -57,6 +60,11 @@ export function PantallaPartidos() {
   const { jornada } = useLocalSearchParams<'/partidos'>();
   const { colores, espacio, medidas } = useTema();
   const [refrescando, setRefrescando] = useState(false);
+  // "Sin predecir" (F23 R4): sigue al cambiar de jornada y se apaga al salir de la pestaña (no va
+  // en la ruta). Abrir un partido no sale de la pestaña: el filtro sigue al volver.
+  const [sinPredecir, setSinPredecir] = useState(false);
+  const navigation = useNavigation();
+  useEffect(() => navigation.getParent()?.addListener('blur', () => setSinPredecir(false)), [navigation]);
 
   const torneo = useQuery({ queryKey: ['torneo-actual'], queryFn: obtenerTorneoActual });
   const jornadas = torneo.data?.jornadas ?? [];
@@ -105,7 +113,21 @@ export function PantallaPartidos() {
     estado = error(partidos.error, partidos.refetch);
   } else if (partidos.data.length === 0) estado = <EstadoPantalla mensaje={mensajes.vacio} />;
 
-  const dias = estado === null && partidos.data ? agruparPorDia(partidos.data) : [];
+  // Por jugar, abiertos y sin mi predicción, sobre lo ya cargado (F23 R4, R6).
+  const ahora = new Date();
+  const visibles = sinPredecir
+    ? (partidos.data ?? []).filter((p) => !p.predicho && prediccionAbierta(p, ahora))
+    : (partidos.data ?? []);
+  if (estado === null && visibles.length === 0) {
+    estado = (
+      <EstadoPantalla
+        mensaje={mensajes.sinPendientes}
+        accion={{ titulo: 'Ver todos', onPress: () => setSinPredecir(false) }}
+      />
+    );
+  }
+
+  const dias = estado === null ? agruparPorDia(visibles) : [];
 
   // Error al actualizar con datos ya cargados: se siguen mostrando, con aviso (B6).
   const fallida = [partidos, torneo].find((consulta) => consulta.isRefetchError);
@@ -129,13 +151,20 @@ export function PantallaPartidos() {
               borderBottomColor: colores.linea,
             }}
           >
-            <View style={{ gap: espacio.xxs }}>
-              <Texto variante="titulo2" numberOfLines={1} accessibilityRole="header">
-                {elegida.nombre}
-              </Texto>
-              <Texto variante="meta" color="textoTenue" numberOfLines={1}>
-                {torneo.data.nombre}
-              </Texto>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
+              <View style={{ flex: 1, gap: espacio.xxs }}>
+                <Texto variante="titulo2" numberOfLines={1} accessibilityRole="header">
+                  {elegida.nombre}
+                </Texto>
+                <Texto variante="meta" color="textoTenue" numberOfLines={1}>
+                  {torneo.data.nombre}
+                </Texto>
+              </View>
+              <ChipFiltro
+                etiqueta="Sin predecir"
+                activo={sinPredecir}
+                onPress={() => setSinPredecir((activo) => !activo)}
+              />
             </View>
             <TiraJornadas
               jornadas={jornadas}

@@ -2,6 +2,7 @@ export { AvisoSinConexion } from './AvisoSinConexion';
 export { Boton } from './Boton';
 export { BotonIcono } from './BotonIcono';
 export { CampoTexto } from './CampoTexto';
+export { ChipFiltro } from './ChipFiltro';
 export { EncabezadoPantalla } from './EncabezadoPantalla';
 export { EncabezadoPartido, type EstadoEncabezado } from './EncabezadoPartido';
 export { EscudoEquipo, type EquipoConEscudo } from './EscudoEquipo';
