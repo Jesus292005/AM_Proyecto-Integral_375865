@@ -1173,6 +1173,7 @@ export type Database = {
         Args: { codigo: string }
         Returns: string
       }
+      otorgar_insignias: { Args: never; Returns: number }
       partidos_pendientes_de_final: {
         Args: { ahora: string }
         Returns: {
