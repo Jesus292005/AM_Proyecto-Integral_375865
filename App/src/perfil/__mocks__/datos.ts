@@ -1,6 +1,6 @@
 // Se activa con `jest.mock('<ruta>/perfil/datos')`. Por defecto la cuenta es de usuario normal, sin
 // foto ni equipo favorito, con los recordatorios activos y sin racha.
-import type { EquipoFavorito, MiPerfil, MiRacha, Rol } from '../datos';
+import type { EquipoFavorito, MiCarta, MiPerfil, MiRacha, Rol } from '../datos';
 
 export const obtenerMiRol = jest.fn(async (): Promise<Rol> => 'USUARIO');
 export const obtenerRecordatoriosActivos = jest.fn(async () => true);
@@ -38,3 +38,16 @@ export class ErrorNombreInvalido extends Error {
   }
 }
 export const cambiarMiNombre = jest.fn(async (nombre: string) => nombre.trim());
+
+export const cartaDePrueba = (cambios: Partial<MiCarta> = {}): MiCarta => ({
+  calificadas: 0,
+  precision: null,
+  punteria: null,
+  analisis: null,
+  constancia: null,
+  media: null,
+  nivel: null,
+  incluye_simulados: false,
+  ...cambios,
+});
+export const obtenerMiCarta = jest.fn(async (): Promise<MiCarta> => cartaDePrueba());

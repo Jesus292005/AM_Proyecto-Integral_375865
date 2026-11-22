@@ -1,3 +1,3 @@
 export { ProveedorTema, useTema } from './ProveedorTema';
 export { useFuentesApp } from './fuentes';
-export type { NombreColor, Tema, VarianteTexto } from './tokens';
+export type { Metal, MetalesTema, NombreColor, Tema, VarianteTexto } from './tokens';

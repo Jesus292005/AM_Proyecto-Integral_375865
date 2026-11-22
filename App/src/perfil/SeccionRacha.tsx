@@ -1,12 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef } from 'react';
 import { View } from 'react-native';
 
 import { Boton, Esqueleto, Seccion, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { useTema } from '../tema';
 import { obtenerMiRacha } from './datos';
+import { useReleerAlVolver } from './useReleerAlVolver';
 
 const mensajes = {
   explicacion: 'Cuenta tus predicciones con puntos, una tras otra. Un partido sin predecir no la rompe.',
@@ -42,18 +41,8 @@ export function SeccionRacha() {
   const { espacio } = useTema();
   const racha = useQuery({ queryKey: ['mi-racha'], queryFn: obtenerMiRacha });
 
-  // La primera vez la pide `useQuery` al montarse; al volver a la pestaña, se pide de nuevo.
-  const { refetch } = racha;
-  const primeraVez = useRef(true);
-  useFocusEffect(
-    useCallback(() => {
-      if (primeraVez.current) {
-        primeraVez.current = false;
-        return;
-      }
-      void refetch();
-    }, [refetch]),
-  );
+  // Al volver a la pestaña, se pide de nuevo.
+  useReleerAlVolver(racha.refetch);
 
   let contenido;
   if (racha.data !== undefined) {

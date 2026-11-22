@@ -149,3 +149,34 @@ export async function cambiarMiNombre(nombre: string): Promise<string> {
   }
   return data.nombre;
 }
+
+// ---------------------------------------------------------------------------
+// Carta de jugador (F20 R5)
+// ---------------------------------------------------------------------------
+
+const esquemaNivel = z.enum(['BRONCE', 'PLATA', 'ORO']);
+export type Nivel = z.infer<typeof esquemaNivel>;
+
+const atributo = z.number().int().nullable();
+const esquemaCarta = z.object({
+  calificadas: z.number().int(),
+  precision: atributo,
+  punteria: atributo,
+  analisis: atributo,
+  constancia: atributo,
+  media: atributo,
+  nivel: esquemaNivel.nullable(),
+  incluye_simulados: z.boolean(),
+});
+
+export type MiCarta = z.infer<typeof esquemaCarta>;
+
+/** Mi carta: atributos, media y nivel calculados por el servidor (F20 R1–R5, D52). */
+export async function obtenerMiCarta(): Promise<MiCarta> {
+  const { data, error, status } = await supabase
+    .from('mi_carta')
+    .select('calificadas, precision, punteria, analisis, constancia, media, nivel, incluye_simulados')
+    .single();
+  if (error) throw comoErrorDatos(error, status);
+  return validar(esquemaCarta, data, 'Carta');
+}

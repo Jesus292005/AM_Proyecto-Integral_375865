@@ -5,7 +5,10 @@ import { useTema, type NombreColor, type VarianteTexto } from '../tema';
 interface Props extends Omit<TextProps, 'style' | 'maxFontSizeMultiplier'> {
   variante: VarianteTexto;
   color?: NombreColor;
-  /** Color que viene de los datos y no de los tokens: solo colores de equipo (05-ui §2, D70). */
+  /**
+   * Color que viene de los datos o de un metal y no de la paleta: colores de equipo (05-ui §2, D70)
+   * y el texto sobre el degradado de un metal (carta e insignias, U6).
+   */
   colorDato?: string;
   alineacion?: 'left' | 'center' | 'right';
 }

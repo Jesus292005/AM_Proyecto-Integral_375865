@@ -17,6 +17,7 @@ import { esSinConexion } from '../datos/errores';
 import { BotonCerrarSesion } from '../sesion/BotonCerrarSesion';
 import { useTema } from '../tema';
 import { AjusteRecordatorios } from './AjusteRecordatorios';
+import { SeccionCarta } from './SeccionCarta';
 import { SeccionRacha } from './SeccionRacha';
 import { useMiPerfil } from './useMiPerfil';
 
@@ -144,6 +145,7 @@ export function PantallaPerfil() {
           Perfil
         </Texto>
         <EncabezadoPerfil />
+        <SeccionCarta />
         <SeccionRacha />
         <Seccion etiqueta="Ajustes">
           <View>

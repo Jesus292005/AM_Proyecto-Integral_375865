@@ -43,15 +43,16 @@ describe('S09 Perfil (F28)', () => {
     await abrir();
 
     expect((await screen.findAllByText('Chucho'))[0]).toBeOnTheScreen();
-    expect(screen.getByTestId('foto-usuario-inicial')).toBeOnTheScreen();
+    expect(screen.getAllByTestId('foto-usuario-inicial')[0]).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'Elige tu equipo' })).toBeOnTheScreen();
 
-    // Orden de R2: encabezado · Racha · Ajustes (con el nombre como valor de "Nombre") · Cerrar
-    // sesión. Carta y Vitrina llegan en L3.
+    // Orden de R2: encabezado · Tu carta (con el nombre en la carta) · Racha · Ajustes (con el
+    // nombre como valor de "Nombre") · Cerrar sesión. La Vitrina llega en T101.
+    await screen.findByTestId('carta-bloqueada');
     const textos = screen
-      .getAllByText(/^(Chucho|Racha|Ajustes|Cerrar sesión)$/)
+      .getAllByText(/^(Chucho|Tu carta|Racha|Ajustes|Cerrar sesión)$/)
       .map((t) => t.props.children);
-    expect(textos).toEqual(['Chucho', 'Racha', 'Ajustes', 'Chucho', 'Cerrar sesión']);
+    expect(textos).toEqual(['Chucho', 'Tu carta', 'Chucho', 'Racha', 'Ajustes', 'Chucho', 'Cerrar sesión']);
     expect(screen.queryByRole('button', { name: 'Simulación' })).not.toBeOnTheScreen();
   });
 
@@ -65,7 +66,7 @@ describe('S09 Perfil (F28)', () => {
     );
     await abrir();
 
-    expect(await screen.findByTestId('foto-usuario')).toBeOnTheScreen();
+    expect((await screen.findAllByTestId('foto-usuario'))[0]).toBeOnTheScreen();
     expect(screen.getAllByText('Chivas').length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: 'Elige tu equipo' })).not.toBeOnTheScreen();
     expect(boton('Equipo favorito: Chivas')).toBeOnTheScreen();
@@ -93,11 +94,12 @@ describe('S09 Perfil (F28)', () => {
     perfilFalso.mockRejectedValueOnce(new ErrorDatos('Network request failed', true));
     await abrir();
 
+    // El encabezado y la carta (que usa el perfil) muestran el error, cada uno con su reintento.
     expect(
-      await screen.findByText('Sin conexión. Revisa tu internet e inténtalo de nuevo.'),
+      (await screen.findAllByText('Sin conexión. Revisa tu internet e inténtalo de nuevo.'))[0],
     ).toBeOnTheScreen();
     expect(screen.getByText('Racha')).toBeOnTheScreen();
-    await fireEvent.press(boton('Reintentar'));
+    await fireEvent.press(screen.getAllByRole('button', { name: 'Reintentar' })[0]!);
 
     expect((await screen.findAllByText('Chucho'))[0]).toBeOnTheScreen();
   });

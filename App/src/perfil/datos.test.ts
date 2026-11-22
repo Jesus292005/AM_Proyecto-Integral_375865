@@ -4,6 +4,7 @@ import {
   ErrorNombreInvalido,
   guardarEquipoFavorito,
   obtenerEquiposTorneoActual,
+  obtenerMiCarta,
   obtenerMiPerfil,
   obtenerMiRacha,
   obtenerMiRol,
@@ -130,5 +131,35 @@ describe('perfil, equipo y nombre (F28, F18)', () => {
 
     expect(await cambiarMiNombre('  Chucho   10 ')).toBe('Chucho 10');
     expect(llamadas).toContainEqual(['update', { nombre: '  Chucho   10 ' }]);
+  });
+});
+
+describe('mi carta (F20 R5)', () => {
+  function respuesta(data: unknown) {
+    const cadena = { select: () => cadena, single: async () => ({ data, error: null, status: 200 }) };
+    return cadena;
+  }
+  const fila = {
+    calificadas: 6,
+    precision: 89,
+    punteria: 67,
+    analisis: null,
+    constancia: 64,
+    media: 73,
+    nivel: 'PLATA',
+    incluye_simulados: false,
+  };
+
+  it('F20 CA3: lee la fila de mi_carta', async () => {
+    desde.mockReturnValue(respuesta(fila));
+
+    expect(await obtenerMiCarta()).toEqual(fila);
+    expect(desde).toHaveBeenCalledWith('mi_carta');
+  });
+
+  it('un nivel desconocido es un error, no un dato (D54)', async () => {
+    desde.mockReturnValue(respuesta({ ...fila, nivel: 'DIAMANTE' }));
+
+    await expect(obtenerMiCarta()).rejects.toThrow('forma inválida');
   });
 });
