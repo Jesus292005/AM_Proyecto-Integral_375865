@@ -72,7 +72,8 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000a", "role": "authenticated"}';
 
 select results_eq(
-  $$ select p.proveedor_id from public.mis_pendientes m join public.partido p on p.id = m.id $$,
+  $$ select p.proveedor_id from public.mis_pendientes m join public.partido p on p.id = m.id
+     order by m.cierre_predicciones, m.id $$,
   $$ values (9701), (9706), (9705) $$,
   'F17 CA1: abiertos sin mi predicción de la jornada actual y la siguiente, ordenados por cierre'
 );
@@ -109,7 +110,8 @@ select is(
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000b", "role": "authenticated"}';
 
 select results_eq(
-  $$ select p.proveedor_id from public.mis_pendientes m join public.partido p on p.id = m.id $$,
+  $$ select p.proveedor_id from public.mis_pendientes m join public.partido p on p.id = m.id
+     order by m.cierre_predicciones, m.id $$,
   $$ values (9702), (9701), (9706), (9705) $$,
   'F17 CA1: cada usuario ve sus propios pendientes'
 );
