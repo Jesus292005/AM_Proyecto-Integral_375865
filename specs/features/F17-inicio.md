@@ -1,5 +1,5 @@
 # F17 — Inicio (v2)
-> **Estado:** ✅ Aprobada v2.0 (2026-11-22, D111) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Should, D39, D104) · **Módulo:** M7 Inicio · **Depende de:** F02, F03, F05, F06, F07, F08, F18, F23, F25 · **Pantallas:** S11 · **Decisiones:** D10, D35, D39, D52, D76, D78, D86, D103, D104, R04, R09
+> **Estado:** ✅ **Terminada** (2026-11-22, D112: cumple CA1–CA9 y Jesús la aprobó en su teléfono) · spec aprobada v2.0 (2026-11-22, D111) · **Prioridad:** Must del rediseño (antes Should, D39, D104) · **Módulo:** M7 Inicio · **Depende de:** F02, F03, F05, F06, F07, F08, F18, F23, F25 · **Pantallas:** S11 · **Decisiones:** D10, D35, D39, D52, D76, D78, D86, D103, D104, R04, R09
 
 ## Decisiones (D111: opción A en las 4)
 | # | Pregunta | A (recomendada) | B | Consecuencia |
