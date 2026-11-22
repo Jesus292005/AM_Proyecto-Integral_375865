@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -7,6 +6,7 @@ import { ChipReaccion, FotoUsuario, Icono, Texto, type NombreIcono } from '../co
 import { abrirPerfil, textoPartido } from '../inicio/TarjetaAnalisis';
 import { datosDePrediccion } from '../partido/presentacion';
 import { useTema } from '../tema';
+import { abrirPartidoDelGrupo } from './navegacion';
 import { reaccionar, TIPOS_REACCION, type AnalisisDelMuro, type PartidoDelMuro, type TipoReaccion } from './datos';
 import { mensajesGrupo } from './errores';
 
@@ -192,9 +192,7 @@ export function MuroJornada({ grupoId, jornadaId, analisis }: Props) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${textoEncabezado(partido)}. Ver el partido`}
-            onPress={() =>
-              router.navigate({ pathname: '/partido/[partidoId]', params: { partidoId: String(partido.id) } })
-            }
+            onPress={() => abrirPartidoDelGrupo(grupoId, partido.id)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.xxs, minHeight: medidas.areaTactil }}
           >
             <View style={{ flex: 1 }}>

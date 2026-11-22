@@ -37,7 +37,7 @@ Inicio de sesión (S01)
 
 **Total: 15 pantallas** (5 modales, 1 solo administrador, 1 que reutiliza el diseño de Perfil).
 
-**Menú inferior (D76):** las pantallas que cuelgan de una pestaña (S03, S08, S13, S10) se abren **con el menú visible**, dentro de la pestaña desde la que se llegó (abrir un partido desde Inicio se queda en Inicio). Inicio de sesión (S01), los modales (S12, S14, S05, S06, S15) y la cámara (S07) **tapan el menú**. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar a otra. Una entrada externa (§4) abre el detalle en la pestaña Inicio.
+**Menú inferior (D76):** las pantallas que cuelgan de una pestaña (S03, S08, S13, S10) se abren **con el menú visible**, dentro de la pestaña desde la que se llegó (abrir un partido desde Inicio se queda en Inicio; desde un grupo, en Grupos, D115). Inicio de sesión (S01), los modales (S12, S14, S05, S06, S15) y la cámara (S07) **tapan el menú**. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar a otra. Una entrada externa (§4) abre el detalle en la pestaña Inicio.
 
 ## 2. Pantallas
 
@@ -73,6 +73,7 @@ Inicio de sesión (S01)
 | `/nombre` | S14 | — | S09 | Atrás |
 | `/partidos` | S02 | `jornada?` (por defecto la actual) | Pestaña, S11 | S03 |
 | `/partido/:partidoId` | S03 | `partidoId` | S02, S11, notificación | Atrás |
+| `/grupo/:grupoId/partido/:partidoId` | S03 | `grupoId`, `partidoId` | S08 (muro y figura de la jornada, D115) | Atrás (S08) |
 | `/grupos` | S04 | — | Pestaña, S11 | S05, S06, S08 |
 | `/grupos/nuevo` | S05 | — | S04, S11 | S08 (al crear) |
 | `/grupos/unirse` | S06 | `codigo?` | S04, S11, S07 | S07, S08 (al unirse) |

@@ -6,7 +6,7 @@ import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 
 import { clienteConsultas } from './datos/clienteConsultas';
-import { crearGrupo, obtenerGrupo, obtenerMisGrupos } from './grupos/datos';
+import { crearGrupo, obtenerGrupo, obtenerMisGrupos, obtenerMuro } from './grupos/datos';
 import { pendienteDePrueba } from './inicio/__mocks__/datos';
 import { obtenerPendientes } from './inicio/datos';
 import { obtenerPartido } from './partido/datos';
@@ -249,6 +249,78 @@ describe('menú inferior', () => {
     await tocar('Partidos', 'tab');
     expect(await abrioS03()).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Partidos' })).toBeSelected();
+  });
+
+  it('F26 R12, D76: el partido abierto desde el muro de un grupo se queda en Grupos y "atrás" vuelve al grupo', async () => {
+    (obtenerMuro as jest.MockedFunction<typeof obtenerMuro>).mockResolvedValueOnce([
+      {
+        prediccionId: 5,
+        partido: {
+          id: 1,
+          inicio: '2024-07-13T20:00:00Z',
+          estado: 'TERMINADO',
+          goles_local: 1,
+          goles_visitante: 0,
+          local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png', color_primario: null, color_texto: null },
+          visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png', color_primario: null, color_texto: null },
+        },
+        autor: { usuario_id: 'b', nombre: 'Beto', foto_url: null, es_yo: false },
+        prediccion: { resultado: 'LOCAL', rango_goles: null, marcador_local: null, marcador_visitante: null },
+        justificacion: 'Puebla en casa.',
+        evaluacion: { estado: 'PENDIENTE', puntos_bono: null, explicacion: null },
+        esSimulada: false,
+        reacciones: { BIEN_VISTO: 0, BUEN_ANALISIS: 0, LA_CLAVO: 0, ME_RIO: 0 },
+        miReaccion: null,
+      },
+    ]);
+    await abrir('/grupos');
+    await fireEvent.press(await screen.findByRole('button', { name: new RegExp(`^${GRUPO}, `) }));
+    await tocar('Jornada', 'tab');
+
+    await tocar('Puebla 1 - 0 Santos. Ver el partido');
+    expect(await abrioS03()).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Grupos' })).toBeSelected();
+
+    await tocar('Volver');
+    await seCerroS03();
+    expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Grupos' })).toBeSelected();
+  });
+
+  it('F26 R12, D76: desde Inicio (Mis grupos → S08 → partido) se queda en Inicio y "atrás" vuelve al grupo', async () => {
+    (obtenerMuro as jest.MockedFunction<typeof obtenerMuro>).mockResolvedValueOnce([
+      {
+        prediccionId: 5,
+        partido: {
+          id: 1,
+          inicio: '2024-07-13T20:00:00Z',
+          estado: 'TERMINADO',
+          goles_local: 1,
+          goles_visitante: 0,
+          local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png', color_primario: null, color_texto: null },
+          visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png', color_primario: null, color_texto: null },
+        },
+        autor: { usuario_id: 'b', nombre: 'Beto', foto_url: null, es_yo: false },
+        prediccion: { resultado: 'LOCAL', rango_goles: null, marcador_local: null, marcador_visitante: null },
+        justificacion: 'Puebla en casa.',
+        evaluacion: { estado: 'PENDIENTE', puntos_bono: null, explicacion: null },
+        esSimulada: false,
+        reacciones: { BIEN_VISTO: 0, BUEN_ANALISIS: 0, LA_CLAVO: 0, ME_RIO: 0 },
+        miReaccion: null,
+      },
+    ]);
+    await abrir('/inicio');
+    await fireEvent.press(await screen.findByRole('button', { name: new RegExp(`^${GRUPO}, 2 miembros`) }));
+    await tocar('Jornada', 'tab');
+
+    await tocar('Puebla 1 - 0 Santos. Ver el partido');
+    expect(await abrioS03()).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
+
+    await tocar('Volver');
+    await seCerroS03();
+    expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
   });
 
   it('tocar varias veces el mismo enlace no apila la pantalla (D78)', async () => {
