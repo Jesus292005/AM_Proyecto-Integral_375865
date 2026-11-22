@@ -1,5 +1,5 @@
 # F19 — Perfil de otro usuario
-> **Estado:** spec aprobada v1.0 (2026-11-22, D113) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Should, D39, D104) · **Módulo:** M8 Grupos sociales · **Depende de:** F07, F13, F14, F18, F20, F26, F28 · **Pantallas:** S13 · **Decisiones:** D35, D38, D45, D52, D76, D78, D101, D104, D108, R04
+> **Estado:** ✅ **Terminada** (2026-11-23, D116: cumple CA1–CA7 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-22, D113) · **Prioridad:** Must del rediseño (antes Should, D39, D104) · **Módulo:** M8 Grupos sociales · **Depende de:** F07, F13, F14, F18, F20, F26, F28 · **Pantallas:** S13 · **Decisiones:** D35, D38, D45, D52, D76, D78, D101, D104, D108, R04
 
 ## Decisiones (D113: opción A en todas)
 | # | Pregunta | A (recomendada) | B | Consecuencia |
