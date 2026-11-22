@@ -1535,6 +1535,36 @@ export type Database = {
           usuario_id: string
         }[]
       }
+      figura_jornada: {
+        Args: { id_grupo: number; id_jornada: number }
+        Returns: {
+          bono_analisis: number
+          en_curso: boolean
+          es_yo: boolean
+          explicacion: string
+          foto_url: string
+          goles_local: number
+          goles_visitante: number
+          incluye_simulados: boolean
+          jornada_nombre: string
+          justificacion: string
+          lideres: number
+          local_color_primario: string
+          local_color_texto: string
+          local_escudo_url: string
+          local_nombre_corto: string
+          nombre: string
+          partido_id: number
+          puntos_base: number
+          puntos_bono: number
+          puntos_total: number
+          usuario_id: string
+          visitante_color_primario: string
+          visitante_color_texto: string
+          visitante_escudo_url: string
+          visitante_nombre_corto: string
+        }[]
+      }
       generar_codigo_invitacion: { Args: never; Returns: string }
       guardar_carga_inicial: { Args: { carga: Json }; Returns: Json }
       guardar_datos_partido: { Args: { datos: Json }; Returns: Json }

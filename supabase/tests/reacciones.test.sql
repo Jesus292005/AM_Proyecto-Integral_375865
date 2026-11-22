@@ -1,5 +1,5 @@
 -- T118 — Reacciones: tabla `reaccion`, `reaccionar` y conteos en `muro_jornada` (F26 R13, R18, R19,
--- CA5; D113). Todo se deshace al final.
+-- CA5; D113, D114). Todo se deshace al final.
 --
 -- Grupo G = A, B, C y E · grupo H = A, B y D. Torneo actual con J1: 9961 terminado y calificado,
 -- 9962 abierto. Predicciones: A, B y C en 9961 con justificación; D en 9961 sin justificación;
@@ -158,9 +158,9 @@ select results_eq(
 -- Errores
 -- ---------------------------------------------------------------------------
 
-select throws_ok(
+select lives_ok(
   $$ select public.reaccionar((select id from ids where nombre = 'g'), (select id from ids where nombre = 'a9961'), 'BIEN_VISTO') $$,
-  'P0001', 'PROPIO', 'F26 CA5: no se reacciona a lo propio'
+  'F26 CA5 (v1.1, D114): también se reacciona a lo propio'
 );
 select throws_ok(
   $$ select public.reaccionar((select id from ids where nombre = 'g'), (select id from ids where nombre = 'b9962'), 'BIEN_VISTO') $$,
