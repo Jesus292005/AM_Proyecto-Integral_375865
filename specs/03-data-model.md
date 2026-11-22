@@ -1,6 +1,6 @@
 # 03 — Modelo de datos (conceptual)
 
-> **Estado:** ✅ Aprobado v1.8 (2026-11-21; colores de `Equipo` en el servidor, F22 R4, D106) · v1.7 (2026-11-07; límites y código de `Grupo`, F07, D97) · v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
+> **Estado:** ✅ Aprobado v1.9 (2026-11-21; `Usuario.nombreEditado`, `Insignia.nivel` e `InsigniaObtenida.vistaEn`, M6, D108) · v1.8 (2026-11-21; colores de `Equipo` en el servidor, F22 R4, D106) · v1.7 (2026-11-07; límites y código de `Grupo`, F07, D97) · v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
 > **Última actualización:** 2026-11-21
 > Base: [`01-mvp.md`](./01-mvp.md), [`02-navigation.md`](./02-navigation.md), [`decisions.md`](./decisions.md).
 > Este documento describe **qué datos existen y cómo se relacionan**. No decide dónde viven (base de datos, tablas, colecciones): eso es la fase de Diseño.
@@ -66,7 +66,8 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 
 ### Usuarios y grupos
 
-**Usuario** — `id`, `googleId`, `nombre`, `correo`, `fotoUrl?`, `equipoFavoritoId?` (F18), `rol` (`USUARIO` | `ADMIN`), `recordatoriosActivos` (F11), `creadoEn`.
+**Usuario** — `id`, `googleId`, `nombre`, `nombreEditado` (F28), `correo`, `fotoUrl?`, `equipoFavoritoId?` (F18), `rol` (`USUARIO` | `ADMIN`), `recordatoriosActivos` (F11), `creadoEn`.
+> `nombre` llega de Google; si el usuario lo cambia (3–20 caracteres, F28 R4), `nombreEditado` pasa a verdadero y Google ya no lo sobrescribe (D108).
 
 **Dispositivo** (F11) — `usuarioId`, `tokenNotificaciones`, `actualizadoEn`. Un usuario puede tener varios.
 

@@ -4,7 +4,7 @@
 -- aquí se simula con inserciones directas. Todo se deshace al final.
 begin;
 
-select plan(21);
+select plan(22);
 
 -- ---------------------------------------------------------------------------
 -- CA1: el primer inicio de sesión crea el usuario
@@ -110,15 +110,23 @@ select is(
 );
 
 -- ---------------------------------------------------------------------------
--- Q1: nombre y foto se actualizan desde Google en cada inicio de sesión
+-- Q1: nombre y foto se actualizan desde Google en cada inicio de sesión. Desde D109 se copian de
+-- la identidad de Google (`auth.identities`), que Supabase actualiza al iniciar sesión.
 -- ---------------------------------------------------------------------------
 
-update auth.users
-set
-  email = 'carlos.nuevo@example.com',
-  raw_user_meta_data =
-    '{"provider_id": "google-c1", "full_name": "Carlos P.", "avatar_url": "https://example.com/c1-nueva.png"}'
+insert into auth.identities (provider_id, user_id, identity_data, provider)
+values
+  ('google-c1', '00000000-0000-0000-0000-0000000000c1',
+   '{"sub": "google-c1", "full_name": "Carlos Pérez", "avatar_url": "https://example.com/c1.png"}', 'google'),
+  ('google-c2', '00000000-0000-0000-0000-0000000000c2',
+   '{"sub": "google-c2", "name": "Diana", "picture": "https://example.com/c2.png"}', 'google');
+
+update auth.users set email = 'carlos.nuevo@example.com'
 where id = '00000000-0000-0000-0000-0000000000c1';
+update auth.identities
+set identity_data =
+  '{"sub": "google-c1", "full_name": "Carlos P.", "avatar_url": "https://example.com/c1-nueva.png"}'
+where user_id = '00000000-0000-0000-0000-0000000000c1';
 
 select results_eq(
   $$ select nombre, foto_url from public.usuario where id = '00000000-0000-0000-0000-0000000000c1' $$,
@@ -132,9 +140,9 @@ select is(
 );
 
 -- Si Google deja de mandar el nombre se conserva el anterior; la foto sigue lo que mande Google.
-update auth.users
-set raw_user_meta_data = '{"provider_id": "google-c1"}'
-where id = '00000000-0000-0000-0000-0000000000c1';
+update auth.identities
+set identity_data = '{"sub": "google-c1"}'
+where user_id = '00000000-0000-0000-0000-0000000000c1';
 
 select results_eq(
   $$ select nombre, foto_url from public.usuario where id = '00000000-0000-0000-0000-0000000000c1' $$,
@@ -155,15 +163,27 @@ select is(
 -- Los cambios del usuario (F11, F18) sobreviven a un nuevo inicio de sesión.
 update public.usuario set recordatorios_activos = false
 where id = '00000000-0000-0000-0000-0000000000c2';
-update auth.users
-set raw_user_meta_data = '{"sub": "google-c2", "name": "Diana R."}'
-where id = '00000000-0000-0000-0000-0000000000c2';
+update auth.identities
+set identity_data = '{"sub": "google-c2", "name": "Diana R."}'
+where user_id = '00000000-0000-0000-0000-0000000000c2';
 
 select results_eq(
   $$ select nombre, recordatorios_activos, rol::text from public.usuario
      where id = '00000000-0000-0000-0000-0000000000c2' $$,
   $$ values ('Diana R.', false, 'USUARIO') $$,
   'Un nuevo inicio de sesión no toca recordatorios ni rol'
+);
+
+-- D109: los metadatos que el propio usuario puede escribir (`auth.updateUser`) ya no se copian.
+update auth.users
+set raw_user_meta_data = '{"sub": "google-c2", "full_name": "<script>!!!", "avatar_url": "https://malo.example.com/x.png"}'
+where id = '00000000-0000-0000-0000-0000000000c2';
+
+select results_eq(
+  $$ select nombre, foto_url from public.usuario where id = '00000000-0000-0000-0000-0000000000c2' $$,
+  -- La foto quedó vacía en el inicio de sesión anterior (Google no la mandó); la mala no entra.
+  $$ values ('Diana R.', null::text) $$,
+  'F28 R4, D109: cambiar los metadatos del usuario no cambia su nombre ni su foto'
 );
 
 -- ---------------------------------------------------------------------------

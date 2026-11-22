@@ -759,6 +759,7 @@ export type Database = {
           google_id: string
           id: string
           nombre: string
+          nombre_editado: boolean
           recordatorios_activos: boolean
           rol: Database["public"]["Enums"]["rol_usuario"]
         }
@@ -770,6 +771,7 @@ export type Database = {
           google_id: string
           id: string
           nombre: string
+          nombre_editado?: boolean
           recordatorios_activos?: boolean
           rol?: Database["public"]["Enums"]["rol_usuario"]
         }
@@ -781,6 +783,7 @@ export type Database = {
           google_id?: string
           id?: string
           nombre?: string
+          nombre_editado?: boolean
           recordatorios_activos?: boolean
           rol?: Database["public"]["Enums"]["rol_usuario"]
         }

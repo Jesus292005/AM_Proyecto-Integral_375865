@@ -83,11 +83,12 @@ select throws_ok(
   '42501', null,
   'V4: A no puede cambiar su correo'
 );
-select throws_ok(
-  $$ update public.usuario set nombre = 'Otro nombre'
+-- Desde T91 (F28 R6, D108) el nombre sí se puede escribir; lo valida un disparador
+-- (`nombre_editable.test.sql`). Aquí solo el permiso, con el mismo nombre para no cambiar nada.
+select lives_ok(
+  $$ update public.usuario set nombre = 'Usuario A'
      where id = '00000000-0000-0000-0000-00000000000a' $$,
-  '42501', null,
-  'V4: A no puede cambiar su nombre'
+  'F28 R6: A tiene permiso de escribir su nombre (D108)'
 );
 select throws_ok(
   $$ update public.usuario set foto_url = 'https://example.com/otra.png'

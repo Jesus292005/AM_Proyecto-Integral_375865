@@ -1,6 +1,6 @@
 # F01 — Inicio de sesión con Google y perfil básico
 
-> **Estado:** ✅ **Terminada** (2026-11-02, D87: cumple CA1–CA10 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-10-04, D55)
+> **Estado:** ✅ **Terminada** (2026-11-02, D87: cumple CA1–CA10 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-10-04, D55) · v1.1 (2026-11-21, T91: Q1 respeta el nombre editado y copia desde la identidad de Google, F28, D108, D109)
 > **Prioridad:** Must · **Semana:** S2 · **Depende de:** — · **Pantallas:** S01, S09 (parcial)
 > **Decisiones:** D11, D14, D50, D51, D53, D54
 
@@ -85,7 +85,7 @@ Otros métodos de inicio de sesión (correo, Apple), eliminar cuenta (ver Q3), e
 ## 14. Decisiones de esta spec (D55)
 | ID | Decisión |
 |---|---|
-| Q1 | Nombre y foto se actualizan desde Google en cada inicio de sesión. |
+| Q1 | Nombre y foto se actualizan desde Google en cada inicio de sesión. **Desde D108 (F28 R5):** si el usuario cambió su nombre, Google ya no lo sobrescribe; la foto sí se sigue actualizando. **Desde D109:** nombre y foto se copian de la identidad de Google (`auth.identities`), no de los metadatos que el usuario puede editar. |
 | Q2 | `recordatoriosActivos` inicia en `true`; solo tiene efecto si el usuario concede el permiso de notificaciones (F11). |
 | Q3 | Eliminar cuenta queda fuera del MVP; en el backlog como **obligatorio antes de publicar** (B18). |
 | Q4 | El rol `ADMIN` se asigna manualmente en la base de datos (cuenta de Jesús y de demo si se necesita). |
