@@ -31,6 +31,7 @@ import {
   type RangoGoles,
   type Resultado,
 } from './eleccion';
+import { vibrar } from './vibracion';
 
 const mensajes = {
   errorGuardar: 'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.',
@@ -96,10 +97,15 @@ export function FormularioPrediccion({
   const guardar = useMutation({
     mutationFn: (eleccion: EleccionPrediccion) => guardarPrediccion(partido.id, eleccion),
     onSuccess: (nueva) => {
+      vibrar('exito');
       alGuardarse(nueva);
       onTerminar(nueva);
     },
-    onError: alFallar(mensajes.errorGuardar),
+    onError: (error) => {
+      // F24 R6: también si el servidor ya cerró el partido (F03 CA8).
+      vibrar('error');
+      alFallar(mensajes.errorGuardar)(error);
+    },
   });
   const quitar = useMutation({
     mutationFn: () => quitarPrediccion(partido.id),

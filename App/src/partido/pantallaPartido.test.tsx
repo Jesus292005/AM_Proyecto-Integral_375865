@@ -3,6 +3,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
+import { NotificationFeedbackType, notificationAsync } from 'expo-haptics';
 import { Alert, type AlertButton, StyleSheet } from 'react-native';
 
 import { clienteConsultas } from '../datos/clienteConsultas';
@@ -26,6 +27,12 @@ jest.mock('../supabase/cliente');
 jest.mock('./datos');
 jest.mock('../grupos/datos');
 jest.mock('../puntos/datos');
+// F24 CA5: simulacro de `expo-haptics` para saber qué vibración se pidió.
+jest.mock('expo-haptics', () => ({
+  notificationAsync: jest.fn(async () => {}),
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+}));
+const vibracion = notificationAsync as jest.MockedFunction<typeof notificationAsync>;
 
 const puntosFalsos = obtenerMisPuntosDePartido as jest.MockedFunction<typeof obtenerMisPuntosDePartido>;
 
@@ -77,6 +84,7 @@ beforeEach(() => {
   }));
   quitarFalso.mockReset().mockResolvedValue();
   puntosFalsos.mockReset().mockResolvedValue(null);
+  vibracion.mockClear();
 });
 
 afterEach(() => {
@@ -290,6 +298,61 @@ describe('boleta (F24)', () => {
     const nueva = await screen.findByTestId('boleta-prediccion');
     expect(within(nueva).getByText('Empate')).toBeOnTheScreen();
     expect(screen.queryByRole('radio')).not.toBeOnTheScreen();
+  });
+});
+
+describe('boleta cerrada y vibración (F24)', () => {
+  it('F24 CA4: cerrado, la boleta no tiene "Editar"', async () => {
+    partidoFalso.mockImplementation(async () => partido({ estado: 'EN_JUEGO' }));
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL', justificacion: 'Juega en casa.' }));
+    await abrir();
+
+    expect(await screen.findByTestId('boleta-prediccion')).toBeOnTheScreen();
+    expect(screen.getByText('Gana América')).toBeOnTheScreen();
+    expect(screen.getByText('Predicciones cerradas')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Editar predicción' })).not.toBeOnTheScreen();
+  });
+
+  it('F24 CA4: si cierra durante la edición, descarta lo no guardado y muestra la boleta', async () => {
+    const cierre = new Date(Date.now() + 1500).toISOString();
+    partidoFalso.mockImplementation(async () => partido({ inicio: cierre, cierre_predicciones: cierre }));
+    prediccionFalsa.mockResolvedValue(guardada({ resultado: 'LOCAL' }));
+    await abrirEdicion();
+    await tocar(opcion('Empate'));
+
+    expect(
+      await screen.findByText('Se cerraron las predicciones.', {}, { timeout: 4000 }),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId('boleta-prediccion')).toBeOnTheScreen();
+    expect(screen.getByText('Gana América')).toBeOnTheScreen();
+    expect(screen.queryByRole('radio')).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Editar predicción' })).not.toBeOnTheScreen();
+    expect(guardarFalso).not.toHaveBeenCalled();
+  });
+
+  it('F24 CA5: al guardar pide la vibración de éxito', async () => {
+    await abrirFormulario();
+
+    await tocar(opcion('Empate'));
+    await tocar(boton('Guardar predicción'));
+
+    await screen.findByTestId('boleta-prediccion');
+    expect(vibracion).toHaveBeenCalledTimes(1);
+    expect(vibracion).toHaveBeenCalledWith(NotificationFeedbackType.Success);
+  });
+
+  it('F24 CA5: si falla el guardado pide la vibración de error', async () => {
+    guardarFalso.mockRejectedValue(new ErrorDatos('Network request failed', true));
+    await abrirFormulario();
+
+    await tocar(opcion('Empate'));
+    await tocar(boton('Guardar predicción'));
+
+    expect(
+      await screen.findByText('No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.'),
+    ).toBeOnTheScreen();
+    expect(vibracion).toHaveBeenCalledTimes(1);
+    expect(vibracion).toHaveBeenCalledWith(NotificationFeedbackType.Error);
   });
 });
 
