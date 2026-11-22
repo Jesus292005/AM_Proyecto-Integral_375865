@@ -5,11 +5,13 @@ import { useTema, type NombreColor, type VarianteTexto } from '../tema';
 interface Props extends Omit<TextProps, 'style' | 'maxFontSizeMultiplier'> {
   variante: VarianteTexto;
   color?: NombreColor;
+  /** Color que viene de los datos y no de los tokens: solo colores de equipo (05-ui §2, D70). */
+  colorDato?: string;
   alineacion?: 'left' | 'center' | 'right';
 }
 
 /** Única forma de mostrar texto (05-ui §5). No acepta `style`: todo sale de los tokens. */
-export function Texto({ variante, color = 'texto', alineacion, ...props }: Props) {
+export function Texto({ variante, color = 'texto', colorDato, alineacion, ...props }: Props) {
   const { colores, tipografia, medidas } = useTema();
   const t = tipografia[variante];
   // Con interlineado menor que el tamaño (titulo1, marcadorXL), Android recorta lo que sobresale
@@ -22,7 +24,7 @@ export function Texto({ variante, color = 'texto', alineacion, ...props }: Props
       {...props}
       maxFontSizeMultiplier={medidas.escalaTextoMaxima}
       style={{
-        color: colores[color],
+        color: colorDato ?? colores[color],
         fontFamily: t.fontFamily,
         fontSize: t.fontSize,
         lineHeight: t.lineHeight,

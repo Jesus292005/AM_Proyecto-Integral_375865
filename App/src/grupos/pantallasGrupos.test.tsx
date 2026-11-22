@@ -47,8 +47,8 @@ const partidoDeJornada: PartidoDeLista = {
   estado: 'PROGRAMADO',
   goles_local: null,
   goles_visitante: null,
-  local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png' },
-  visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png' },
+  local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png', color_primario: null, color_texto: null },
+  visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png', color_primario: null, color_texto: null },
   es_simulado: false,
   predicho: false,
 };
@@ -482,8 +482,8 @@ describe('S03, "En tus grupos" (F07 R7)', () => {
       es_simulado: false,
       goles_local: null,
       goles_visitante: null,
-      local: { nombre_corto: 'Puebla', color_primario: null },
-      visitante: { nombre_corto: 'Santos', color_primario: null },
+      local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png', color_primario: null, color_texto: null },
+      visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png', color_primario: null, color_texto: null },
     });
     await abrir('/partido/7');
 

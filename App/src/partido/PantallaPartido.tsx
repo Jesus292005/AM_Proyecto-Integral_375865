@@ -222,11 +222,8 @@ export function PantallaPartido() {
           </Texto>
         )}
         <EncabezadoPartido
-          local={{ nombre: datos.local.nombre_corto, color: datos.local.color_primario }}
-          visitante={{
-            nombre: datos.visitante.nombre_corto,
-            color: datos.visitante.color_primario,
-          }}
+          local={datos.local}
+          visitante={datos.visitante}
           estado={estadoEncabezado(datos, abierto, ahora)}
         />
         {aviso !== null && <Aviso mensaje={aviso} />}

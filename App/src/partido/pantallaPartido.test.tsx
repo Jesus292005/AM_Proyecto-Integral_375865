@@ -1,9 +1,9 @@
 // S03 (T34): formulario de predicción (F03 CA7, CA8), quitar, cierre y estados de pantalla.
 // Corre la app completa con una sesión guardada; las lecturas y escrituras se simulan.
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
-import { Alert, type AlertButton } from 'react-native';
+import { Alert, type AlertButton, StyleSheet } from 'react-native';
 
 import { clienteConsultas } from '../datos/clienteConsultas';
 import { ErrorDatos } from '../datos/errores';
@@ -18,6 +18,7 @@ import {
 } from './datos';
 import { guardarAhoraNo, leerAhoraNo, leerPermiso, pedirPermiso } from '../notificaciones/sistema';
 import { obtenerMisPuntosDePartido } from '../puntos/datos';
+import { temaGrafito } from '../tema/tokens';
 import type { Prediccion } from './eleccion';
 
 jest.mock('../supabase/cliente');
@@ -44,8 +45,8 @@ function partido(extra: Partial<PartidoDetalle> = {}): PartidoDetalle {
     es_simulado: false,
     goles_local: null,
     goles_visitante: null,
-    local: { nombre_corto: 'América', color_primario: '#FFD700' },
-    visitante: { nombre_corto: 'Chivas', color_primario: null },
+    local: { nombre_corto: 'América', escudo_url: 'https://x.mx/l.png', color_primario: '#FFD700', color_texto: '#0B2341' },
+    visitante: { nombre_corto: 'Chivas', escudo_url: 'https://x.mx/v.png', color_primario: null, color_texto: null },
     ...extra,
   };
 }
@@ -95,6 +96,36 @@ async function abrirFormulario() {
   await abrir();
   await screen.findByRole('header', { name: 'América contra Chivas' });
 }
+
+describe('encabezado (F22)', () => {
+  it('F22 CA4: escudo del local a la izquierda del nombre y del visitante a la derecha, con su franja', async () => {
+    await abrirFormulario();
+    const { colores } = temaGrafito;
+
+    // Posición dentro de la fila del escudo y del hijo que contiene al nombre.
+    const posiciones = (lado: 'local' | 'visitante', nombre: string) => {
+      const hijos = screen.getByTestId(`encabezado-${lado}`).children;
+      const posicion = (busca: (hijo: Exclude<(typeof hijos)[number], string>) => boolean) =>
+        hijos.findIndex((hijo) => typeof hijo !== 'string' && busca(hijo));
+      return {
+        escudo: posicion((hijo) => hijo.props.testID === 'escudo-imagen'),
+        nombre: posicion((hijo) => within(hijo).queryByText(nombre) !== null),
+      };
+    };
+    // Local: escudo a la izquierda del nombre; visitante: a la derecha (R5).
+    const local = posiciones('local', 'América');
+    const visitante = posiciones('visitante', 'Chivas');
+    expect(local.escudo).toBeGreaterThanOrEqual(0);
+    expect(local.escudo).toBeLessThan(local.nombre);
+    expect(visitante.nombre).toBeGreaterThanOrEqual(0);
+    expect(visitante.escudo).toBeGreaterThan(visitante.nombre);
+    const franja = (lado: string) =>
+      StyleSheet.flatten(screen.getByTestId(`franja-${lado}`).props.style).backgroundColor;
+    expect(franja('local')).toBe('#FFD700');
+    // Chivas en el simulacro no tiene colores: franja neutra (D70).
+    expect(franja('visitante')).toBe(colores.textoTenue);
+  });
+});
 
 describe('formulario (F03 CA7)', () => {
   it('F03 CA7: "Guardar" está deshabilitado sin una elección válida', async () => {

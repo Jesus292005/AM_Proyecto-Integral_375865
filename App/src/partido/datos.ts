@@ -20,7 +20,13 @@ function comoErrorEscritura(error: { message: string }, status: number): Error {
     : comoErrorDatos(error, status);
 }
 
-export type EquipoDeEncabezado = { nombre_corto: string; color_primario: string | null };
+// Escudo y colores del encabezado (F22 R3, R5).
+export type EquipoDeEncabezado = {
+  nombre_corto: string;
+  escudo_url: string;
+  color_primario: string | null;
+  color_texto: string | null;
+};
 
 export type PartidoDetalle = {
   id: number;
@@ -36,7 +42,7 @@ export type PartidoDetalle = {
 
 // Un solo literal: supabase-js deduce el tipo del resultado a partir de este texto.
 const COLUMNAS_PARTIDO =
-  'id, inicio, cierre_predicciones, estado, es_simulado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, color_primario), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, color_primario)';
+  'id, inicio, cierre_predicciones, estado, es_simulado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url, color_primario, color_texto), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url, color_primario, color_texto)';
 
 const COLUMNAS_PREDICCION =
   'resultado, rango_goles, marcador_local, marcador_visitante, justificacion, actualizada_en';

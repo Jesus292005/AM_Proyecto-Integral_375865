@@ -131,6 +131,8 @@ export const medidas = {
   altoBoton: 54,
   // Escudo de equipo en listas (S02).
   escudoLista: 28,
+  // Escudo en el encabezado del partido (S03; 05-ui v2.0 §4, F22 R3).
+  escudoEncabezado: 44,
   // Foto de usuario en listas (S08, S03 "En tus grupos").
   fotoLista: 28,
   // Lado del QR de invitación en S08, con su margen (F12 R2).

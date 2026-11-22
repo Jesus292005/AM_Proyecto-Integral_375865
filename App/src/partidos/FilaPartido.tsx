@@ -1,7 +1,6 @@
-import { Image } from 'expo-image';
 import { Pressable, View } from 'react-native';
 
-import { Texto } from '../componentes';
+import { EscudoEquipo, Texto } from '../componentes';
 import { formatearHora } from '../formato/fechas';
 import type { PuntosPrediccion } from '../puntos/datos';
 import { descripcionEnFila, estadoEnFila, PuntosEnFila } from '../puntos/PuntosEnFila';
@@ -18,7 +17,7 @@ export const textoEstado: Record<EstadoPartido, string> = {
 };
 
 function Equipo({ equipo, lado }: { equipo: EquipoDePartido; lado: 'local' | 'visitante' }) {
-  const { espacio, medidas } = useTema();
+  const { espacio } = useTema();
 
   return (
     <View
@@ -29,13 +28,8 @@ function Equipo({ equipo, lado }: { equipo: EquipoDePartido; lado: 'local' | 'vi
         gap: espacio.xs,
       }}
     >
-      {/* Desde la URL con caché en disco (B-R4); decorativo: la fila ya dice el nombre. */}
-      <Image
-        source={equipo.escudo_url}
-        contentFit="contain"
-        accessible={false}
-        style={{ width: medidas.escudoLista, height: medidas.escudoLista }}
-      />
+      {/* Con caché en disco (B-R4) y respaldo con la inicial (F22 R3). */}
+      <EscudoEquipo equipo={equipo} tamano="escudoLista" />
       <Texto
         variante="cuerpoFuerte"
         numberOfLines={1}

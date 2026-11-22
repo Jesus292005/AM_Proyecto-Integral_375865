@@ -11,8 +11,8 @@ function partido(id: number, inicio: string): PartidoDeLista {
     estado: 'PROGRAMADO',
     goles_local: null,
     goles_visitante: null,
-    local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png' },
-    visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png' },
+    local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png', color_primario: null, color_texto: null },
+    visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png', color_primario: null, color_texto: null },
     es_simulado: false,
     predicho: false,
   };

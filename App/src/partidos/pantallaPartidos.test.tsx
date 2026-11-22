@@ -41,6 +41,15 @@ const apertura: TorneoActual = {
   ordenActual: 2,
 };
 
+function equipoDeLista(nombre: string) {
+  return {
+    nombre_corto: nombre,
+    escudo_url: `https://x.mx/${nombre}.png`,
+    color_primario: null,
+    color_texto: null,
+  };
+}
+
 function partido(
   id: number,
   inicio: string,
@@ -54,8 +63,8 @@ function partido(
     estado: 'PROGRAMADO',
     goles_local: null,
     goles_visitante: null,
-    local: { nombre_corto: local, escudo_url: `https://x.mx/${local}.png` },
-    visitante: { nombre_corto: visitante, escudo_url: `https://x.mx/${visitante}.png` },
+    local: equipoDeLista(local),
+    visitante: equipoDeLista(visitante),
     es_simulado: false,
     predicho: false,
     ...extra,

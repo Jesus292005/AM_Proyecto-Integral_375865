@@ -4,6 +4,7 @@ export { BotonIcono } from './BotonIcono';
 export { CampoTexto } from './CampoTexto';
 export { EncabezadoPantalla } from './EncabezadoPantalla';
 export { EncabezadoPartido, type EstadoEncabezado } from './EncabezadoPartido';
+export { EscudoEquipo, type EquipoConEscudo } from './EscudoEquipo';
 export { Esqueleto } from './Esqueleto';
 export { EstadoPantalla } from './EstadoPantalla';
 export { Icono, type NombreIcono } from './Icono';

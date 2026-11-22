@@ -41,7 +41,13 @@ export async function obtenerTorneoActual(): Promise<TorneoActual | null> {
   return { nombre: torneo.data.nombre, jornadas: jornadas.data, ordenActual: actual.data };
 }
 
-export type EquipoDePartido = { nombre_corto: string; escudo_url: string };
+// Con sus colores para el respaldo del escudo (F22 R3).
+export type EquipoDePartido = {
+  nombre_corto: string;
+  escudo_url: string;
+  color_primario: string | null;
+  color_texto: string | null;
+};
 
 export type PartidoDeLista = {
   id: number;
@@ -59,7 +65,7 @@ export type PartidoDeLista = {
 
 // Un solo literal: supabase-js deduce el tipo del resultado a partir de este texto.
 const COLUMNAS_PARTIDO =
-  'id, inicio, estado, es_simulado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url), mis_predicciones:prediccion(id)';
+  'id, inicio, estado, es_simulado, goles_local, goles_visitante, local:equipo!partido_equipo_local_id_fkey(nombre_corto, escudo_url, color_primario, color_texto), visitante:equipo!partido_equipo_visitante_id_fkey(nombre_corto, escudo_url, color_primario, color_texto), mis_predicciones:prediccion(id)';
 
 /** Partidos de una jornada con sus dos equipos, por hora de inicio. */
 export async function obtenerPartidosDeJornada(jornadaId: number): Promise<PartidoDeLista[]> {

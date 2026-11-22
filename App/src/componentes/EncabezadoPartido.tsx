@@ -2,9 +2,8 @@ import { View } from 'react-native';
 
 import { formatearDia, formatearHora } from '../formato/fechas';
 import { useTema } from '../tema';
+import { EscudoEquipo, type EquipoConEscudo } from './EscudoEquipo';
 import { Texto } from './Texto';
-
-type Equipo = { nombre: string; color: string | null };
 
 export type EstadoEncabezado =
   /** `contador` "hh:mm:ss" con menos de 24 h; null con más (se muestra la fecha, F03 R8). */
@@ -13,29 +12,46 @@ export type EstadoEncabezado =
   | { tipo: 'terminado'; golesLocal: number; golesVisitante: number };
 
 interface Props {
-  local: Equipo;
-  visitante: Equipo;
+  local: EquipoConEscudo;
+  visitante: EquipoConEscudo;
   estado: EstadoEncabezado;
 }
 
-function FilaEquipo({ equipo, goles }: { equipo: Equipo; goles?: number }) {
+function FilaEquipo({
+  equipo,
+  lado,
+  goles,
+}: {
+  equipo: EquipoConEscudo;
+  lado: 'local' | 'visitante';
+  goles?: number;
+}) {
   const { colores, espacio, medidas } = useTema();
+  // F22 R5: escudo a un lado del nombre, a la izquierda el del local y a la derecha el del visitante.
+  const escudo = <EscudoEquipo equipo={equipo} tamano="escudoEncabezado" />;
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
-      {/* Franja del color del equipo (D68); sin dato, neutra (D70). */}
+    <View
+      testID={`encabezado-${lado}`}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}
+    >
+      {/* Franja del color del equipo (D68, F22 R4); sin dato, neutra (D70). */}
       <View
+        testID={`franja-${lado}`}
         style={{
           alignSelf: 'stretch',
           width: medidas.barraActiva,
-          backgroundColor: equipo.color ?? colores.textoTenue,
+          backgroundColor: equipo.color_primario ?? colores.textoTenue,
         }}
       />
-      <View style={{ flex: 1 }}>
+      {lado === 'local' && escudo}
+      <View style={{ flexShrink: 1 }}>
         <Texto variante="titulo1" numberOfLines={1} adjustsFontSizeToFit>
-          {equipo.nombre}
+          {equipo.nombre_corto}
         </Texto>
       </View>
+      {lado === 'visitante' && escudo}
+      <View style={{ flex: 1 }} />
       {goles !== undefined && <Texto variante="titulo1">{String(goles)}</Texto>}
     </View>
   );
@@ -70,22 +86,25 @@ function Cierre({ estado }: { estado: EstadoEncabezado }) {
   );
 }
 
-/** Encabezado del partido, variante 2 (D68): equipos con su franja, "vs" y el cierre debajo. */
+/**
+ * Encabezado del partido, variante 2 (D68): equipos con su franja y su escudo (F22 R5), "vs" y el
+ * cierre debajo.
+ */
 export function EncabezadoPartido({ local, visitante, estado }: Props) {
   const { espacio } = useTema();
   const terminado = estado.tipo === 'terminado' ? estado : null;
   const nombre = terminado
-    ? `${local.nombre} ${terminado.golesLocal}, ${visitante.nombre} ${terminado.golesVisitante}`
-    : `${local.nombre} contra ${visitante.nombre}`;
+    ? `${local.nombre_corto} ${terminado.golesLocal}, ${visitante.nombre_corto} ${terminado.golesVisitante}`
+    : `${local.nombre_corto} contra ${visitante.nombre_corto}`;
 
   return (
     <View style={{ gap: espacio.m }}>
       <View accessible accessibilityRole="header" accessibilityLabel={nombre} style={{ gap: espacio.xxs }}>
-        <FilaEquipo equipo={local} goles={terminado?.golesLocal} />
+        <FilaEquipo equipo={local} lado="local" goles={terminado?.golesLocal} />
         <Texto variante="pestana" color="textoTenue">
           vs
         </Texto>
-        <FilaEquipo equipo={visitante} goles={terminado?.golesVisitante} />
+        <FilaEquipo equipo={visitante} lado="visitante" goles={terminado?.golesVisitante} />
       </View>
       <Cierre estado={estado} />
     </View>

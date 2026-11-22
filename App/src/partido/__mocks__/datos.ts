@@ -18,8 +18,8 @@ export const partidoTerminado = (id: number): PartidoDetalle => ({
   es_simulado: false,
   goles_local: 1,
   goles_visitante: 0,
-  local: { nombre_corto: 'Puebla', color_primario: '#1D3F8F' },
-  visitante: { nombre_corto: 'Santos', color_primario: null },
+  local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png', color_primario: '#1D3F8F', color_texto: '#FFFFFF' },
+  visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png', color_primario: null, color_texto: null },
 });
 
 export const obtenerPartido = jest.fn(async (id: number): Promise<PartidoDetalle | null> =>
