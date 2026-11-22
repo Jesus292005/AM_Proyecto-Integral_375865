@@ -1,5 +1,5 @@
 # F20 — Carta de jugador
-> **Estado:** ✅ Aprobada v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Could, D41, D42, D104) · **Módulo:** M6 Identidad · **Depende de:** F05, F06, F13, F18, F28 · **Pantallas:** S09 · **Decisiones:** D23, D40, D41, D42, D52, D101, P4, 00-project §11
+> **Estado:** ✅ Aprobada v1.1 (2026-11-22, detalle de la media y los atributos en hoja, pedido de Jesús en el guion de M6) · v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Could, D41, D42, D104) · **Módulo:** M6 Identidad · **Depende de:** F05, F06, F13, F18, F28 · **Pantallas:** S09 · **Decisiones:** D23, D40, D41, D42, D52, D101, P4, 00-project §11
 
 ## Decisiones (D108)
 | # | Pregunta | A (recomendada) | B | Consecuencia |
@@ -19,7 +19,7 @@ Una carta estilo FIFA con tu media y cuatro atributos calculados de cómo predic
 | R5 | **Servidor:** vista `mi_carta` (`security_invoker`, solo `auth.uid()`), siempre una fila: `calificadas`, `precision`, `punteria`, `analisis`, `constancia`, `media`, `nivel`, `incluye_simulados`. Se calcula en cada lectura, sin tablas precalculadas (como F13 R6). | D52 |
 | R6 | **Permisos (nivel 3, se aprueban con esta spec):** `grant select` de `mi_carta` a `authenticated`, que lee con las RLS de `prediccion`, `calificacion` y `evaluacion_ia` (solo lo propio); `anon` sin acceso; sin `security definer`. | D14, D35 |
 | R7 | **Carta** (componente nuevo, 05-ui U6: los metales solo en recompensas): rectángulo con radio 12 y el degradado del metal de su nivel (05-ui §2) dibujado con `react-native-svg` (ya instalado, sin librería nueva); el texto usa el color "texto encima" del metal. Arriba, media en Teko grande y nivel en texto (U5: el metal no va solo); en medio, `FotoUsuario`, nombre y escudo del equipo favorito (F18); abajo, los 4 atributos (abreviatura en `etiqueta` y número en `numero`). Bloqueada: `superficie2`, sin metal. | U5, U6 |
-| R8 | **En S09** (F28 R2) como sección "Tu carta", con "Se calcula con todas tus predicciones calificadas." y, al tocar un atributo, su nombre completo y cómo se calcula. | P5 |
+| R8 | **En S09** (F28 R2) como sección "Tu carta", con "Se calcula con todas tus predicciones calificadas. Toca la media o un atributo para ver qué es." Tocar la **media** o un **atributo** abre su **detalle en una hoja** (v1.1, `HojaModal`, como el de las insignias): valor grande sobre el metal, nombre, qué mide y cómo se calcula (fórmula de R1); para la media, los niveles de R2 y cuándo aparece (R3); para Análisis sin dato, por qué sale "—". | P5 |
 
 ## Flujo
 **Servidor:** migración con `mi_carta` (R5) y su permiso (R6).

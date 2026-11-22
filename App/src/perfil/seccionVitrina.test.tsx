@@ -72,7 +72,20 @@ describe('Vitrina (F14)', () => {
     expect(screen.queryByText('Tu primera insignia llega con tu primer acierto.')).not.toBeOnTheScreen();
   });
 
-  it('F14 CA4: tocar una muestra cómo se gana y, si la tienes, cuándo, dónde y si fue simulada', async () => {
+  it('F14 CA4: tocar una bloqueada abre su detalle con cómo se gana', async () => {
+    await abrirPerfil();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Analista, bloqueada' }));
+
+    const detalle = await screen.findByTestId('detalle-insignia');
+    expect(within(detalle).getByRole('header', { name: 'Analista' })).toBeOnTheScreen();
+    expect(within(detalle).getByText('Aún no la tienes')).toBeOnTheScreen();
+    expect(within(detalle).getByText('Cómo ganar Analista.')).toBeOnTheScreen();
+    expect(within(detalle).getByTestId('medalla-bloqueada')).toBeOnTheScreen();
+    expect(within(detalle).queryByText('Cuándo')).not.toBeOnTheScreen();
+  });
+
+  it('F14 CA4: el detalle de una ganada dice cuántas veces, cuándo, dónde y si fue simulada', async () => {
     vitrinaFalsa.mockResolvedValue(
       vitrinaDePrueba({
         TOP_JORNADA: {
@@ -86,15 +99,29 @@ describe('Vitrina (F14)', () => {
     );
     await abrirPerfil();
 
-    await fireEvent.press(await screen.findByRole('button', { name: 'Analista, bloqueada' }));
-    expect(screen.getByText('Analista: Cómo ganar Analista.')).toBeOnTheScreen();
+    await fireEvent.press(await screen.findByRole('button', { name: 'Top de la jornada, ganada 2 veces' }));
 
-    await fireEvent.press(insignia('Top de la jornada, ganada 2 veces'));
-    expect(
-      screen.getByText(
-        `Top de la jornada: Cómo ganar Top de la jornada. La última vez: ${formatearDia(new Date(GANADA_EN))} · Los compas · Jornada 17 · Simulada.`,
-      ),
-    ).toBeOnTheScreen();
+    const detalle = await screen.findByTestId('detalle-insignia');
+    expect(within(detalle).getByText('La ganaste 2 veces')).toBeOnTheScreen();
+    expect(within(detalle).getByText('Oro · Se puede ganar varias veces')).toBeOnTheScreen();
+    expect(within(detalle).getByText(formatearDia(new Date(GANADA_EN)))).toBeOnTheScreen();
+    expect(within(detalle).getByText('Los compas · Jornada 17')).toBeOnTheScreen();
+    expect(within(detalle).getByText('Con un partido simulado')).toBeOnTheScreen();
+    expect(within(detalle).getByTestId('medalla')).toBeOnTheScreen();
+  });
+
+  it('F14 CA4: el detalle se cierra con "Cerrar" y tocando fuera', async () => {
+    await abrirPerfil();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Analista, bloqueada' }));
+    await fireEvent.press(within(await screen.findByTestId('detalle-insignia')).getByRole('button', { name: 'Cerrar' }));
+    expect(screen.queryByTestId('detalle-insignia')).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Visionario, bloqueada' }));
+    await screen.findByTestId('detalle-insignia');
+    // El fondo queda fuera del lector de pantalla (la tarjeta es modal); con el dedo sí se toca.
+    await fireEvent.press(screen.getByTestId('detalle-insignia-fuera', { includeHiddenElements: true }));
+    expect(screen.queryByTestId('detalle-insignia')).not.toBeOnTheScreen();
   });
 
   it('F14 CA4: solo las nuevas se animan, y después se marcan vistas una sola vez', async () => {

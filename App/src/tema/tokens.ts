@@ -16,6 +16,8 @@ export interface ColoresTema {
   parcial: string;
   fallo: string;
   pendiente: string;
+  /** Fondo oscurecido detrás de un modal en hoja (05-ui v2.5). */
+  velo: string;
 }
 
 export type NombreColor = keyof ColoresTema;
@@ -49,6 +51,8 @@ export const coloresGrafito: ColoresTema = {
   parcial: '#E7C84B',
   fallo: '#E85D75',
   pendiente: textoTenueGrafito,
+  // `fondo` al 85 %.
+  velo: 'rgba(19, 18, 17, 0.85)',
 };
 
 // Metales: solo recompensas (U6).
@@ -141,8 +145,9 @@ export const medidas = {
   fotoLista: 28,
   // Foto en el encabezado de S09 (05-ui v2.2, F28 R1).
   fotoPerfil: 72,
-  // Medalla de una insignia en la Vitrina (05-ui v2.3, F14 R6).
+  // Medalla de una insignia en la Vitrina (05-ui v2.3, F14 R6) y en su detalle (v2.5).
   medallaInsignia: 56,
+  medallaDetalle: 96,
   // Animación de una insignia nueva (05-ui §8, F14 R7), en milisegundos.
   celebracionMs: 400,
   // Lado del QR de invitación en S08, con su margen (F12 R2).
@@ -151,6 +156,8 @@ export const medidas = {
   icono: 16,
   // Ícono del menú inferior (05-ui v2.0 §4, F22 R1).
   iconoMenu: 20,
+  // Ícono dentro de la medalla del detalle de una insignia (05-ui v2.5, F14 R6).
+  iconoGrande: 40,
   trazoIcono: 2,
   // Tamaño de letra del sistema respetado hasta 1.3× (05-ui §3, accesibilidad).
   escalaTextoMaxima: 1.3,

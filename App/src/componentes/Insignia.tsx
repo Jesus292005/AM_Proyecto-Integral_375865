@@ -15,15 +15,18 @@ interface Props {
   bloqueada: boolean;
   /** Veces ganada; "×n" solo si es más de una. */
   veces: number;
+  /** `medallaInsignia` (56) en la Vitrina; `medallaDetalle` (96) en el detalle, sin nombre debajo. */
+  tamano?: 'medallaInsignia' | 'medallaDetalle';
 }
 
 /**
  * Medalla circular con el degradado de su metal y su ícono, con el nombre debajo (05-ui §5, U6).
  * Decorativa para el lector de pantalla: quien la usa pone la etiqueta completa.
  */
-export function Insignia({ nombre, metal, icono, bloqueada, veces }: Props) {
+export function Insignia({ nombre, metal, icono, bloqueada, veces, tamano = 'medallaInsignia' }: Props) {
   const { colores, metales, espacio, medidas } = useTema();
-  const lado = medidas.medallaInsignia;
+  const lado = medidas[tamano];
+  const enDetalle = tamano === 'medallaDetalle';
 
   return (
     <View style={{ alignItems: 'center', gap: espacio.xxs }}>
@@ -40,25 +43,31 @@ export function Insignia({ nombre, metal, icono, bloqueada, veces }: Props) {
         }}
       >
         {bloqueada ? (
-          <Texto variante="titulo2" color="textoTenue">
+          <Texto variante={enDetalle ? 'titulo1' : 'titulo2'} color="textoTenue">
             ?
           </Texto>
         ) : (
           <>
             <DegradadoMetal metal={metales[metal]} />
-            <Icono nombre={icono} colorDato={metales[metal].texto} tamano="iconoMenu" />
+            <Icono
+              nombre={icono}
+              colorDato={metales[metal].texto}
+              tamano={enDetalle ? 'iconoGrande' : 'iconoMenu'}
+            />
           </>
         )}
       </View>
-      <Texto
-        variante="meta"
-        color={bloqueada ? 'textoTenue' : 'texto'}
-        alineacion="center"
-        numberOfLines={2}
-      >
-        {nombre}
-      </Texto>
-      {veces > 1 && (
+      {!enDetalle && (
+        <Texto
+          variante="meta"
+          color={bloqueada ? 'textoTenue' : 'texto'}
+          alineacion="center"
+          numberOfLines={2}
+        >
+          {nombre}
+        </Texto>
+      )}
+      {!enDetalle && veces > 1 && (
         <Texto variante="etiqueta" color="texto2">
           {`×${veces}`}
         </Texto>

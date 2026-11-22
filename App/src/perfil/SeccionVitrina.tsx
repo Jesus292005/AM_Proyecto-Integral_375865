@@ -4,9 +4,9 @@ import { Animated, Pressable, View } from 'react-native';
 
 import { Boton, esNombreIcono, Insignia, Seccion, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
-import { formatearDia } from '../formato/fechas';
 import { useTema } from '../tema';
 import { type InsigniaDeVitrina, marcarInsigniasVistas, obtenerMisInsignias } from './datos';
+import { DetalleInsignia } from './DetalleInsignia';
 import { useReleerAlVolver } from './useReleerAlVolver';
 
 const mensajes = {
@@ -24,20 +24,6 @@ function etiquetaAccesible(insignia: InsigniaDeVitrina): string {
   return insignia.veces > 1
     ? `${insignia.nombre}, ganada ${insignia.veces} veces`
     : `${insignia.nombre}, ganada`;
-}
-
-/** Qué dice debajo al tocar una (R6): cómo se gana y, si la tengo, cuándo la gané. */
-function detalle(insignia: InsigniaDeVitrina): string {
-  if (insignia.veces === 0 || insignia.ultima_en === null) return insignia.descripcion;
-  const donde = [insignia.ultimo_grupo, insignia.ultima_jornada].filter(Boolean).join(' · ');
-  const ultima = [
-    `${insignia.veces > 1 ? 'La última vez' : 'La ganaste'}: ${formatearDia(new Date(insignia.ultima_en))}`,
-    donde,
-    insignia.ultima_simulada ? 'Simulada' : '',
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  return `${insignia.descripcion} ${ultima}.`;
 }
 
 /** Una insignia de la rejilla; si es nueva, la animación celebratoria una sola vez (R7). */
@@ -167,15 +153,11 @@ export function SeccionVitrina() {
               key={insignia.codigo}
               insignia={insignia}
               elegida={insignia.codigo === elegida}
-              onPress={() => setElegida((antes) => (antes === insignia.codigo ? null : insignia.codigo))}
+              onPress={() => setElegida(insignia.codigo)}
             />
           ))}
         </View>
-        {tocada && (
-          <Texto variante="cuerpo" accessibilityLiveRegion="polite">
-            {`${tocada.nombre}: ${detalle(tocada)}`}
-          </Texto>
-        )}
+        <DetalleInsignia insignia={tocada ?? null} onCerrar={() => setElegida(null)} />
       </View>
     );
   } else if (vitrina.isError) {

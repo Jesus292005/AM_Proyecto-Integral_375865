@@ -6,36 +6,45 @@ import type { MiCarta, MiPerfil, Nivel } from './datos';
 import { renglonesDeNombre } from './nombre';
 
 export type CodigoAtributo = 'PRE' | 'PUN' | 'ANA' | 'CON';
+/** Lo que se puede tocar en la carta para ver su detalle (F20 R8). */
+export type ParteCarta = CodigoAtributo | 'MEDIA';
 
-/** Abreviatura, nombre y cómo se calcula cada atributo (F20 R1, R8). */
+/** Abreviatura, nombre, qué mide y cómo se calcula cada atributo (F20 R1, R8). */
 export const atributos: readonly {
   codigo: CodigoAtributo;
   nombre: string;
   explicacion: string;
+  calculo: string;
+  sinDato?: string;
   valor: (carta: MiCarta) => number | null;
 }[] = [
   {
     codigo: 'PRE',
     nombre: 'Precisión',
-    explicacion: 'Tus predicciones con puntos entre todas tus predicciones calificadas.',
+    explicacion: 'Qué tan seguido sacas puntos: tus predicciones con puntos entre todas tus predicciones calificadas.',
+    calculo: '40 + 59 × (predicciones con puntos ÷ predicciones calificadas)',
     valor: (c) => c.precision,
   },
   {
     codigo: 'PUN',
     nombre: 'Puntería',
-    explicacion: 'Tus puntos base promedio por predicción, sobre 350 (un marcador exacto).',
+    explicacion: 'Cuántos puntos sacas por predicción, comparado con lo máximo: un marcador exacto vale 350.',
+    calculo: '40 + 59 × (puntos base promedio ÷ 350)',
     valor: (c) => c.punteria,
   },
   {
     codigo: 'ANA',
     nombre: 'Análisis',
-    explicacion: 'El bono promedio que te dio la IA por tus análisis, sobre 100.',
+    explicacion: 'Qué tan buenos son tus análisis: el bono promedio que te dio la IA, que va de 0 a 100.',
+    calculo: '40 + 59 × (bono promedio ÷ 100)',
+    sinDato: 'Aún no tienes análisis evaluados por la IA. Escribe por qué crees que pasará al predecir.',
     valor: (c) => c.analisis,
   },
   {
     codigo: 'CON',
     nombre: 'Constancia',
-    explicacion: 'Tu mejor racha de predicciones con puntos, hasta 10.',
+    explicacion: 'Tu mejor racha de predicciones con puntos seguidas. Llega al máximo con 10.',
+    calculo: '40 + 59 × (mejor racha, hasta 10, ÷ 10)',
     valor: (c) => c.constancia,
   },
 ];
@@ -44,17 +53,17 @@ export const textoNivel: Record<Nivel, string> = { BRONCE: 'Bronce', PLATA: 'Pla
 const metalDe = { BRONCE: 'bronce', PLATA: 'plata', ORO: 'oro' } as const;
 
 // F20 R3. El servidor decide la media y el nivel; este mínimo solo dice cuántas faltan.
-const MINIMO_CALIFICADAS = 5;
+export const MINIMO_CALIFICADAS = 5;
 
-const textoFaltan = (n: number) =>
+export const textoFaltan = (n: number) =>
   n === 1 ? 'Te falta 1 predicción calificada' : `Te faltan ${n} predicciones calificadas`;
 
 interface Props {
   carta: MiCarta;
   perfil: Pick<MiPerfil, 'nombre' | 'foto_url' | 'equipo'>;
-  /** Atributo tocado (su explicación va debajo de la carta, R8). */
-  elegido: CodigoAtributo | null;
-  onElegir: (codigo: CodigoAtributo) => void;
+  /** Parte tocada: su detalle se abre en una hoja (R8). */
+  elegido: ParteCarta | null;
+  onElegir: (parte: ParteCarta) => void;
 }
 
 /**
@@ -82,16 +91,19 @@ export function Carta({ carta, perfil, elegido, onElegir }: Props) {
     >
       {metal && <DegradadoMetal metal={metal} />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.m }}>
-        {/* Agrupado para el lector de pantalla; los atributos siguen siendo botones aparte. */}
-        <View
+        {/* La media es un botón que abre su detalle; los atributos son botones aparte. */}
+        <Pressable
           testID="carta-media"
-          accessible
+          onPress={() => onElegir('MEDIA')}
+          accessibilityRole="button"
           accessibilityLabel={
             carta.media !== null && carta.nivel
               ? `Tu carta: media ${carta.media}, nivel ${textoNivel[carta.nivel]}`
               : `Tu carta, bloqueada: ${textoFaltan(faltan)}`
           }
-          style={{ alignItems: 'center' }}
+          accessibilityHint="Ver cómo se calcula"
+          accessibilityState={{ selected: elegido === 'MEDIA' }}
+          style={{ alignItems: 'center', minWidth: medidas.areaTactil, minHeight: medidas.areaTactil }}
         >
           <Texto variante="titulo1" color="textoTenue" colorDato={colorTexto}>
             {carta.media !== null ? String(carta.media) : '—'}
@@ -100,7 +112,7 @@ export function Carta({ carta, perfil, elegido, onElegir }: Props) {
           <Texto variante="etiqueta" color="textoTenue" colorDato={colorTexto}>
             {carta.nivel ? textoNivel[carta.nivel] : 'Sin nivel'}
           </Texto>
-        </View>
+        </Pressable>
         <FotoUsuario url={perfil.foto_url} nombre={perfil.nombre} tamano="fotoPerfil" />
         <View style={{ flex: 1, gap: espacio.xxs }}>
           <Texto

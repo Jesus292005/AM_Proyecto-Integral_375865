@@ -120,14 +120,68 @@ describe('Tu carta (F20)', () => {
     expect(await screen.findByText('Incluye partidos simulados')).toBeOnTheScreen();
   });
 
-  it('F20 R8: tocar un atributo muestra su nombre y cómo se calcula', async () => {
+  it('F20 R8: tocar un atributo abre su detalle con su valor, qué mide y cómo se calcula', async () => {
     await abrirPerfil();
 
     await fireEvent.press(await screen.findByRole('button', { name: 'Constancia: 99' }));
 
+    const detalle = await screen.findByTestId('detalle-carta');
+    expect(within(detalle).getByRole('header', { name: 'Constancia' })).toBeOnTheScreen();
+    expect(within(detalle).getByText('CON · de 40 a 99')).toBeOnTheScreen();
+    expect(within(detalle).getByText('99')).toBeOnTheScreen();
+    expect(within(detalle).getByText('Qué mide')).toBeOnTheScreen();
+    expect(within(detalle).getByText('40 + 59 × (mejor racha, hasta 10, ÷ 10)')).toBeOnTheScreen();
+    expect(within(detalle).getByTestId('degradado-metal')).toBeOnTheScreen();
+  });
+
+  it('F20 R8: Análisis sin dato explica por qué sale "—"', async () => {
+    cartaFalsa.mockResolvedValue({ ...oro, analisis: null });
+    await abrirPerfil();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Análisis: sin dato' }));
+
+    const detalle = await screen.findByTestId('detalle-carta');
+    expect(within(detalle).getByText('Por qué sale —')).toBeOnTheScreen();
+  });
+
+  it('F20 R8: tocar la media explica qué es, los niveles y cuándo aparece', async () => {
+    await abrirPerfil();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Tu carta: media 84, nivel Oro' }));
+
+    const detalle = await screen.findByTestId('detalle-carta');
+    expect(within(detalle).getByRole('header', { name: 'Media' })).toBeOnTheScreen();
+    expect(within(detalle).getByText('Nivel Oro')).toBeOnTheScreen();
+    expect(within(detalle).getByText('Bronce: menos de 65 · Plata: de 65 a 79 · Oro: 80 o más')).toBeOnTheScreen();
+    expect(within(detalle).getByText('Con 5 predicciones calificadas o más. Llevas 12.')).toBeOnTheScreen();
+  });
+
+  it('F20 R8: con la carta bloqueada, la media dice cuántas faltan', async () => {
+    cartaFalsa.mockResolvedValue(cartaDePrueba({ calificadas: 3 }));
+    await abrirPerfil();
+
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Tu carta, bloqueada: Te faltan 2 predicciones calificadas' }),
+    );
+
+    const detalle = await screen.findByTestId('detalle-carta');
     expect(
-      screen.getByText('Constancia: Tu mejor racha de predicciones con puntos, hasta 10.'),
+      within(detalle).getByText('Con 5 predicciones calificadas. Te faltan 2 predicciones calificadas.'),
     ).toBeOnTheScreen();
+    expect(within(detalle).queryByTestId('degradado-metal')).not.toBeOnTheScreen();
+  });
+
+  it('F20 R8: el detalle se cierra con "Cerrar" y tocando fuera', async () => {
+    await abrirPerfil();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Precisión: 89' }));
+    await fireEvent.press(within(await screen.findByTestId('detalle-carta')).getByRole('button', { name: 'Cerrar' }));
+    expect(screen.queryByTestId('detalle-carta')).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Puntería: 67' }));
+    await screen.findByTestId('detalle-carta');
+    await fireEvent.press(screen.getByTestId('detalle-carta-fuera', { includeHiddenElements: true }));
+    expect(screen.queryByTestId('detalle-carta')).not.toBeOnTheScreen();
   });
 
   it('estados: un error de la carta se reintenta sin romper el perfil', async () => {

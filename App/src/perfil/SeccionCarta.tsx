@@ -4,13 +4,14 @@ import { View } from 'react-native';
 import { Boton, Esqueleto, Seccion, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { useTema } from '../tema';
-import { atributos, Carta, type CodigoAtributo } from './Carta';
+import { Carta, type ParteCarta } from './Carta';
+import { DetalleCarta } from './DetalleCarta';
 import { useMiCarta } from './useMiCarta';
 import { useMiPerfil } from './useMiPerfil';
 import { useReleerAlVolver } from './useReleerAlVolver';
 
 const mensajes = {
-  explicacion: 'Se calcula con todas tus predicciones calificadas. Toca un atributo para ver cómo.',
+  explicacion: 'Se calcula con todas tus predicciones calificadas. Toca la media o un atributo para ver qué es.',
   simulados: 'Incluye partidos simulados',
   error: 'No pudimos cargar tu carta.',
   // Mismo texto que F01 §10.
@@ -42,25 +43,20 @@ export function SeccionCarta() {
   const { espacio } = useTema();
   const carta = useMiCarta({ siempreAlMontar: true });
   const perfil = useMiPerfil();
-  const [elegido, setElegido] = useState<CodigoAtributo | null>(null);
+  const [elegido, setElegido] = useState<ParteCarta | null>(null);
   useReleerAlVolver(carta.refetch);
 
   let contenido;
   if (carta.data !== undefined && perfil.data !== undefined) {
-    const detalle = atributos.find((a) => a.codigo === elegido);
     contenido = (
       <View style={{ gap: espacio.s }}>
         <Carta
           carta={carta.data}
           perfil={perfil.data}
           elegido={elegido}
-          onElegir={(codigo) => setElegido((antes) => (antes === codigo ? null : codigo))}
+          onElegir={setElegido}
         />
-        {detalle && (
-          <Texto variante="cuerpo" accessibilityLiveRegion="polite">
-            {`${detalle.nombre}: ${detalle.explicacion}`}
-          </Texto>
-        )}
+        <DetalleCarta carta={carta.data} parte={elegido} onCerrar={() => setElegido(null)} />
         <Texto variante="meta" color="textoTenue">
           {mensajes.explicacion}
         </Texto>

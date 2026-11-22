@@ -63,8 +63,8 @@ interface Props {
   color?: NombreColor;
   /** Color fuera de la paleta: solo el texto sobre un metal (insignias, U6). */
   colorDato?: string;
-  /** `icono` (16) en contenido, `iconoMenu` (20) en el menú inferior (05-ui §7). */
-  tamano?: 'icono' | 'iconoMenu';
+  /** `icono` (16) en contenido, `iconoMenu` (20) en el menú inferior, `iconoGrande` (40) en el detalle de una insignia (05-ui §7). */
+  tamano?: 'icono' | 'iconoMenu' | 'iconoGrande';
 }
 
 /** Decorativo: el texto de al lado dice lo mismo (U5). */
