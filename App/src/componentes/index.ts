@@ -14,6 +14,7 @@ export { IndicadorEstado, type EstadoIndicador } from './IndicadorEstado';
 export { Interruptor } from './Interruptor';
 export { MenuInferior, type DestinoMenu } from './MenuInferior';
 export { Opciones } from './Opciones';
+export { PantallaModal } from './PantallaModal';
 export { PestanasTexto } from './PestanasTexto';
 export { Seccion } from './Seccion';
 export { SelectorMarcador } from './SelectorMarcador';

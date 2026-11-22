@@ -1,10 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { Boton, CampoTexto, Texto } from '../componentes';
+import { Boton, CampoTexto, PantallaModal, Texto } from '../componentes';
 import { crearGrupo } from './datos';
 import { mensajeAlCrear, mensajesGrupo } from './errores';
-import { PantallaModal } from './PantallaModal';
 import { irAlGrupo } from './useUnirseAGrupo';
 
 // F07 R1: de 3 a 30 caracteres después de recortar; el servidor vuelve a validar.

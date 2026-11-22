@@ -1,9 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { Boton, CampoTexto, Texto } from '../componentes';
+import { Boton, CampoTexto, PantallaModal, Texto } from '../componentes';
 import { tomarLectura } from './lecturaQR';
-import { PantallaModal } from './PantallaModal';
 import { useUnirseAGrupo } from './useUnirseAGrupo';
 
 // `ABCD-EFGH`: 8 caracteres y el guion opcional (F07 R2).

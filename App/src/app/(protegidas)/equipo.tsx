@@ -1,5 +1,3 @@
-import { PantallaProvisional } from '../../provisional/PantallaProvisional';
+import { PantallaEquipoFavorito } from '../../perfil/PantallaEquipoFavorito';
 
-export default function Equipo() {
-  return <PantallaProvisional id="S12" titulo="Equipo favorito" />;
-}
+export default PantallaEquipoFavorito;

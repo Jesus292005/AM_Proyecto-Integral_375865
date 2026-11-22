@@ -80,7 +80,6 @@ async function seCerroS03() {
 
 // Pantallas provisionales (T03): muestran su id.
 const rutas = [
-  { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
   { url: '/usuario/5', id: 'S13', titulo: 'Perfil de usuario' },
 ] as const;
 
@@ -88,6 +87,7 @@ const rutas = [
 const rutasReales = [
   { url: '/inicio', id: 'S11', titulo: 'Inicio' },
   { url: '/perfil', id: 'S09', titulo: 'Perfil' },
+  { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
   { url: '/grupos', id: 'S04', titulo: 'Grupos' },
   { url: '/grupos/nuevo', id: 'S05', titulo: 'Crear grupo' },
   { url: '/grupos/unirse', id: 'S06', titulo: 'Unirse a grupo' },
