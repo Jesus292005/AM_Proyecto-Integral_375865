@@ -194,7 +194,7 @@ select is(
 
 reset role;
 select ok(
-  pg_get_function_result('public.mejor_analisis_jornada()'::regprocedure) !~ '(afirmaciones|correo|resultado|marcador_local|rango_goles)',
+  pg_get_function_result('public.mejor_analisis_jornada(bigint, bigint)'::regprocedure) !~ '(afirmaciones|correo|resultado|marcador_local|rango_goles)',
   'F17 CA4: no trae afirmaciones, correo ni la predicción'
 );
 select is(
