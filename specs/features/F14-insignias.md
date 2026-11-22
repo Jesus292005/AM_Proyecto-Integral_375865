@@ -1,5 +1,5 @@
 # F14 — Insignias y Vitrina
-> **Estado:** ✅ Aprobada v1.2 (2026-11-22, detalle de la insignia en hoja, pedido de Jesús en el guion de M6) · v1.1 (2026-11-21, D109: límites de R3) · v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Should, D42, D104) · **Módulo:** M6 Identidad · **Depende de:** F05, F06, F07, F08, F13, F28 · **Pantallas:** S09 (Vitrina) · **Decisiones:** D10, D40, D42, D47, D52, D57, D101, P4, 05-ui §5 y §8
+> **Estado:** ✅ **Terminada** (2026-11-22, D110: cumple CA1–CA6 y Jesús la aprobó en su teléfono) · v1.2 (2026-11-22, detalle de la insignia en hoja, pedido de Jesús en el guion de M6) · v1.1 (2026-11-21, D109: límites de R3) · v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Should, D42, D104) · **Módulo:** M6 Identidad · **Depende de:** F05, F06, F07, F08, F13, F28 · **Pantallas:** S09 (Vitrina) · **Decisiones:** D10, D40, D42, D47, D52, D57, D101, P4, 05-ui §5 y §8
 
 ## Decisiones (D108)
 | # | Pregunta | A (recomendada) | B | Consecuencia |

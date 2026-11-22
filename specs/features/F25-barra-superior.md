@@ -1,5 +1,5 @@
 # F25 — Barra superior
-> **Estado:** ✅ Aprobada v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño · **Módulo:** M6 Identidad · **Depende de:** F13, F18, F20, F28 · **Pantallas:** S11, S02, S04, S09 · **Decisiones:** D52, D76, D78, D104, 01-mvp §7
+> **Estado:** ✅ **Terminada** (2026-11-22, D110: cumple CA1–CA4 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-21, D108) · **Prioridad:** Must del rediseño · **Módulo:** M6 Identidad · **Depende de:** F13, F18, F20, F28 · **Pantallas:** S11, S02, S04, S09 · **Decisiones:** D52, D76, D78, D104, 01-mvp §7
 
 ## Decisiones (D108)
 Ninguna.

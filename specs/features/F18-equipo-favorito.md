@@ -1,5 +1,5 @@
 # F18 — Equipo favorito
-> **Estado:** ✅ Aprobada v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Should, D39, D104) · **Módulo:** M6 Identidad · **Depende de:** F01, F02, F22 · **Pantallas:** S12, S09 · **Decisiones:** D39, D52, D78, D104, F01 V3
+> **Estado:** ✅ **Terminada** (2026-11-22, D110: cumple CA1–CA5 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-21, D108) · **Prioridad:** Must del rediseño (antes Should, D39, D104) · **Módulo:** M6 Identidad · **Depende de:** F01, F02, F22 · **Pantallas:** S12, S09 · **Decisiones:** D39, D52, D78, D104, F01 V3
 
 ## Decisiones (D108)
 | # | Pregunta | A (recomendada) | B | Consecuencia |

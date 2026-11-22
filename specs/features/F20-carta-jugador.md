@@ -1,5 +1,5 @@
 # F20 — Carta de jugador
-> **Estado:** ✅ Aprobada v1.1 (2026-11-22, detalle de la media y los atributos en hoja, pedido de Jesús en el guion de M6) · v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Could, D41, D42, D104) · **Módulo:** M6 Identidad · **Depende de:** F05, F06, F13, F18, F28 · **Pantallas:** S09 · **Decisiones:** D23, D40, D41, D42, D52, D101, P4, 00-project §11
+> **Estado:** ✅ **Terminada** (2026-11-22, D110: cumple CA1–CA4 y Jesús la aprobó en su teléfono) · v1.1 (2026-11-22, detalle de la media y los atributos en hoja, pedido de Jesús en el guion de M6) · v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño (antes Could, D41, D42, D104) · **Módulo:** M6 Identidad · **Depende de:** F05, F06, F13, F18, F28 · **Pantallas:** S09 · **Decisiones:** D23, D40, D41, D42, D52, D101, P4, 00-project §11
 
 ## Decisiones (D108)
 | # | Pregunta | A (recomendada) | B | Consecuencia |

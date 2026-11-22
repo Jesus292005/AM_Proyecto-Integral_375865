@@ -1,5 +1,5 @@
 # F28 — Perfil propio
-> **Estado:** ✅ Aprobada v1.0 (2026-11-21, D108) · pendiente de implementar · **Prioridad:** Must del rediseño · **Módulo:** M6 Identidad · **Depende de:** F01, F13, F14, F18, F20 · **Pantallas:** S09, S14 (nueva) · **Decisiones:** D23, D52, D75, D103, D104, F01 Q1/V3/V4
+> **Estado:** ✅ **Terminada** (2026-11-22, D110: cumple CA1–CA6 y Jesús la aprobó en su teléfono) · spec aprobada v1.0 (2026-11-21, D108) · **Prioridad:** Must del rediseño · **Módulo:** M6 Identidad · **Depende de:** F01, F13, F14, F18, F20 · **Pantallas:** S09, S14 (nueva) · **Decisiones:** D23, D52, D75, D103, D104, F01 Q1/V3/V4
 
 ## Decisiones (D108)
 | # | Pregunta | A (recomendada) | B | Consecuencia |
