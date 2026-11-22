@@ -219,7 +219,7 @@ describe('menú inferior', () => {
 
     await tocar('Inicio', 'tab');
     await seCerroS03();
-    await tocar(GRUPO);
+    await fireEvent.press(await screen.findByRole('button', { name: new RegExp(`^${GRUPO}, `) }));
     expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
   });

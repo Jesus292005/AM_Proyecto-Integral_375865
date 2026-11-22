@@ -109,8 +109,14 @@ export function PantallaInicio() {
         )}
         <BloquePendientes consulta={pendientes} sinTorneo={sinTorneo} />
         <BloqueEquipo consulta={combinar(perfil, proximo)} sinTorneo={sinTorneo} />
-        <BloqueUltimaJornada consulta={ultima} sinTorneo={sinTorneo} />
-        <BloqueMejorAnalisis consulta={analisis} grupos={grupos.data} sinTorneo={sinTorneo} />
+        <BloqueUltimaJornada consulta={ultima} grupos={grupos.data} sinTorneo={sinTorneo} />
+        <BloqueMejorAnalisis
+          consulta={analisis}
+          grupos={grupos.data}
+          ultimaJornada={ultima.data}
+          esperandoVacio={grupos.isPending || ultima.isPending}
+          sinTorneo={sinTorneo}
+        />
         <BloqueGrupos consulta={grupos} />
       </ScrollView>
     </SafeAreaView>
