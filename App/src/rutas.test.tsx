@@ -257,12 +257,10 @@ describe('menú inferior', () => {
   it('cambiar la jornada actualiza Partidos sin agregar historial (D78)', async () => {
     await abrir('/partidos');
 
-    await tocar('Jornada siguiente');
+    await tocar('Jornada 2', 'tab');
 
     expect(await screen.findByRole('header', { name: 'Jornada 2' })).toBeOnTheScreen();
-    expect(
-      screen.queryAllByRole('button', { name: 'Jornada anterior', includeHiddenElements: true }),
-    ).toHaveLength(1);
+    expect(screen.queryAllByTestId('tira-jornadas', { includeHiddenElements: true })).toHaveLength(1);
   });
 
   it('tocar varias veces un grupo no apila su pantalla y "volver" regresa a Grupos (D78)', async () => {

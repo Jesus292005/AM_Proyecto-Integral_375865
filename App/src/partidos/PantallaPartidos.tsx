@@ -11,7 +11,7 @@ import { esSinConexion } from '../datos/errores';
 import { obtenerMisPuntos } from '../puntos/datos';
 import { obtenerPartidosDeJornada, obtenerTorneoActual } from './datos';
 import { FilaPartido } from './FilaPartido';
-import { SelectorJornada } from './SelectorJornada';
+import { EsqueletoTira, TiraJornadas } from './TiraJornadas';
 
 const mensajes = {
   // F02 B6.
@@ -52,7 +52,7 @@ function EsqueletoPartidos() {
   );
 }
 
-/** S02: partidos de una jornada con selector de jornada y todos los estados (F02 parte B). */
+/** S02: partidos de una jornada con la tira de jornadas (F23) y todos los estados (F02 parte B). */
 export function PantallaPartidos() {
   const { jornada } = useLocalSearchParams<'/partidos'>();
   const { colores, espacio, medidas } = useTema();
@@ -79,11 +79,8 @@ export function PantallaPartidos() {
     enabled: predichos.length > 0,
   });
 
-  // Cambiar de jornada actualiza esta misma pantalla, sin agregar historial (D78).
-  const indice = elegida ? jornadas.indexOf(elegida) : -1;
-  const anterior = indice > 0 ? jornadas[indice - 1] : undefined;
-  const siguiente = indice >= 0 ? jornadas[indice + 1] : undefined;
-  const irA = (orden: number) => () => router.setParams({ jornada: String(orden) });
+  // Cambiar de jornada actualiza esta misma pantalla, sin agregar historial (D78, F23 R3).
+  const irA = (orden: number) => router.setParams({ jornada: String(orden) });
 
   async function recargar() {
     setRefrescando(true);
@@ -122,13 +119,31 @@ export function PantallaPartidos() {
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colores.fondo }}>
       <View style={{ paddingHorizontal: medidas.margenPantalla, gap: espacio.s }}>
+        {torneo.isPending && <EsqueletoTira />}
         {torneo.data && elegida && (
-          <SelectorJornada
-            nombre={elegida.nombre}
-            torneo={torneo.data.nombre}
-            onAnterior={anterior && irA(anterior.orden)}
-            onSiguiente={siguiente && irA(siguiente.orden)}
-          />
+          <View
+            style={{
+              gap: espacio.s,
+              paddingVertical: espacio.s,
+              borderBottomWidth: medidas.linea,
+              borderBottomColor: colores.linea,
+            }}
+          >
+            <View style={{ gap: espacio.xxs }}>
+              <Texto variante="titulo2" numberOfLines={1} accessibilityRole="header">
+                {elegida.nombre}
+              </Texto>
+              <Texto variante="meta" color="textoTenue" numberOfLines={1}>
+                {torneo.data.nombre}
+              </Texto>
+            </View>
+            <TiraJornadas
+              jornadas={jornadas}
+              elegida={elegida.orden}
+              actual={torneo.data.ordenActual}
+              onElegir={irA}
+            />
+          </View>
         )}
         {aviso}
       </View>

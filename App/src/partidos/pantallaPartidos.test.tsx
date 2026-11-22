@@ -1,6 +1,6 @@
-// S02 (T26): estados de B6, agrupación por día (CA9), selector de jornada (CA10) y navegación.
+// S02 (T26, T86): estados de B6, agrupación por día (CA9), tira de jornadas (F23) y navegación.
 // Corre la app completa con una sesión guardada; las lecturas de Supabase se simulan.
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { ExpoRoot } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 
@@ -16,6 +16,7 @@ import {
   type PartidoDeLista,
   type TorneoActual,
 } from './datos';
+import { etiquetaJornada } from './TiraJornadas';
 
 jest.mock('../supabase/cliente');
 jest.mock('../partido/datos');
@@ -234,33 +235,69 @@ describe('S02 con datos', () => {
   });
 });
 
-describe('S02 selector de jornada (CA10)', () => {
-  it('va a la anterior y a la siguiente; en los extremos la flecha se deshabilita', async () => {
+describe('S02 tira de jornadas (F23)', () => {
+  const jornada = (nombre: string) => screen.getByRole('tab', { name: nombre });
+
+  it('F23 CA1: muestra todas las jornadas con su etiqueta y marca la elegida y la actual', async () => {
     await abrir('/partidos');
     await screen.findByRole('header', { name: 'Jornada 2' });
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Jornada anterior' }));
-    expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Jornada anterior' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Jornada siguiente' })).toBeEnabled();
-
-    await fireEvent.press(screen.getByRole('button', { name: 'Jornada siguiente' }));
-    await fireEvent.press(await screen.findByRole('button', { name: 'Jornada siguiente' }));
-    expect(await screen.findByRole('header', { name: 'Liguilla · Final' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Jornada siguiente' })).toBeDisabled();
+    const tira = screen.getByTestId('tira-jornadas');
+    expect(within(tira).getAllByRole('tab')).toHaveLength(3);
+    expect(within(jornada('Jornada 1')).getByText('J1')).toBeOnTheScreen();
+    expect(within(jornada('Liguilla · Final')).getByText('Final')).toBeOnTheScreen();
+    // La actual (J2) es también la elegida al abrir; lleva el punto y lo dice en su nombre.
+    expect(jornada('Jornada 2, jornada actual')).toBeSelected();
+    expect(within(jornada('Jornada 2, jornada actual')).getByTestId('jornada-actual')).toBeTruthy();
+    expect(jornada('Jornada 1')).not.toBeSelected();
   });
 
-  it('cambiar de jornada no agrega historial (D78)', async () => {
+  it('F23 CA1: tocar una jornada abre sus partidos; la actual conserva su punto', async () => {
     await abrir('/partidos');
     await screen.findByRole('header', { name: 'Jornada 2' });
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Jornada anterior' }));
+    await fireEvent.press(jornada('Liguilla · Final'));
+
+    expect(await screen.findByRole('header', { name: 'Liguilla · Final' })).toBeOnTheScreen();
+    expect(partidosFalsos).toHaveBeenLastCalledWith(21);
+    expect(jornada('Liguilla · Final')).toBeSelected();
+    expect(jornada('Jornada 2, jornada actual')).not.toBeSelected();
+    expect(within(jornada('Jornada 2, jornada actual')).getByTestId('jornada-actual')).toBeTruthy();
+  });
+
+  it('F23 CA1: cambiar de jornada no agrega historial (D78)', async () => {
+    await abrir('/partidos');
+    await screen.findByRole('header', { name: 'Jornada 2' });
+
+    await fireEvent.press(jornada('Jornada 1'));
     await screen.findByRole('header', { name: 'Jornada 1' });
 
     // Una sola pantalla S02 montada (las apiladas siguen en el árbol, ocultas).
-    expect(
-      screen.queryAllByRole('button', { name: 'Jornada siguiente', includeHiddenElements: true }),
-    ).toHaveLength(1);
+    expect(screen.queryAllByTestId('tira-jornadas', { includeHiddenElements: true })).toHaveLength(1);
+  });
+
+  it('F23 CA1: un torneo con una sola jornada muestra la tira igual', async () => {
+    torneoFalso.mockResolvedValue({
+      ...apertura,
+      jornadas: [{ id: 12, orden: 2, nombre: 'Jornada 2' }],
+    });
+    await abrir('/partidos');
+
+    await screen.findByRole('header', { name: 'Jornada 2' });
+    expect(within(screen.getByTestId('tira-jornadas')).getAllByRole('tab')).toHaveLength(1);
+  });
+});
+
+describe('etiquetaJornada (F23 R1)', () => {
+  it.each([
+    ['Jornada 1', 'J1'],
+    ['Jornada 17', 'J17'],
+    ['Liguilla · Play-in', 'Play-in'],
+    ['Liguilla · Cuartos', 'Cuartos'],
+    ['Liguilla · Semifinales', 'Semis'],
+    ['Liguilla · Final', 'Final'],
+  ])('F23 CA1: "%s" se muestra como "%s"', (nombre, etiqueta) => {
+    expect(etiquetaJornada(nombre)).toBe(etiqueta);
   });
 });
 
@@ -270,6 +307,7 @@ describe('S02 estados (B6, CA11)', () => {
     await abrir('/partidos');
 
     expect(await screen.findByTestId('partidos-cargando')).toBeOnTheScreen();
+    expect(screen.getByTestId('tira-cargando')).toBeOnTheScreen();
   });
 
   it('una jornada sin partidos lo dice', async () => {
@@ -284,7 +322,7 @@ describe('S02 estados (B6, CA11)', () => {
     await abrir('/partidos');
 
     expect(await screen.findByText('No hay partidos en esta jornada.')).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Jornada anterior' })).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('tira-jornadas')).not.toBeOnTheScreen();
   });
 
   it('sin conexión y sin datos: mensaje y "Reintentar" que vuelve a cargar', async () => {

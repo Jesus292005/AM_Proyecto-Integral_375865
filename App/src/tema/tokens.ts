@@ -128,6 +128,10 @@ export const medidas = {
   linea: 1,
   barraActiva: 3,
   areaTactil: 44,
+  // Alto visible de `ChipFiltro`; el área táctil sigue siendo `areaTactil` (05-ui v2.0 §5, F23 R4).
+  altoChip: 36,
+  // Punto de la jornada actual en `TiraJornadas` (05-ui v2.0 §5, F23 R2).
+  puntoJornada: 4,
   altoBoton: 54,
   // Escudo de equipo en listas (S02).
   escudoLista: 28,
