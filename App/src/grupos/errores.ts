@@ -11,6 +11,9 @@ export const CODIGOS_GRUPO = [
   'NO_MIEMBRO',
   'JORNADA_INVALIDA',
   'SIN_TORNEO_ACTUAL',
+  // F26 R6.
+  'NO_ADMIN',
+  'COLOR_INVALIDO',
 ] as const;
 
 export type CodigoGrupo = (typeof CODIGOS_GRUPO)[number];
@@ -52,6 +55,15 @@ export const mensajesGrupo = {
   fallaCrear: 'No se pudo crear el grupo. Inténtalo de nuevo.',
   fallaUnirse: 'No pudimos unirte al grupo. Inténtalo de nuevo.',
   fallaSalir: 'No pudimos sacarte del grupo. Inténtalo de nuevo.',
+  // F26.
+  crearOUnirse: 'Crear o unirse a un grupo',
+  unirseSubtitulo: 'Con el código o escaneando el QR del grupo.',
+  sinPuntosAun: 'Sin puntos aún',
+  empateLider: 'Empate en el 1.º',
+  vasLider: 'Vas líder',
+  noAdmin: 'Solo el administrador puede editar el grupo.',
+  colorInvalido: 'Elige un color de la paleta.',
+  fallaEditar: 'No se pudo guardar. Inténtalo de nuevo.',
 } as const;
 
 function mensajeDeFalla(error: Error, porCodigo: Partial<Record<CodigoGrupo, string>>, falla: string): string {
@@ -76,6 +88,18 @@ export const mensajeAlUnirse = (error: Error) =>
       LIMITE_GRUPOS: mensajesGrupo.limiteUnirse,
     },
     mensajesGrupo.fallaUnirse,
+  );
+
+export const mensajeAlEditar = (error: Error) =>
+  mensajeDeFalla(
+    error,
+    {
+      NOMBRE_INVALIDO: mensajesGrupo.nombreInvalido,
+      NO_ADMIN: mensajesGrupo.noAdmin,
+      COLOR_INVALIDO: mensajesGrupo.colorInvalido,
+      NO_MIEMBRO: mensajesGrupo.noMiembro,
+    },
+    mensajesGrupo.fallaEditar,
   );
 
 export const mensajeAlSalir = (error: Error) =>

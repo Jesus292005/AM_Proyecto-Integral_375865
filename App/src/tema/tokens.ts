@@ -33,6 +33,17 @@ export interface MetalesTema {
   oro: Metal;
 }
 
+/** Colores del ícono de grupo, en el orden del enum `color_grupo` del servidor (F26 R2). */
+export const COLORES_GRUPO = ['ROJO', 'AMARILLO', 'VERDE', 'TURQUESA', 'AZUL', 'MORADO', 'ROSA', 'CAFE'] as const;
+
+export type ColorGrupo = (typeof COLORES_GRUPO)[number];
+
+/** Un color del ícono de grupo y el de su inicial. */
+export interface ColorDeGrupo {
+  fondo: string;
+  texto: string;
+}
+
 // Paleta "Grafito y naranja balón" (D65). Agregar una paleta = otro objeto con los mismos nombres.
 const textoTenueGrafito = '#A59D95';
 
@@ -60,6 +71,19 @@ export const metalesGrafito: MetalesTema = {
   bronce: { degradado: ['#7A4A28', '#D9A06B', '#6E4323'], texto: '#24140A' },
   plata: { degradado: ['#8E979E', '#E3E8EC', '#7D868D'], texto: '#1B1F22' },
   oro: { degradado: ['#9C7420', '#F3D27A', '#8A6418'], texto: '#2A1E05' },
+};
+
+// Ícono de grupo (05-ui v2.7, F26 R2): sin naranja (acento, U4) ni metales (U6). Contraste medido
+// contra `fondo` y de la inicial (`fondo`) sobre cada color: todos ≥ 5.9:1.
+export const paletaGrupoGrafito: Record<ColorGrupo, ColorDeGrupo> = {
+  ROJO: { fondo: '#F0626A', texto: '#131211' },
+  AMARILLO: { fondo: '#E8C35A', texto: '#131211' },
+  VERDE: { fondo: '#7DC97F', texto: '#131211' },
+  TURQUESA: { fondo: '#45C2C9', texto: '#131211' },
+  AZUL: { fondo: '#6FA3F7', texto: '#131211' },
+  MORADO: { fondo: '#B48CF2', texto: '#131211' },
+  ROSA: { fondo: '#F08BB9', texto: '#131211' },
+  CAFE: { fondo: '#C79A6B', texto: '#131211' },
 };
 
 // Nombres de familia registrados en `fuentes.ts`.
@@ -143,8 +167,10 @@ export const medidas = {
   escudoEncabezado: 44,
   // Foto de usuario en listas (S08, S03 "En tus grupos").
   fotoLista: 28,
-  // Foto en el encabezado de S09 (05-ui v2.2, F28 R1).
+  // Foto en el encabezado de S09 (05-ui v2.2, F28 R1); también el ícono de grupo en S08 y S15.
   fotoPerfil: 72,
+  // Ícono de grupo en listas: tarjetas de S04 y bloque "Mis grupos" de S11 (05-ui v2.7, F26 R1).
+  iconoGrupo: 44,
   // Medalla de una insignia en la Vitrina (05-ui v2.3, F14 R6) y en su detalle (v2.5).
   medallaInsignia: 56,
   medallaDetalle: 96,
@@ -172,6 +198,7 @@ export interface Tema {
   nombre: string;
   colores: ColoresTema;
   metales: MetalesTema;
+  paletaGrupo: Record<ColorGrupo, ColorDeGrupo>;
   tipografia: typeof tipografia;
   espacio: typeof espacio;
   medidas: typeof medidas;
@@ -181,6 +208,7 @@ export const temaGrafito: Tema = {
   nombre: 'grafito',
   colores: coloresGrafito,
   metales: metalesGrafito,
+  paletaGrupo: paletaGrupoGrafito,
   tipografia,
   espacio,
   medidas,

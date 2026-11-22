@@ -115,7 +115,7 @@ describe('S07 lectura', () => {
     expect(await screen.findByText('No se pudo abrir la cámara.')).toBeOnTheScreen();
     await tocar('Escribir el código');
 
-    expect(await screen.findByRole('header', { name: 'Unirse a grupo' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Unirse a un grupo' })).toBeOnTheScreen();
   });
 });
 
@@ -139,7 +139,7 @@ describe('S07 permiso de cámara (F12 R6)', () => {
     expect(pedirPermisoCamara).toHaveBeenCalledTimes(1);
 
     await tocar('Escribir el código');
-    expect(await screen.findByRole('header', { name: 'Unirse a grupo' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Unirse a un grupo' })).toBeOnTheScreen();
   });
 
   it('F12 CA3: negado sin nueva oportunidad ofrece abrir los ajustes', async () => {
@@ -184,7 +184,7 @@ describe('S06 desde el QR', () => {
 
     expect(await screen.findByLabelText('Código del grupo')).toHaveDisplayValue('ABCD-EFGH');
     await waitFor(() => expect(unirseFalso).not.toHaveBeenCalled());
-    expect(screen.getByRole('header', { name: 'Unirse a grupo' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Unirse a un grupo' })).toBeOnTheScreen();
   });
 
   it('F12 CA4: sin lectura de S07 solo llena el campo', async () => {

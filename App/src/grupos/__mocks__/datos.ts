@@ -8,6 +8,8 @@ export const obtenerGrupo = jest.fn(
     id: grupoId,
     nombre: 'Los del sillón',
     codigo_invitacion: 'ABCDEFGH',
+    color: 'AZUL',
+    rol: 'MIEMBRO',
   }),
 );
 export const obtenerRanking = jest.fn(
@@ -22,5 +24,8 @@ export const obtenerPrediccionesDelGrupo = jest.fn(
 export const crearGrupo = jest.fn(async (_nombre: string): Promise<number> => 1);
 export const unirseAGrupo = jest.fn(
   async (_codigo: string): Promise<Union> => ({ grupoId: 1, yaEraMiembro: false }),
+);
+export const editarGrupo = jest.fn(
+  async (_grupoId: number, _nombre: string, _color: string): Promise<void> => {},
 );
 export const salirDeGrupo = jest.fn(async (_grupoId: number): Promise<void> => {});

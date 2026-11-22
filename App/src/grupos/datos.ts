@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { comoErrorDatos } from '../datos/errores';
 import { supabase } from '../supabase/cliente';
+import { COLORES_GRUPO, type ColorGrupo } from '../tema';
 import { ErrorGrupo, esCodigoGrupo } from './errores';
 
 // Lecturas y acciones de grupos (F07) y su ranking (F08). Crear, unirse y salir son funciones del servidor que usan
@@ -9,6 +10,8 @@ import { ErrorGrupo, esCodigoGrupo } from './errores';
 // vistas devuelven columnas que pueden venir vacías: Zod valida su forma (D54).
 
 const entero = z.number().int();
+const esquemaColor = z.enum(COLORES_GRUPO);
+const esquemaRol = z.enum(['ADMIN', 'MIEMBRO']);
 
 // F08 R8: `mi_posicion` en el ranking del torneo actual; vacía sin torneo actual. F17 R8:
 // `mi_posicion_antes`, la misma sin la jornada de referencia; vacía si no hay un "antes".
@@ -18,6 +21,18 @@ const esquemaMiGrupo = z.object({
   miembros: entero,
   mi_posicion: entero.nullable(),
   mi_posicion_antes: entero.nullable(),
+  // F26 R2, R5: color resuelto y el 1.º del ranking del torneo (vacíos si nadie tiene puntos).
+  color: esquemaColor,
+  lider_nombre: z.string().nullable(),
+  lider_es_yo: z.boolean().nullable(),
+  lideres: entero.nullable(),
+});
+// S08 y S15: el grupo con mi rol (F26 R6, R7). El código sale de `grupo`; lo demás, de `mis_grupos`.
+const esquemaGrupoDetalle = z.object({
+  id: entero,
+  nombre: z.string(),
+  color: esquemaColor,
+  rol: esquemaRol,
 });
 // F08 R6: una fila por miembro actual; de otros, solo nombre, foto y puntos.
 const esquemaFilaRanking = z.object({
@@ -49,7 +64,7 @@ export type MiGrupo = z.infer<typeof esquemaMiGrupo>;
 export type FilaRanking = z.infer<typeof esquemaFilaRanking>;
 export type Ranking = { filas: FilaRanking[]; incluyeSimulados: boolean };
 export type PrediccionAjena = z.infer<typeof esquemaPrediccionAjena>;
-export type GrupoDetalle = { id: number; nombre: string; codigo_invitacion: string };
+export type GrupoDetalle = z.infer<typeof esquemaGrupoDetalle> & { codigo_invitacion: string };
 export type Union = { grupoId: number; yaEraMiembro: boolean };
 
 function validar<T>(esquema: z.ZodType<T>, datos: unknown, que: string): T {
@@ -66,22 +81,24 @@ function comoErrorAccion(error: { message: string }, status: number): Error {
 export async function obtenerMisGrupos(): Promise<MiGrupo[]> {
   const { data, error, status } = await supabase
     .from('mis_grupos')
-    .select('id, nombre, miembros, mi_posicion, mi_posicion_antes')
+    .select('id, nombre, miembros, mi_posicion, mi_posicion_antes, color, lider_nombre, lider_es_yo, lideres')
     .order('unido_en', { ascending: false })
     .order('id', { ascending: false });
   if (error) throw comoErrorDatos(error, status);
   return validar(z.array(esquemaMiGrupo), data, 'Mis grupos');
 }
 
-/** S08: el grupo con su código, o null si no existe o no soy miembro (RLS). */
+/** S08 y S15: el grupo con su código, color y mi rol, o null si no existe o no soy miembro (RLS). */
 export async function obtenerGrupo(grupoId: number): Promise<GrupoDetalle | null> {
-  const { data, error, status } = await supabase
-    .from('grupo')
-    .select('id, nombre, codigo_invitacion')
-    .eq('id', grupoId)
-    .maybeSingle();
-  if (error) throw comoErrorDatos(error, status);
-  return data;
+  const [codigo, mio] = await Promise.all([
+    supabase.from('grupo').select('codigo_invitacion').eq('id', grupoId).maybeSingle(),
+    supabase.from('mis_grupos').select('id, nombre, color, rol').eq('id', grupoId).maybeSingle(),
+  ]);
+  if (codigo.error) throw comoErrorDatos(codigo.error, codigo.status);
+  if (mio.error) throw comoErrorDatos(mio.error, mio.status);
+  if (codigo.data === null || mio.data === null) return null;
+  const grupo = validar(esquemaGrupoDetalle, mio.data, 'Grupo');
+  return { ...grupo, codigo_invitacion: codigo.data.codigo_invitacion };
 }
 
 /**
@@ -124,6 +141,12 @@ export async function unirseAGrupo(codigo: string): Promise<Union> {
   const [fila] = validar(esquemaUnion, data, 'Respuesta de unirse');
   if (fila === undefined) throw new Error('Respuesta de unirse vacía');
   return { grupoId: fila.grupo_id, yaEraMiembro: fila.ya_era_miembro };
+}
+
+/** S15: solo el `ADMIN` (F26 R6). El servidor recorta y valida el nombre y el color. */
+export async function editarGrupo(grupoId: number, nombre: string, color: ColorGrupo): Promise<void> {
+  const { error, status } = await supabase.rpc('editar_grupo', { id_grupo: grupoId, nombre, color });
+  if (error) throw comoErrorAccion(error, status);
 }
 
 export async function salirDeGrupo(grupoId: number): Promise<void> {

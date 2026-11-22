@@ -52,6 +52,15 @@ const trazos = {
   // M7 (F17 R9): Lucide arrow-up y arrow-down.
   flechaArriba: 'M5 12l7-7 7 7M12 19V5',
   flechaAbajo: 'M12 5v14M19 12l-7 7-7-7',
+  // M8 (F26 R4, R14, R17): Lucide plus, share-2, thumbs-up y laugh.
+  mas: 'M5 12h14M12 5v14',
+  compartir:
+    'M15 5a3 3 0 1 0 6 0a3 3 0 1 0-6 0M3 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0' +
+    'M15 19a3 3 0 1 0 6 0a3 3 0 1 0-6 0M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98',
+  pulgarArriba:
+    'M7 10v12M15 5.88L14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8' +
+    'a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88z',
+  risa: 'M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0M18 13a6 6 0 0 1-6 5 6 6 0 0 1-6-5h12zM9 9h.01M15 9h.01',
 } as const;
 
 export type NombreIcono = keyof typeof trazos;

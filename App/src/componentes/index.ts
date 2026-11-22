@@ -11,6 +11,7 @@ export { Esqueleto } from './Esqueleto';
 export { FotoUsuario } from './FotoUsuario';
 export { EstadoPantalla } from './EstadoPantalla';
 export { HojaModal } from './HojaModal';
+export { IconoGrupo, inicialDeGrupo } from './IconoGrupo';
 export { esNombreIcono, Icono, type NombreIcono } from './Icono';
 export { IndicadorEstado, type EstadoIndicador } from './IndicadorEstado';
 export { Insignia } from './Insignia';

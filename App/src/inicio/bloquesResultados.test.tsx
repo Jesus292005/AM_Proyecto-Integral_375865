@@ -36,6 +36,10 @@ const grupo = (cambios: Partial<MiGrupo> = {}): MiGrupo => ({
   miembros: 5,
   mi_posicion: 2,
   mi_posicion_antes: 4,
+  color: 'AZUL',
+  lider_nombre: null,
+  lider_es_yo: null,
+  lideres: null,
   ...cambios,
 });
 
@@ -218,6 +222,15 @@ describe('bloque Mis grupos (R12)', () => {
     expect(within(bloque).getByText('Sin puntos aún')).toBeOnTheScreen();
     fireEvent.press(within(bloque).getByLabelText('Oficina, 4 miembros, Vas 2.º de 4'));
     expect(navegar).toHaveBeenCalledWith({ pathname: '/grupo/[grupoId]', params: { grupoId: '3' } });
+  });
+
+  it('F26 CA7: cada grupo lleva su ícono con su color', async () => {
+    gruposFalsos.mockResolvedValue([grupo({ id: 3, nombre: 'Oficina', color: 'MORADO' })]);
+    await abrir();
+
+    const bloque = await screen.findByTestId('bloque-grupos');
+    expect(await within(bloque).findByTestId('icono-grupo-MORADO')).toBeOnTheScreen();
+    expect(within(bloque).getByLabelText('Grupo Oficina')).toBeOnTheScreen();
   });
 
   it('F17 CA7: sin grupos, "Crear grupo" y "Unirse"', async () => {

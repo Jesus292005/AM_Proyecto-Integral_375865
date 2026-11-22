@@ -59,7 +59,7 @@ const GRUPO = 'Los del sillón';
 
 beforeEach(() => {
   pendientesFalsos.mockResolvedValue([]);
-  misGruposFalsos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 2, mi_posicion: null, mi_posicion_antes: null }]);
+  misGruposFalsos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 2, mi_posicion: null, mi_posicion_antes: null, color: 'AZUL', lider_nombre: null, lider_es_yo: null, lideres: null }]);
   simularSesionGuardada();
   clienteConsultas.clear();
   clienteConsultas.setDefaultOptions({ queries: { retry: false, gcTime: Infinity } });
@@ -96,9 +96,10 @@ const rutasReales = [
   { url: '/equipo', id: 'S12', titulo: 'Equipo favorito' },
   { url: '/grupos', id: 'S04', titulo: 'Grupos' },
   { url: '/grupos/nuevo', id: 'S05', titulo: 'Crear grupo' },
-  { url: '/grupos/unirse', id: 'S06', titulo: 'Unirse a grupo' },
+  { url: '/grupos/unirse', id: 'S06', titulo: 'Unirse a un grupo' },
   { url: '/grupo/3', id: 'S08', titulo: GRUPO },
   { url: '/grupos/escanear', id: 'S07', titulo: 'Escanear QR' },
+  { url: '/grupos/editar/3', id: 'S15', titulo: 'Editar grupo' },
 ] as const;
 
 describe('rutas', () => {
@@ -283,7 +284,7 @@ describe('menú inferior', () => {
   it('tocar varias veces un grupo no apila su pantalla y "volver" regresa a Grupos (D78)', async () => {
     await abrir('/grupos');
 
-    const fila = await screen.findByRole('button', { name: `${GRUPO}, 2 miembros` });
+    const fila = await screen.findByRole('button', { name: `${GRUPO}, 2 miembros · Sin puntos aún` });
     for (let i = 0; i < 3; i++) await fireEvent.press(fila);
     expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
     expect(screen.queryAllByRole('header', { name: GRUPO, includeHiddenElements: true })).toHaveLength(1);
@@ -297,6 +298,7 @@ describe('menú inferior', () => {
     await abrir('/inicio');
 
     await tocar('Grupos', 'tab');
+    await tocar('Crear o unirse a un grupo');
     await tocar('Crear grupo');
     expect(await screen.findByRole('header', { name: 'Crear grupo' })).toBeOnTheScreen();
     expect(screen.queryAllByRole('tab')).toHaveLength(0);
@@ -312,7 +314,8 @@ describe('menú inferior', () => {
     await abrir('/inicio');
 
     await tocar('Grupos', 'tab');
-    await tocar('Unirse con código');
+    await tocar('Crear o unirse a un grupo');
+    await tocar('Unirse a un grupo');
     await fireEvent.changeText(await screen.findByLabelText('Código del grupo'), 'abcd-efgh');
     await tocar('Unirse');
     expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();

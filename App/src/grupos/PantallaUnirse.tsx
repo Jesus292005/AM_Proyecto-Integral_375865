@@ -40,7 +40,7 @@ export function PantallaUnirse() {
   }
 
   return (
-    <PantallaModal titulo="Unirse a grupo">
+    <PantallaModal titulo="Unirse a un grupo">
       <Texto variante="cuerpo" color="texto2">
         Pide el código a alguien del grupo.
       </Texto>

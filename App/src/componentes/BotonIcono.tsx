@@ -1,19 +1,24 @@
 import { Pressable } from 'react-native';
 
 import { useTema } from '../tema';
+import { Icono, type NombreIcono } from './Icono';
 import { Texto } from './Texto';
 
-interface Props {
+type Contenido =
+  /** Símbolo de texto (− / +, ‹ ›). */
+  | { simbolo: string; icono?: never }
+  /** Ícono de trazo (05-ui §7), p. ej. `mas` en S04 o `lapiz` en S08 (v2.7). */
+  | { icono: NombreIcono; simbolo?: never };
+
+type Props = Contenido & {
   /** Siempre obligatorio: el botón no tiene texto visible (05-ui §5). */
   etiqueta: string;
-  /** Símbolo de texto; pasa a ícono SVG cuando se instale react-native-svg (F12). */
-  simbolo: string;
   onPress: () => void;
   deshabilitado?: boolean;
-}
+};
 
 /** Botón cuadrado de 44 × 44 con borde `linea` y radio 4 (05-ui §5). */
-export function BotonIcono({ etiqueta, simbolo, onPress, deshabilitado = false }: Props) {
+export function BotonIcono({ etiqueta, simbolo, icono, onPress, deshabilitado = false }: Props) {
   const { colores, medidas } = useTema();
 
   return (
@@ -34,9 +39,13 @@ export function BotonIcono({ etiqueta, simbolo, onPress, deshabilitado = false }
         opacity: pressed ? medidas.opacidadPresionado : 1,
       })}
     >
-      <Texto variante="titulo2" color={deshabilitado ? 'linea' : 'texto'}>
-        {simbolo}
-      </Texto>
+      {icono !== undefined ? (
+        <Icono nombre={icono} color={deshabilitado ? 'linea' : 'texto'} tamano="iconoMenu" />
+      ) : (
+        <Texto variante="titulo2" color={deshabilitado ? 'linea' : 'texto'}>
+          {simbolo}
+        </Texto>
+      )}
     </Pressable>
   );
 }

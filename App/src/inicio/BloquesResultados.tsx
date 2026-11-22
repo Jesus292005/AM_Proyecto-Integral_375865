@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { Esqueleto, FotoUsuario, Icono, TablaFila, Texto, Boton } from '../componentes';
+import { Boton, Esqueleto, FotoUsuario, Icono, IconoGrupo, TablaFila, Texto } from '../componentes';
 import type { MiGrupo } from '../grupos/datos';
 import { useTema } from '../tema';
 import { BloqueInicio, type Consulta } from './BloqueInicio';
@@ -322,6 +322,8 @@ export function BloqueGrupos({ consulta }: { consulta: Consulta<MiGrupo[]> }) {
                   router.navigate({ pathname: '/grupo/[grupoId]', params: { grupoId: String(grupo.id) } })
                 }
               >
+                {/* F26 R5: el mismo ícono de grupo que S04. */}
+                <IconoGrupo nombre={grupo.nombre} color={grupo.color} />
                 <View style={{ flex: 1 }}>
                   <Texto variante="cuerpoFuerte" numberOfLines={1}>
                     {grupo.nombre}

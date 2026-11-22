@@ -4,35 +4,71 @@ import { useState, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AvisoSinConexion, Boton, Esqueleto, EstadoPantalla, TablaFila, Texto } from '../componentes';
+import {
+  AvisoSinConexion,
+  Boton,
+  BotonIcono,
+  Esqueleto,
+  EstadoPantalla,
+  HojaModal,
+  Texto,
+} from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { useTema } from '../tema';
-import { obtenerMisGrupos, type MiGrupo } from './datos';
+import { obtenerMisGrupos } from './datos';
 import { mensajesGrupo } from './errores';
+import { TarjetaGrupo } from './TarjetaGrupo';
 import { BarraSuperior } from '../perfil/BarraSuperior';
 
-const textoMiembros = (n: number) => (n === 1 ? '1 miembro' : `${n} miembros`);
-
-/** "Vas 2.º de 5" con mi posición en el torneo actual (F08 R8); sin ella, el número de miembros. */
-const textoDeGrupo = (grupo: MiGrupo) =>
-  grupo.mi_posicion === null ? textoMiembros(grupo.miembros) : `Vas ${grupo.mi_posicion}.º de ${grupo.miembros}`;
-
-function EsqueletoGrupos() {
+/** "Crear grupo" (S05) y "Unirse a un grupo" (S06): en la hoja del "+" y en el vacío (F26 R4). */
+function AccionesGrupo({ antes }: { antes?: () => void }) {
   const { espacio } = useTema();
+  const ir = (ruta: '/grupos/nuevo' | '/grupos/unirse') => {
+    antes?.();
+    router.navigate(ruta);
+  };
 
   return (
-    <View testID="grupos-cargando" style={{ gap: espacio.m }}>
-      <Esqueleto variante="cuerpoFuerte" ancho="70%" />
-      <Esqueleto variante="cuerpoFuerte" ancho="55%" />
-      <Esqueleto variante="cuerpoFuerte" ancho="65%" />
+    <View style={{ alignSelf: 'stretch', gap: espacio.s }}>
+      <Boton titulo="Crear grupo" icono="mas" onPress={() => ir('/grupos/nuevo')} />
+      <Boton titulo="Unirse a un grupo" variante="secundario" onPress={() => ir('/grupos/unirse')} />
+      <Texto variante="meta" color="textoTenue" alineacion="center">
+        {mensajesGrupo.unirseSubtitulo}
+      </Texto>
     </View>
   );
 }
 
-/** S04: mis grupos con mi posición (F08 R8) y las acciones de crear y unirse (F07 R9). */
+function EsqueletoGrupos() {
+  const { colores, espacio, medidas } = useTema();
+
+  return (
+    <View testID="grupos-cargando" style={{ gap: espacio.s }}>
+      {[0, 1, 2].map((i) => (
+        <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
+          <View
+            style={{
+              width: medidas.iconoGrupo,
+              height: medidas.iconoGrupo,
+              borderRadius: medidas.iconoGrupo / 2,
+              backgroundColor: colores.superficie,
+            }}
+          />
+          <View style={{ flex: 1, gap: espacio.xxs }}>
+            <Esqueleto variante="cuerpoFuerte" ancho="70%" />
+            <Esqueleto variante="meta" ancho="50%" />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** S04: mis grupos en tarjetas (F26 R3) y el "+" para crear o unirse (F26 R4). */
 export function PantallaGrupos() {
   const { colores, espacio, medidas } = useTema();
   const [refrescando, setRefrescando] = useState(false);
+  const [hojaAbierta, setHojaAbierta] = useState(false);
   const grupos = useQuery({ queryKey: ['mis-grupos'], queryFn: obtenerMisGrupos });
 
   async function recargar() {
@@ -53,15 +89,16 @@ export function PantallaGrupos() {
     );
   } else if (grupos.data.length === 0) {
     contenido = (
-      <View style={{ paddingVertical: espacio.xxl }}>
+      <View style={{ paddingVertical: espacio.xxl, gap: espacio.l }}>
         <Texto variante="cuerpo" alineacion="center">
           {mensajesGrupo.sinGrupos}
         </Texto>
+        <AccionesGrupo />
       </View>
     );
   } else {
     contenido = (
-      <View>
+      <View style={{ gap: espacio.s }}>
         {grupos.isRefetchError && (
           <AvisoSinConexion
             actualizadoEn={new Date(grupos.dataUpdatedAt)}
@@ -69,22 +106,7 @@ export function PantallaGrupos() {
           />
         )}
         {grupos.data.map((grupo) => (
-          <TablaFila
-            key={grupo.id}
-            accessibilityLabel={`${grupo.nombre}, ${textoDeGrupo(grupo)}`}
-            onPress={() =>
-              router.navigate({ pathname: '/grupo/[grupoId]', params: { grupoId: String(grupo.id) } })
-            }
-          >
-            <View style={{ flex: 1 }}>
-              <Texto variante="cuerpoFuerte" numberOfLines={1}>
-                {grupo.nombre}
-              </Texto>
-            </View>
-            <Texto variante="meta" color="textoTenue">
-              {textoDeGrupo(grupo)}
-            </Texto>
-          </TablaFila>
+          <TarjetaGrupo key={grupo.id} grupo={grupo} />
         ))}
       </View>
     );
@@ -111,19 +133,22 @@ export function PantallaGrupos() {
           />
         }
       >
-        <Texto variante="titulo1" accessibilityRole="header">
-          Grupos
-        </Texto>
-        {contenido}
-        <View style={{ gap: espacio.s }}>
-          <Boton titulo="Crear grupo" onPress={() => router.navigate('/grupos/nuevo')} />
-          <Boton
-            titulo="Unirse con código"
-            variante="secundario"
-            onPress={() => router.navigate('/grupos/unirse')}
-          />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
+          <View style={{ flex: 1 }}>
+            <Texto variante="titulo1" accessibilityRole="header">
+              Grupos
+            </Texto>
+          </View>
+          <BotonIcono icono="mas" etiqueta={mensajesGrupo.crearOUnirse} onPress={() => setHojaAbierta(true)} />
         </View>
+        {contenido}
       </ScrollView>
+      <HojaModal visible={hojaAbierta} onCerrar={() => setHojaAbierta(false)} testID="hoja-grupos">
+        <Texto variante="titulo2" accessibilityRole="header">
+          {mensajesGrupo.crearOUnirse}
+        </Texto>
+        <AccionesGrupo antes={() => setHojaAbierta(false)} />
+      </HojaModal>
     </SafeAreaView>
   );
 }
