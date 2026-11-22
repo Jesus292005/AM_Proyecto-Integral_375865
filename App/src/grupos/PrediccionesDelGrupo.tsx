@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { View } from 'react-native';
 
-import { Boton, Esqueleto, Seccion, Texto } from '../componentes';
+import { Boton, Esqueleto, FotoUsuario, Seccion, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { datosDePrediccion } from '../partido/presentacion';
 import { useTema } from '../tema';
 import { obtenerMisGrupos, obtenerPrediccionesDelGrupo, type PrediccionAjena } from './datos';
 import { mensajesGrupo } from './errores';
-import { FotoUsuario } from './FotoUsuario';
 
 type Equipos = { id: number; local: { nombre_corto: string }; visitante: { nombre_corto: string } };
 

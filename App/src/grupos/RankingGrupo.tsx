@@ -2,13 +2,12 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
-import { Esqueleto, EstadoPantalla, PestanasTexto, TablaFila, Texto } from '../componentes';
+import { Esqueleto, EstadoPantalla, FotoUsuario, PestanasTexto, TablaFila, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { SelectorJornada } from '../partidos/SelectorJornada';
 import { useTema } from '../tema';
 import type { FilaRanking, Ranking } from './datos';
 import { ErrorGrupo, mensajesGrupo } from './errores';
-import { FotoUsuario } from './FotoUsuario';
 
 export type Vista = 'torneo' | 'jornada';
 

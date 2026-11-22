@@ -7,6 +7,7 @@ export { EncabezadoPantalla } from './EncabezadoPantalla';
 export { EncabezadoPartido, type EstadoEncabezado } from './EncabezadoPartido';
 export { EscudoEquipo, type EquipoConEscudo } from './EscudoEquipo';
 export { Esqueleto } from './Esqueleto';
+export { FotoUsuario } from './FotoUsuario';
 export { EstadoPantalla } from './EstadoPantalla';
 export { Icono, type NombreIcono } from './Icono';
 export { IndicadorEstado, type EstadoIndicador } from './IndicadorEstado';
