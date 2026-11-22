@@ -30,7 +30,7 @@ export type Database = {
           es_simulada: boolean
           id?: never
           prediccion_id: number
-          puntos_base?: never
+          puntos_base?: number | null
           puntos_marcador: number
           puntos_rango_goles: number
           puntos_resultado: number
@@ -40,7 +40,7 @@ export type Database = {
           es_simulada?: boolean
           id?: never
           prediccion_id?: number
-          puntos_base?: never
+          puntos_base?: number | null
           puntos_marcador?: number
           puntos_rango_goles?: number
           puntos_resultado?: number
@@ -159,17 +159,38 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "estadistica_partido_equipo_id_fkey"
+            columns: ["equipo_id"]
+            isOneToOne: false
+            referencedRelation: "equipos_torneo_actual"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estadistica_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "mis_pendientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "estadistica_partido_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
             referencedRelation: "partido"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "estadistica_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximo_partido_equipo"
+            referencedColumns: ["id"]
+          },
         ]
       }
       evaluacion_ia: {
         Row: {
-          afirmaciones: NonNullable<Json>
+          afirmaciones: Json
           creada_en: string
           error: string | null
           es_simulada: boolean
@@ -185,7 +206,7 @@ export type Database = {
           version_prompt: string | null
         }
         Insert: {
-          afirmaciones?: NonNullable<Json>
+          afirmaciones?: Json
           creada_en?: string
           error?: string | null
           es_simulada: boolean
@@ -201,7 +222,7 @@ export type Database = {
           version_prompt?: string | null
         }
         Update: {
-          afirmaciones?: NonNullable<Json>
+          afirmaciones?: Json
           creada_en?: string
           error?: string | null
           es_simulada?: boolean
@@ -270,10 +291,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "evento_partido_equipo_id_fkey"
+            columns: ["equipo_id"]
+            isOneToOne: false
+            referencedRelation: "equipos_torneo_actual"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "mis_pendientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "evento_partido_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
             referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximo_partido_equipo"
             referencedColumns: ["id"]
           },
         ]
@@ -414,10 +456,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "insignia_obtenida_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "mi_ultima_jornada"
+            referencedColumns: ["jornada_id"]
+          },
+          {
+            foreignKeyName: "insignia_obtenida_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "mis_pendientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "insignia_obtenida_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
             referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insignia_obtenida_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximo_partido_equipo"
             referencedColumns: ["id"]
           },
           {
@@ -619,7 +682,21 @@ export type Database = {
             foreignKeyName: "notificacion_enviada_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
+            referencedRelation: "mis_pendientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacion_enviada_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
             referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacion_enviada_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximo_partido_equipo"
             referencedColumns: ["id"]
           },
           {
@@ -708,10 +785,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "partido_equipo_local_id_fkey"
+            columns: ["equipo_local_id"]
+            isOneToOne: false
+            referencedRelation: "equipos_torneo_actual"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "partido_equipo_visitante_id_fkey"
             columns: ["equipo_visitante_id"]
             isOneToOne: false
             referencedRelation: "equipo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partido_equipo_visitante_id_fkey"
+            columns: ["equipo_visitante_id"]
+            isOneToOne: false
+            referencedRelation: "equipos_torneo_actual"
             referencedColumns: ["id"]
           },
           {
@@ -722,10 +813,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "partido_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "mi_ultima_jornada"
+            referencedColumns: ["jornada_id"]
+          },
+          {
+            foreignKeyName: "partido_partido_origen_id_fkey"
+            columns: ["partido_origen_id"]
+            isOneToOne: false
+            referencedRelation: "mis_pendientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "partido_partido_origen_id_fkey"
             columns: ["partido_origen_id"]
             isOneToOne: false
             referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partido_partido_origen_id_fkey"
+            columns: ["partido_origen_id"]
+            isOneToOne: false
+            referencedRelation: "proximo_partido_equipo"
             referencedColumns: ["id"]
           },
           {
@@ -779,7 +891,21 @@ export type Database = {
             foreignKeyName: "prediccion_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
+            referencedRelation: "mis_pendientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
             referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximo_partido_equipo"
             referencedColumns: ["id"]
           },
           {
@@ -914,6 +1040,13 @@ export type Database = {
             referencedRelation: "equipo"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "usuario_equipo_favorito_id_fkey"
+            columns: ["equipo_favorito_id"]
+            isOneToOne: false
+            referencedRelation: "equipos_torneo_actual"
+            referencedColumns: ["id"]
+          },
         ]
       }
       valor_puntos: {
@@ -947,6 +1080,20 @@ export type Database = {
           id: number | null
           nombre_corto: string | null
         }
+        Insert: {
+          color_primario?: string | null
+          color_texto?: string | null
+          escudo_url?: string | null
+          id?: number | null
+          nombre_corto?: string | null
+        }
+        Update: {
+          color_primario?: string | null
+          color_texto?: string | null
+          escudo_url?: string | null
+          id?: number | null
+          nombre_corto?: string | null
+        }
         Relationships: []
       }
       mi_carta: {
@@ -968,6 +1115,23 @@ export type Database = {
           mejor_racha: number | null
           racha_actual: number | null
           ultima_calificacion: string | null
+        }
+        Relationships: []
+      }
+      mi_ultima_jornada: {
+        Row: {
+          bonos_pendientes: number | null
+          en_curso: boolean | null
+          incluye_simulados: boolean | null
+          jornada_id: number | null
+          jornada_nombre: string | null
+          jornada_orden: number | null
+          mejor_analisis_bono: number | null
+          mejor_analisis_partido_id: number | null
+          predicciones_calificadas: number | null
+          puntos_base: number | null
+          puntos_bono: number | null
+          puntos_total: number | null
         }
         Relationships: []
       }
@@ -1015,8 +1179,9 @@ export type Database = {
       mis_grupos: {
         Row: {
           id: number | null
-          miembros: number | null
           mi_posicion: number | null
+          mi_posicion_antes: number | null
+          miembros: number | null
           nombre: string | null
           rol: Database["public"]["Enums"]["rol_grupo"] | null
           unido_en: string | null
@@ -1041,6 +1206,42 @@ export type Database = {
         }
         Relationships: []
       }
+      mis_pendientes: {
+        Row: {
+          cierre_predicciones: string | null
+          es_simulado: boolean | null
+          estado: Database["public"]["Enums"]["estado_partido"] | null
+          id: number | null
+          inicio: string | null
+          jornada_id: number | null
+          jornada_nombre: string | null
+          jornada_orden: number | null
+          local_color_primario: string | null
+          local_color_texto: string | null
+          local_escudo_url: string | null
+          local_nombre_corto: string | null
+          visitante_color_primario: string | null
+          visitante_color_texto: string | null
+          visitante_escudo_url: string | null
+          visitante_nombre_corto: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partido_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "jornada"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partido_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "mi_ultima_jornada"
+            referencedColumns: ["jornada_id"]
+          },
+        ]
+      }
       mis_puntos: {
         Row: {
           afirmaciones: Json | null
@@ -1061,7 +1262,21 @@ export type Database = {
             foreignKeyName: "prediccion_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
+            referencedRelation: "mis_pendientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
             referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximo_partido_equipo"
             referencedColumns: ["id"]
           },
         ]
@@ -1083,7 +1298,21 @@ export type Database = {
             foreignKeyName: "prediccion_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
+            referencedRelation: "mis_pendientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
             referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediccion_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximo_partido_equipo"
             referencedColumns: ["id"]
           },
           {
@@ -1099,6 +1328,44 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "usuario_publico"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      proximo_partido_equipo: {
+        Row: {
+          cierre_predicciones: string | null
+          estado: Database["public"]["Enums"]["estado_partido"] | null
+          goles_local: number | null
+          goles_visitante: number | null
+          id: number | null
+          inicio: string | null
+          jornada_id: number | null
+          jornada_nombre: string | null
+          jornada_orden: number | null
+          local_color_primario: string | null
+          local_color_texto: string | null
+          local_escudo_url: string | null
+          local_nombre_corto: string | null
+          tengo_prediccion: boolean | null
+          visitante_color_primario: string | null
+          visitante_color_texto: string | null
+          visitante_escudo_url: string | null
+          visitante_nombre_corto: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partido_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "jornada"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partido_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "mi_ultima_jornada"
+            referencedColumns: ["jornada_id"]
           },
         ]
       }
@@ -1127,6 +1394,13 @@ export type Database = {
             columns: ["equipo_favorito_id"]
             isOneToOne: false
             referencedRelation: "equipo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_equipo_favorito_id_fkey"
+            columns: ["equipo_favorito_id"]
+            isOneToOne: false
+            referencedRelation: "equipos_torneo_actual"
             referencedColumns: ["id"]
           },
         ]
@@ -1165,9 +1439,43 @@ export type Database = {
         Returns: boolean
       }
       jornada_actual: { Args: { ahora?: string }; Returns: number }
+      jornada_referencia: { Args: never; Returns: number }
       liberar_evaluaciones: { Args: { ids: number[] }; Returns: undefined }
       llamadas_ia_hoy: { Args: { ahora: string }; Returns: number }
       marcar_insignias_vistas: { Args: never; Returns: number }
+      mejor_analisis_jornada: {
+        Args: never
+        Returns: {
+          en_curso: boolean
+          es_simulada: boolean
+          es_yo: boolean
+          explicacion: string
+          foto_url: string
+          goles_local: number
+          goles_visitante: number
+          grupo_id: number
+          grupo_nombre: string
+          jornada_id: number
+          jornada_nombre: string
+          justificacion: string
+          local_color_primario: string
+          local_color_texto: string
+          local_escudo_url: string
+          local_nombre_corto: string
+          nombre: string
+          partido_id: number
+          puntos_bono: number
+          usuario_id: string
+          visitante_color_primario: string
+          visitante_color_texto: string
+          visitante_escudo_url: string
+          visitante_nombre_corto: string
+        }[]
+      }
+      mi_posicion_antes_en_grupo: {
+        Args: { id_grupo: number }
+        Returns: number
+      }
       mi_posicion_en_grupo: { Args: { id_grupo: number }; Returns: number }
       normalizar_codigo_invitacion: {
         Args: { codigo: string }
@@ -1190,7 +1498,12 @@ export type Database = {
         }[]
       }
       posiciones_grupo: {
-        Args: { id_grupo: number; id_jornada: number; id_torneo: number }
+        Args: {
+          antes_de_orden?: number
+          id_grupo: number
+          id_jornada: number
+          id_torneo: number
+        }
         Returns: {
           con_simulados: boolean
           marcadores_exactos: number
