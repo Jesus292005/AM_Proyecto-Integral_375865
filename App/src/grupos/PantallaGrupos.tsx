@@ -9,6 +9,7 @@ import { esSinConexion } from '../datos/errores';
 import { useTema } from '../tema';
 import { obtenerMisGrupos, type MiGrupo } from './datos';
 import { mensajesGrupo } from './errores';
+import { BarraSuperior } from '../perfil/BarraSuperior';
 
 const textoMiembros = (n: number) => (n === 1 ? '1 miembro' : `${n} miembros`);
 
@@ -91,6 +92,8 @@ export function PantallaGrupos() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colores.fondo }}>
+      {/* F25 R1. */}
+      <BarraSuperior />
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: medidas.margenPantalla,

@@ -13,6 +13,7 @@ import { obtenerMisPuntos } from '../puntos/datos';
 import { obtenerPartidosDeJornada, obtenerTorneoActual } from './datos';
 import { FilaPartido } from './FilaPartido';
 import { EsqueletoTira, TiraJornadas } from './TiraJornadas';
+import { BarraSuperior } from '../perfil/BarraSuperior';
 
 const mensajes = {
   // F02 B6.
@@ -140,6 +141,8 @@ export function PantallaPartidos() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colores.fondo }}>
+      {/* F25 R1. */}
+      <BarraSuperior />
       <View style={{ paddingHorizontal: medidas.margenPantalla, gap: espacio.s }}>
         {torneo.isPending && <EsqueletoTira />}
         {torneo.data && elegida && (

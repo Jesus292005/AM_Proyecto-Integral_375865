@@ -22,6 +22,7 @@ import { SeccionRacha } from './SeccionRacha';
 import { SeccionVitrina } from './SeccionVitrina';
 import { renglonesDeNombre } from './nombre';
 import { useMiPerfil } from './useMiPerfil';
+import { BarraSuperior } from './BarraSuperior';
 
 const mensajes = {
   eligeEquipo: 'Elige tu equipo',
@@ -140,6 +141,8 @@ export function PantallaPerfil() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colores.fondo }}>
+      {/* F25 R1. */}
+      <BarraSuperior enPerfil />
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: medidas.margenPantalla,

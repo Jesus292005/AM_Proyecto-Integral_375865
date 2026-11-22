@@ -40,7 +40,7 @@ function EsqueletoCarta() {
 /** S09, sección "Tu carta" (F20 R7–R8); un error no rompe el resto del perfil. */
 export function SeccionCarta() {
   const { espacio } = useTema();
-  const carta = useMiCarta();
+  const carta = useMiCarta({ siempreAlMontar: true });
   const perfil = useMiPerfil();
   const [elegido, setElegido] = useState<CodigoAtributo | null>(null);
   useReleerAlVolver(carta.refetch);

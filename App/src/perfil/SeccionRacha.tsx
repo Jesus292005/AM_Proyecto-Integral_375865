@@ -1,10 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
 import { View } from 'react-native';
 
 import { Boton, Esqueleto, Seccion, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { useTema } from '../tema';
-import { obtenerMiRacha } from './datos';
+import { useMiRacha } from './useMiRacha';
 import { useReleerAlVolver } from './useReleerAlVolver';
 
 const mensajes = {
@@ -39,7 +38,7 @@ function Numero({ etiqueta, valor }: { etiqueta: string; valor: number }) {
  */
 export function SeccionRacha() {
   const { espacio } = useTema();
-  const racha = useQuery({ queryKey: ['mi-racha'], queryFn: obtenerMiRacha });
+  const racha = useMiRacha({ siempreAlMontar: true });
 
   // Al volver a la pestaña, se pide de nuevo.
   useReleerAlVolver(racha.refetch);

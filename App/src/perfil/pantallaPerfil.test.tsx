@@ -52,7 +52,9 @@ describe('S09 Perfil (F28)', () => {
     const textos = screen
       .getAllByText(/^(Chucho|Tu carta|Racha|Vitrina|Ajustes|Cerrar sesión)$/)
       .map((t) => t.props.children);
+    // El primer "Chucho" es el de la barra superior (F25).
     expect(textos).toEqual([
+      'Chucho',
       'Chucho',
       'Tu carta',
       'Chucho',

@@ -6,12 +6,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Boton, Texto } from '../componentes';
 import { useTema } from '../tema';
+import { BarraSuperior } from '../perfil/BarraSuperior';
 
 export function PantallaInicio() {
   const { colores, espacio, medidas } = useTema();
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colores.fondo }}>
+      {/* F25 R1. */}
+      <BarraSuperior />
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: medidas.margenPantalla,
