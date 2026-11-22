@@ -49,6 +49,7 @@ export default function LayoutProtegidas() {
       <Stack.Screen name="nombre" options={{ presentation: 'modal' }} />
       <Stack.Screen name="grupos/nuevo" options={{ presentation: 'modal' }} />
       <Stack.Screen name="grupos/unirse" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="grupos/editar/[grupoId]" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

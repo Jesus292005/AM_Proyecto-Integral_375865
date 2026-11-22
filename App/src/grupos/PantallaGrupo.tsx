@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AvisoSinConexion,
   Boton,
+  BotonIcono,
   EncabezadoPantalla,
   Esqueleto,
   EstadoPantalla,
@@ -102,7 +103,7 @@ function InvitarYSalir({ grupo }: { grupo: GrupoDetalle }) {
         </Texto>
         <QRInvitacion codigo={grupo.codigo_invitacion} />
         <Texto variante="meta" color="textoTenue">
-          Muéstralo para que lo escaneen desde Unirse a grupo.
+          Muéstralo para que lo escaneen desde Unirse a un grupo.
         </Texto>
       </Seccion>
       <View style={{ gap: espacio.xs }}>
@@ -213,9 +214,23 @@ export function PantallaGrupo() {
           />
         )}
         <View style={{ gap: espacio.xs }}>
-          <Texto variante="titulo1" accessibilityRole="header">
-            {grupo.data.nombre}
-          </Texto>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
+            <View style={{ flex: 1 }}>
+              <Texto variante="titulo1" accessibilityRole="header">
+                {grupo.data.nombre}
+              </Texto>
+            </View>
+            {/* F26 R6: solo el ADMIN edita nombre y color (S15). */}
+            {grupo.data.rol === 'ADMIN' && (
+              <BotonIcono
+                icono="lapiz"
+                etiqueta="Editar grupo"
+                onPress={() =>
+                  router.navigate({ pathname: '/grupos/editar/[grupoId]', params: { grupoId: String(id) } })
+                }
+              />
+            )}
+          </View>
           {aviso === 'ya-miembro' && (
             <Texto variante="meta" color="texto2" accessibilityLiveRegion="polite">
               {mensajesGrupo.yaEraMiembro}

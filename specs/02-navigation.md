@@ -1,6 +1,6 @@
 # 02 — Pantallas y navegación
 
-> **Estado:** ✅ Aprobado v1.6 (2026-11-22, T109: S11 con los 5 bloques de F17 v2; D103 deja de aplicar a S11, D111) · v1.5 (2026-11-21, T99: S09 nuevo y S14 Cambiar nombre, F28, D108) · v1.4 (2026-11-07, T70: parámetros `jornada?` y `aviso?` de S08) · v1.3 (2026-11-02, D90: recordatorio agrupado abre S02) · v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
+> **Estado:** ✅ Aprobado v1.7 (2026-11-22, T124: S04 con tarjetas y "+", S06 "Unirse a un grupo", S08 con pestañas `pestana?`, S13 de F19 y S15 Editar grupo nueva; F26, F19, D113) · v1.6 (2026-11-22, T109: S11 con los 5 bloques de F17 v2; D103 deja de aplicar a S11, D111) · v1.5 (2026-11-21, T99: S09 nuevo y S14 Cambiar nombre, F28, D108) · v1.4 (2026-11-07, T70: parámetros `jornada?` y `aviso?` de S08) · v1.3 (2026-11-02, D90: recordatorio agrupado abre S02) · v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
 > **Última actualización:** 2026-10-10
 > Base: [`01-mvp.md`](./01-mvp.md). Cada pantalla existe porque la necesita al menos una feature; si no, no se construye.
 > Este documento define **qué hay en cada pantalla y cómo se llega**, no cómo se ve (colores, tipografía, estilo): eso se define en la fase de Diseño.
@@ -23,9 +23,10 @@ Inicio de sesión (S01)
     │
     ├── Grupos (S04)
     │   ├── Crear grupo (S05, modal)
-    │   ├── Unirse a grupo (S06, modal)
+    │   ├── Unirse a un grupo (S06, modal)
     │   │   └── Escanear QR (S07, cámara)
     │   └── Detalle de grupo (S08)
+    │       ├── Editar grupo (S15, modal)          ← F26, solo ADMIN (D113)
     │       └── Perfil de otro usuario (S13)
     │
     └── Perfil (S09)
@@ -34,9 +35,9 @@ Inicio de sesión (S01)
         └── Simulación de partidos (S10)      ← solo cuentas administrador (D36)
 ```
 
-**Total: 14 pantallas** (4 modales, 1 solo administrador, 1 que reutiliza el diseño de Perfil).
+**Total: 15 pantallas** (5 modales, 1 solo administrador, 1 que reutiliza el diseño de Perfil).
 
-**Menú inferior (D76):** las pantallas que cuelgan de una pestaña (S03, S08, S13, S10) se abren **con el menú visible**, dentro de la pestaña desde la que se llegó (abrir un partido desde Inicio se queda en Inicio). Inicio de sesión (S01), los modales (S12, S14, S05, S06) y la cámara (S07) **tapan el menú**. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar a otra. Una entrada externa (§4) abre el detalle en la pestaña Inicio.
+**Menú inferior (D76):** las pantallas que cuelgan de una pestaña (S03, S08, S13, S10) se abren **con el menú visible**, dentro de la pestaña desde la que se llegó (abrir un partido desde Inicio se queda en Inicio). Inicio de sesión (S01), los modales (S12, S14, S05, S06, S15) y la cámara (S07) **tapan el menú**. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar a otra. Una entrada externa (§4) abre el detalle en la pestaña Inicio.
 
 ## 2. Pantallas
 
@@ -47,14 +48,15 @@ Inicio de sesión (S01)
 | S12 | Elegir equipo favorito | F18 | Lista de los 18 equipos de la Liga MX; seleccionar uno. También accesible desde Perfil para cambiarlo. | Cargando, error |
 | S02 | Partidos | F02, F03, F10 | Partidos de una jornada (selector de jornada). Cada partido indica hora, estado (por jugar / en juego / terminado) y si ya predije. En jornadas pasadas muestra mis puntos por partido → **cubre el historial de F10** (D34). | Cargando, con datos, jornada sin partidos, error/sin internet |
 | S03 | Detalle de partido | F03, F04, F06, F10, F21, (F16) | **Antes del inicio:** previa del partido (forma, tabla, enfrentamientos directos) + formulario de predicción + justificación (crear/editar); las predicciones de los demás **no se ven**. **Desde la hora de inicio:** mi predicción bloqueada + predicciones y justificaciones de quienes comparten al menos un grupo conmigo (D35). **Terminado:** resultado, estadísticas usadas, mis puntos con desglose (base + bono + explicación de la IA; "bono pendiente" si la IA no ha evaluado). | Cargando, error al guardar, partido ya iniciado al intentar guardar, sin internet |
-| S04 | Grupos | F07 | Lista de mis grupos (nombre, # miembros, mi posición). Botones "Crear" y "Unirse". | Cargando, sin grupos (vacío con las dos acciones), error |
+| S04 | Grupos | F07, F26 | Mis grupos en tarjetas: ícono de grupo (color + inicial, D104), nombre, # miembros, mi posición y el líder. Botón "+" arriba con una hoja: "Crear grupo" (S05) y "Unirse a un grupo" (S06). | Cargando, sin grupos (vacío con las dos acciones), error |
 | S05 | Crear grupo | F07 | Nombre del grupo → al crear, navega a S08. | Nombre vacío/inválido, error al crear |
-| S06 | Unirse a grupo | F07, F12 | Campo de código + botón "Escanear QR". | Código vacío, código inválido, ya soy miembro, error |
+| S06 | Unirse a un grupo | F07, F12 | Campo de código + botón "Escanear QR". | Código vacío, código inválido, ya soy miembro, error |
 | S07 | Escanear QR | F12 | Cámara; al leer un QR válido regresa a S06 con el código lleno. Solo dentro de la app (D37). | Permiso de cámara negado, QR no válido |
-| S08 | Detalle de grupo | F07, F08, F12, F14, F15 | Ranking con dos vistas: **torneo** y **jornada**. En la vista de jornada, la tarjeta "Mejor análisis de la jornada". Código e imagen QR para invitar. Botón compartir. Tocar a un miembro abre S13 (D38). | Cargando, ranking sin puntos aún, error |
+| S08 | Detalle de grupo | F07, F08, F12, F26 | Encabezado con ícono, nombre, # miembros y "Editar" (solo `ADMIN`, S15). Pestañas **Ranking** (torneo, F08) / **Jornada** (analista de la jornada, ranking de la jornada y muro de análisis revelados con reacciones, F26 decisión 4) / **Miembros** (posición, quién falta por predecir, invitar con código, QR y "Compartir invitación", salir). Tocar a un miembro abre S13 (D38). | Por pestaña y por sección: cargando, vacío, error |
 | S09 | Perfil (propio) | F01, F11, F13, F14, F18, F20, F28 | Encabezado con foto (de Google), nombre visible y equipo favorito (o "Elige tu equipo"); carta (F20), racha (F13) y Vitrina de insignias (F14). Ajustes: equipo favorito (S12), nombre (S14), recordatorios. Cerrar sesión. Acceso a S10 solo si soy administrador (F28 R1–R2). | Por sección: cargando, error (una sección que falla no rompe las demás) |
 | S14 | Cambiar nombre | F28 | Campo con el nombre actual (3–20 caracteres) y "Guardar"; al guardar vuelve a S09 (F28 R3–R4). | Nombre inválido, error al guardar, sin internet |
-| S13 | Perfil de otro usuario | F19 | Mismo diseño que S09 en **solo lectura**: foto, nombre, equipo, puntos, racha, Vitrina, (carta). **No** muestra predicciones de partidos que no han empezado. | Cargando, error, usuario no encontrado |
+| S13 | Perfil de otro usuario | F19 | Mismo diseño que S09 en **solo lectura**: foto, nombre, equipo, carta, racha y Vitrina (sin grupo ni jornada de las insignias). Solo para quien comparte grupo con esa persona. **No** muestra predicciones. | Cargando, error, no encontrado (también sin grupo en común) |
+| S15 | Editar grupo | F26 | Solo el `ADMIN`: nombre (3–30) y color de una paleta de 8 con vista previa del ícono; "Guardar" vuelve a S08 (F26 R6). | Nombre inválido, no soy `ADMIN`, error al guardar, sin internet |
 | S10 | Simulación | F09 | Elegir un partido de 2024 y "jugarlo" como partido actual; forzar su final para disparar la calificación. | — (solo administrador) |
 
 ## 3. Rutas y datos que viajan
@@ -75,8 +77,9 @@ Inicio de sesión (S01)
 | `/grupos/nuevo` | S05 | — | S04, S11 | S08 (al crear) |
 | `/grupos/unirse` | S06 | `codigo?` | S04, S11, S07 | S07, S08 (al unirse) |
 | `/grupos/escanear` | S07 | — | S06 | S06 con `codigo` |
-| `/grupo/:grupoId` | S08 | `grupoId`, `vista?` (`torneo`/`jornada`), `jornada?` (el `orden`, como en S02; F08), `aviso?` (`ya-miembro`, F07) | S04, S05, S06, S11, notificación | S13 |
-| `/usuario/:usuarioId` | S13 | `usuarioId` | S08 | Atrás |
+| `/grupo/:grupoId` | S08 | `grupoId`, `pestana?` (`ranking`/`jornada`/`miembros`, F26; `vista=jornada` de antes abre Jornada), `jornada?` (el `orden`, como en S02; F08), `aviso?` (`ya-miembro`, F07) | S04, S05, S06, S11, notificación | S13, S15 |
+| `/grupos/editar/:grupoId` | S15 | `grupoId` | S08 (solo `ADMIN`) | Atrás (S08) |
+| `/usuario/:usuarioId` | S13 | `usuarioId` | S08 (Miembros, muro, analista) | Atrás |
 | `/perfil` | S09 | — | Pestaña | S12, S14, S10, Login (cerrar sesión) |
 | `/admin/simulacion` | S10 | — | S09 (solo administrador) | Atrás |
 

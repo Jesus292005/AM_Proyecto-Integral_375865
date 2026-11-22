@@ -2,6 +2,8 @@ import { ErrorDatos } from '../datos/errores';
 import { supabase } from '../supabase/cliente';
 import {
   crearGrupo,
+  editarGrupo,
+  obtenerGrupo,
   obtenerMisGrupos,
   obtenerRanking,
   obtenerPrediccionesDelGrupo,
@@ -25,6 +27,7 @@ function consulta(respuesta: Respuesta) {
     select: anotar('select'),
     eq: anotar('eq'),
     order: anotar('order'),
+    maybeSingle: anotar('maybeSingle'),
     then: (resolver: (r: Respuesta) => unknown) => Promise.resolve(respuesta).then(resolver),
   };
   return cadena;
@@ -40,7 +43,17 @@ beforeEach(() => {
 
 describe('lecturas', () => {
   it('F07 R9: mis grupos, del más reciente al que me uní', async () => {
-    const fila = { id: 1, nombre: 'Amigos', miembros: 3, mi_posicion: 2, mi_posicion_antes: null };
+    const fila = {
+      id: 1,
+      nombre: 'Amigos',
+      miembros: 3,
+      mi_posicion: 2,
+      mi_posicion_antes: null,
+      color: 'AZUL',
+      lider_nombre: 'Ana',
+      lider_es_yo: false,
+      lideres: 1,
+    };
     const c = consulta({ data: [fila], error: null, status: 200 });
     desde.mockReturnValue(c);
 
@@ -107,6 +120,54 @@ describe('lecturas', () => {
     const error = await obtenerMisGrupos().catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ErrorDatos);
     expect((error as ErrorDatos).sinConexion).toBe(true);
+  });
+});
+
+describe('grupo para S08 y S15 (F26 R6, R7)', () => {
+  it('junta el código de `grupo` con nombre, color resuelto y mi rol de `mis_grupos`', async () => {
+    const codigo = consulta({ data: { codigo_invitacion: 'ABCDEFGH' }, error: null, status: 200 });
+    const mio = consulta({ data: { id: 4, nombre: 'Primos', color: 'ROSA', rol: 'ADMIN' }, error: null, status: 200 });
+    desde.mockImplementation((tabla: string) => (tabla === 'grupo' ? codigo : mio));
+
+    expect(await obtenerGrupo(4)).toEqual({
+      id: 4,
+      nombre: 'Primos',
+      color: 'ROSA',
+      rol: 'ADMIN',
+      codigo_invitacion: 'ABCDEFGH',
+    });
+    expect(mio.llamadas).toContainEqual(['eq', 'id', 4]);
+  });
+
+  it('F07: si no soy miembro (sin fila en alguna de las dos), devuelve null', async () => {
+    desde.mockImplementation((tabla: string) =>
+      consulta({ data: tabla === 'grupo' ? null : { id: 4, nombre: 'P', color: 'ROSA', rol: 'ADMIN' }, error: null, status: 200 }),
+    );
+
+    expect(await obtenerGrupo(4)).toBeNull();
+  });
+
+  it('un color que no es de la paleta es un error, no un dato (D54)', async () => {
+    desde.mockImplementation((tabla: string) =>
+      consulta({
+        data: tabla === 'grupo' ? { codigo_invitacion: 'ABCDEFGH' } : { id: 4, nombre: 'P', color: 'NARANJA', rol: 'ADMIN' },
+        error: null,
+        status: 200,
+      }),
+    );
+
+    await expect(obtenerGrupo(4)).rejects.toThrow('forma inválida');
+  });
+
+  it('F26 R6: editar llama a editar_grupo y distingue NO_ADMIN de una falla', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: null, status: 204 });
+    await editarGrupo(4, 'Primos', 'ROSA');
+    expect(rpc).toHaveBeenCalledWith('editar_grupo', { id_grupo: 4, nombre: 'Primos', color: 'ROSA' });
+
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'NO_ADMIN' }, status: 400 });
+    const error = await editarGrupo(4, 'Primos', 'ROSA').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ErrorGrupo);
+    expect((error as ErrorGrupo).codigo).toBe('NO_ADMIN');
   });
 });
 

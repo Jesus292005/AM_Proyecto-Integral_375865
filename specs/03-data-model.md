@@ -1,7 +1,7 @@
 # 03 — Modelo de datos (conceptual)
 
-> **Estado:** ✅ Aprobado v1.9 (2026-11-21; `Usuario.nombreEditado`, `Insignia.nivel` e `InsigniaObtenida.vistaEn`, M6, D108) · v1.8 (2026-11-21; colores de `Equipo` en el servidor, F22 R4, D106) · v1.7 (2026-11-07; límites y código de `Grupo`, F07, D97) · v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
-> **Última actualización:** 2026-11-21
+> **Estado:** ✅ Aprobado v1.10 (2026-11-22; `Grupo.color` y `Reaccion`, M8, D113) · v1.9 (2026-11-21; `Usuario.nombreEditado`, `Insignia.nivel` e `InsigniaObtenida.vistaEn`, M6, D108) · v1.8 (2026-11-21; colores de `Equipo` en el servidor, F22 R4, D106) · v1.7 (2026-11-07; límites y código de `Grupo`, F07, D97) · v1.6 (2026-11-06; `EvaluacionIA` completa y `LlamadaIA`, F06 R16, D94) · v1.5 (2026-11-02; R03 y R04 miden desde `cierrePredicciones`, D82, D90) · v1.4 (2026-11-02; `Partido.listoParaCalificarEn`, D84) · v1.3 (2026-11-02; `Partido.cierrePredicciones`, D82) · v1.2 (2026-11-01; origen de `nombreCorto`, D81) · v1.1 (2026-10-10; colores de equipo, D70)
+> **Última actualización:** 2026-11-22
 > Base: [`01-mvp.md`](./01-mvp.md), [`02-navigation.md`](./02-navigation.md), [`decisions.md`](./decisions.md).
 > Este documento describe **qué datos existen y cómo se relacionan**. No decide dónde viven (base de datos, tablas, colecciones): eso es la fase de Diseño.
 > Requisitos de diseño heredados: varias ligas y temporadas (visión a futuro), datos marcados como simulados (D40), estadísticas suficientes para la carta (D41).
@@ -24,6 +24,7 @@ Usuario 1──* Prediccion *──1 Partido
               └──*   Comentario             (F16, Could)
 
 Usuario *──* Grupo   (a través de MiembroGrupo)
+Grupo 1──* Reaccion *──1 Prediccion         (F26; también *──1 Usuario)
 Usuario 1──* InsigniaObtenida *──1 Insignia
 Usuario 1──* Dispositivo                    (tokens de notificación)
 Usuario *──0..1 Equipo                      (equipo favorito)
@@ -71,11 +72,15 @@ Torneo 1──* PosicionTabla *──1 Equipo       (tabla general, F21)
 
 **Dispositivo** (F11) — `usuarioId`, `tokenNotificaciones`, `actualizadoEn`. Un usuario puede tener varios.
 
-**Grupo** — `id`, `nombre` (3–30 caracteres), `codigoInvitacion` (único: 8 caracteres de un alfabeto de 31 sin 0 O 1 I L, F07 R2), `creadorId?`, `creadoEn`.
+**Grupo** — `id`, `nombre` (3–30 caracteres), `codigoInvitacion` (único: 8 caracteres de un alfabeto de 31 sin 0 O 1 I L, F07 R2), `color?` (F26 R2), `creadorId?`, `creadoEn`.
+> `color` es uno de 8 (`ROJO` | `AMARILLO` | `VERDE` | `TURQUESA` | `AZUL` | `MORADO` | `ROSA` | `CAFE`) y solo lo cambia el `ADMIN`; vacío = por defecto, el de la posición `id mod 8` (lo resuelve el servidor).
 > El grupo **no** pertenece a un torneo: dura entre torneos y su ranking se calcula por torneo.
 > Límites (D97): **30 miembros** por grupo y **10 grupos** por usuario. Si sale el último miembro, el grupo se borra; si sale el último `ADMIN`, el miembro más antiguo pasa a `ADMIN`.
 
 **MiembroGrupo** — `grupoId`, `usuarioId`, `rol` (`ADMIN` | `MIEMBRO`), `unidoEn`.
+
+**Reaccion** (F26 R13) — `grupoId`, `prediccionId`, `usuarioId`, `tipo` (`BIEN_VISTO` | `BUEN_ANALISIS` | `LA_CLAVO` | `ME_RIO`), `creadaEn`.
+> Una por persona, análisis y grupo (D113): las reacciones son del muro de cada grupo. Solo cuentan las de los miembros actuales; no dan puntos, insignias ni racha (P4).
 
 ### Predicciones y puntos
 

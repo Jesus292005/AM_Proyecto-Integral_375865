@@ -1,7 +1,7 @@
 // T66–T67: S04, S05, S06, S08 y la sección "En tus grupos" de S03 (F07 CA9, CA10). Corre la app
 // completa con una sesión guardada; las lecturas y acciones de grupos se simulan.
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { ExpoRoot } from 'expo-router';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { ExpoRoot, router } from 'expo-router';
 import { getMockContext } from 'expo-router/testing-library';
 import { Alert, type AlertButton } from 'react-native';
 
@@ -9,10 +9,11 @@ import { clienteConsultas } from '../datos/clienteConsultas';
 import { ErrorDatos } from '../datos/errores';
 import { obtenerPartido } from '../partido/datos';
 import { obtenerPartidosDeJornada, obtenerTorneoActual, type PartidoDeLista } from '../partidos/datos';
-import { coloresGrafito } from '../tema/tokens';
+import { coloresGrafito, temaGrafito } from '../tema/tokens';
 import { simularSesionGuardada } from '../pruebas/supabaseFalso';
 import {
   crearGrupo,
+  editarGrupo,
   obtenerGrupo,
   obtenerMisGrupos,
   obtenerRanking,
@@ -20,6 +21,7 @@ import {
   salirDeGrupo,
   unirseAGrupo,
   type FilaRanking,
+  type MiGrupo,
   type PrediccionAjena,
 } from './datos';
 import { ErrorGrupo } from './errores';
@@ -59,6 +61,7 @@ const prediccionesFalsas = obtenerPrediccionesDelGrupo as jest.MockedFunction<
 const crearFalso = crearGrupo as jest.MockedFunction<typeof crearGrupo>;
 const unirseFalso = unirseAGrupo as jest.MockedFunction<typeof unirseAGrupo>;
 const salirFalso = salirDeGrupo as jest.MockedFunction<typeof salirDeGrupo>;
+const editarFalso = editarGrupo as jest.MockedFunction<typeof editarGrupo>;
 const partidoFalso = obtenerPartido as jest.MockedFunction<typeof obtenerPartido>;
 
 const GRUPO = 'Los del sillón';
@@ -100,7 +103,7 @@ beforeEach(() => {
   misGrupos.mockReset().mockResolvedValue([]);
   grupoFalso
     .mockReset()
-    .mockImplementation(async (id) => ({ id, nombre: GRUPO, codigo_invitacion: 'ABCDEFGH' }));
+    .mockImplementation(async (id) => ({ id, nombre: GRUPO, codigo_invitacion: 'ABCDEFGH', color: 'AZUL', rol: 'MIEMBRO' }));
   rankingFalso.mockReset().mockResolvedValue({ filas: [], incluyeSimulados: false });
   torneoFalso.mockReset().mockResolvedValue({
     nombre: 'Apertura 2026',
@@ -115,6 +118,7 @@ beforeEach(() => {
   crearFalso.mockReset().mockResolvedValue(1);
   unirseFalso.mockReset().mockResolvedValue({ grupoId: 1, yaEraMiembro: false });
   salirFalso.mockReset().mockResolvedValue(undefined);
+  editarFalso.mockReset().mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -143,24 +147,73 @@ function confirmarAlerta() {
   return alerta;
 }
 
+const miGrupo = (extra: Partial<MiGrupo>): MiGrupo => ({
+  id: 1,
+  nombre: GRUPO,
+  miembros: 4,
+  mi_posicion: 2,
+  mi_posicion_antes: null,
+  color: 'AZUL',
+  lider_nombre: 'Ana',
+  lider_es_yo: false,
+  lideres: 1,
+  ...extra,
+});
+
 describe('S04 Grupos', () => {
-  it('F07 CA9: sin grupos muestra el vacío con las dos acciones', async () => {
+  it('F07 CA9, F26 R4: sin grupos muestra el vacío con las dos acciones', async () => {
     await abrir('/grupos');
 
     expect(await screen.findByText('Aún no estás en ningún grupo.')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Crear grupo' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Unirse con código' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Unirse a un grupo' })).toBeOnTheScreen();
   });
 
-  it('F07 CA9, F08 R8: lista mis grupos con mi posición (o el número de miembros sin ella)', async () => {
+  it('F26 CA7: tarjetas con ícono (color e inicial), miembros, posición y las 4 formas del líder', async () => {
     misGrupos.mockResolvedValue([
-      { id: 2, nombre: 'Oficina', miembros: 1, mi_posicion: null, mi_posicion_antes: null },
-      { id: 1, nombre: GRUPO, miembros: 4, mi_posicion: 2, mi_posicion_antes: null },
+      miGrupo({ id: 1, nombre: 'oficina', color: 'ROJO', miembros: 1, lider_nombre: 'Ana' }),
+      miGrupo({ id: 2, nombre: 'Primos', color: 'VERDE', mi_posicion: 1, lider_nombre: 'Yo', lider_es_yo: true }),
+      miGrupo({ id: 3, nombre: '7 de copas', color: 'CAFE', mi_posicion: 1, lideres: 2 }),
+      miGrupo({ id: 4, nombre: 'Nuevos', mi_posicion: 1, lider_nombre: null, lider_es_yo: null, lideres: null }),
     ]);
     await abrir('/grupos');
 
-    expect(await screen.findByRole('button', { name: 'Oficina, 1 miembro' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: `${GRUPO}, Vas 2.º de 4` })).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: 'oficina, 1 miembro · Vas 2.º, Líder: Ana' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Primos, 4 miembros · Vas 1.º, Vas líder' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: '7 de copas, 4 miembros · Vas 1.º, Empate en el 1.º' })).toBeOnTheScreen();
+    // Sin puntos nadie es líder y "Vas 1.º" no dice nada: "Sin puntos aún".
+    expect(screen.getByRole('button', { name: 'Nuevos, 4 miembros · Sin puntos aún' })).toBeOnTheScreen();
+
+    const icono = screen.getByTestId('icono-grupo-ROJO');
+    expect(icono).toHaveStyle({ backgroundColor: temaGrafito.paletaGrupo.ROJO.fondo });
+    expect(within(icono).getByText('O')).toBeOnTheScreen();
+    expect(within(screen.getByTestId('icono-grupo-CAFE')).getByText('7')).toBeOnTheScreen();
+  });
+
+  it('F26 CA7: tocar una tarjeta abre S08 con navigate', async () => {
+    misGrupos.mockResolvedValue([miGrupo({ id: 3 })]);
+    await abrir('/grupos');
+    const navegar = jest.spyOn(router, 'navigate');
+
+    await fireEvent.press(await screen.findByRole('button', { name: `${GRUPO}, 4 miembros · Vas 2.º, Líder: Ana` }));
+    expect(navegar).toHaveBeenCalledWith({ pathname: '/grupo/[grupoId]', params: { grupoId: '3' } });
+  });
+
+  it.each([
+    ['Crear grupo', '/grupos/nuevo'],
+    ['Unirse a un grupo', '/grupos/unirse'],
+  ])('F26 CA7: el "+" abre la hoja y "%s" navega a %s con navigate', async (opcion, ruta) => {
+    misGrupos.mockResolvedValue([miGrupo({})]);
+    await abrir('/grupos');
+    const navegar = jest.spyOn(router, 'navigate');
+
+    await tocar('Crear o unirse a un grupo');
+    const hoja = await screen.findByTestId('hoja-grupos');
+    expect(within(hoja).getByText('Con el código o escaneando el QR del grupo.')).toBeOnTheScreen();
+    await fireEvent.press(within(hoja).getByRole('button', { name: opcion }));
+
+    expect(navegar).toHaveBeenCalledWith(ruta);
+    await waitFor(() => expect(screen.queryByTestId('hoja-grupos')).not.toBeOnTheScreen());
   });
 
   it('F07 CA9: un error al cargar ofrece reintentar', async () => {
@@ -172,6 +225,86 @@ describe('S04 Grupos', () => {
     ).toBeOnTheScreen();
     await tocar('Reintentar');
     expect(await screen.findByText('Aún no estás en ningún grupo.')).toBeOnTheScreen();
+  });
+});
+
+describe('S15 Editar grupo (F26 R6)', () => {
+  const comoAdmin = () =>
+    grupoFalso.mockImplementation(async (id) => ({
+      id,
+      nombre: GRUPO,
+      codigo_invitacion: 'ABCDEFGH',
+      color: 'AZUL',
+      rol: 'ADMIN',
+    }));
+
+  it('F26 CA8: un MIEMBRO no ve "Editar" en S08', async () => {
+    await abrir('/grupo/1');
+    expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Editar grupo' })).not.toBeOnTheScreen();
+  });
+
+  it('F26 CA8: el ADMIN ve "Editar" en S08 y abre S15', async () => {
+    comoAdmin();
+    await abrir('/grupo/1');
+    await tocar('Editar grupo');
+    expect(await screen.findByRole('header', { name: 'Editar grupo' })).toBeOnTheScreen();
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+  });
+
+  it('F26 CA8: sin cambios "Guardar" está deshabilitado; el color elegido lleva check y se guarda', async () => {
+    comoAdmin();
+    await abrir('/grupos/editar/1');
+
+    const guardar = await screen.findByRole('button', { name: 'Guardar' });
+    expect(guardar).toBeDisabled();
+    expect(screen.getByRole('radio', { name: 'Azul' })).toBeSelected();
+    expect(within(screen.getByRole('radio', { name: 'Azul' })).getByTestId('icono-check')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Rojo' }));
+    expect(screen.getByRole('radio', { name: 'Rojo' })).toBeSelected();
+    expect(screen.getByRole('radio', { name: 'Azul' })).not.toBeSelected();
+    expect(screen.getByTestId('icono-grupo-ROJO')).toBeOnTheScreen();
+
+    await escribir('Nombre del grupo', '  Los Compas  ');
+    await tocar('Guardar');
+    expect(editarFalso).toHaveBeenCalledWith(1, 'Los Compas', 'ROJO');
+    // Se cierra el modal y queda S08.
+    await waitFor(() => expect(screen.queryByRole('header', { name: 'Editar grupo' })).not.toBeOnTheScreen());
+  });
+
+  it('F26 CA8: un nombre inválido deshabilita "Guardar" y lo dice bajo el campo', async () => {
+    comoAdmin();
+    await abrir('/grupos/editar/1');
+
+    await escribir('Nombre del grupo', 'ab');
+    expect(await screen.findByText('Escribe un nombre de 3 a 30 caracteres.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeDisabled();
+  });
+
+  it.each([
+    ['NO_ADMIN', new ErrorGrupo('NO_ADMIN'), 'Solo el administrador puede editar el grupo.'],
+    ['NOMBRE_INVALIDO', new ErrorGrupo('NOMBRE_INVALIDO'), 'Escribe un nombre de 3 a 30 caracteres.'],
+    ['COLOR_INVALIDO', new ErrorGrupo('COLOR_INVALIDO'), 'Elige un color de la paleta.'],
+    ['NO_MIEMBRO', new ErrorGrupo('NO_MIEMBRO'), 'No perteneces a este grupo.'],
+    ['sin conexión', new ErrorDatos('Network request failed', true), 'Sin conexión. Revisa tu internet e inténtalo de nuevo.'],
+    ['una falla', new Error('boom'), 'No se pudo guardar. Inténtalo de nuevo.'],
+  ])('F26 CA8: con %s del servidor muestra su texto y conserva lo escrito', async (_caso, error, texto) => {
+    comoAdmin();
+    editarFalso.mockRejectedValueOnce(error);
+    await abrir('/grupos/editar/1');
+
+    await escribir('Nombre del grupo', 'Otro nombre');
+    await tocar('Guardar');
+    expect(await screen.findByText(texto)).toBeOnTheScreen();
+    expect(screen.getByDisplayValue('Otro nombre')).toBeOnTheScreen();
+  });
+
+  it('F26 R6: un MIEMBRO que abre S15 ve que solo el administrador puede editar', async () => {
+    await abrir('/grupos/editar/1');
+
+    expect(await screen.findByText('Solo el administrador puede editar el grupo.')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeOnTheScreen();
   });
 });
 
@@ -227,7 +360,7 @@ describe('S05 Crear grupo', () => {
   });
 });
 
-describe('S06 Unirse a grupo', () => {
+describe('S06 Unirse a un grupo', () => {
   it('F07 CA9: un código mal escrito se rechaza sin llamar al servidor', async () => {
     await abrir('/grupos/unirse');
 
@@ -439,7 +572,7 @@ describe('S08 Grupo', () => {
 
 describe('S03, "En tus grupos" (F07 R7)', () => {
   beforeEach(() => {
-    misGrupos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 3, mi_posicion: 1, mi_posicion_antes: null }]);
+    misGrupos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 3, mi_posicion: 1, mi_posicion_antes: null, color: 'AZUL', lider_nombre: null, lider_es_yo: null, lideres: null }]);
   });
 
   it('F07 CA10: cerrado, una fila por persona con su predicción y su análisis', async () => {
