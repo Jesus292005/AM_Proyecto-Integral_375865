@@ -40,7 +40,7 @@ beforeEach(() => {
 
 describe('lecturas', () => {
   it('F07 R9: mis grupos, del más reciente al que me uní', async () => {
-    const fila = { id: 1, nombre: 'Amigos', miembros: 3, mi_posicion: 2 };
+    const fila = { id: 1, nombre: 'Amigos', miembros: 3, mi_posicion: 2, mi_posicion_antes: null };
     const c = consulta({ data: [fila], error: null, status: 200 });
     desde.mockReturnValue(c);
 
@@ -50,7 +50,7 @@ describe('lecturas', () => {
   });
 
   it('una fila con forma inválida es un error, no un dato (D54)', async () => {
-    desde.mockReturnValue(consulta({ data: [{ id: 1, nombre: null, miembros: 3, mi_posicion: null }], error: null, status: 200 }));
+    desde.mockReturnValue(consulta({ data: [{ id: 1, nombre: null, miembros: 3, mi_posicion: null, mi_posicion_antes: null }], error: null, status: 200 }));
 
     await expect(obtenerMisGrupos()).rejects.toThrow('forma inválida');
   });

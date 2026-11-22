@@ -7,6 +7,8 @@ import { getMockContext } from 'expo-router/testing-library';
 
 import { clienteConsultas } from './datos/clienteConsultas';
 import { crearGrupo, obtenerGrupo, obtenerMisGrupos } from './grupos/datos';
+import { pendienteDePrueba } from './inicio/__mocks__/datos';
+import { obtenerPendientes } from './inicio/datos';
 import { obtenerPartido } from './partido/datos';
 import { simularSesionGuardada } from './pruebas/supabaseFalso';
 
@@ -18,6 +20,8 @@ jest.mock('./perfil/datos');
 jest.mock('./simulacion/datos');
 // S04–S08 ya son reales (T66, T67, T72): un grupo "Los del sillón"; la cámara la simula `jest.setup.ts`.
 jest.mock('./grupos/datos');
+// S11 ya es real (F17 v2): sin pendientes ni equipo por defecto.
+jest.mock('./inicio/datos');
 // S02 ya es real (T26): sus lecturas se simulan con una jornada de un partido.
 jest.mock('./partidos/datos', () => ({
   ...jest.requireActual<typeof import('./partidos/datos')>('./partidos/datos'),
@@ -50,10 +54,12 @@ const PARTIDO_S02 = 'Puebla 1, Santos 0. Terminado';
 const S03 = 'Puebla 1, Santos 0';
 
 const misGruposFalsos = obtenerMisGrupos as jest.MockedFunction<typeof obtenerMisGrupos>;
+const pendientesFalsos = obtenerPendientes as jest.MockedFunction<typeof obtenerPendientes>;
 const GRUPO = 'Los del sillón';
 
 beforeEach(() => {
-  misGruposFalsos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 2, mi_posicion: null }]);
+  pendientesFalsos.mockResolvedValue([]);
+  misGruposFalsos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 2, mi_posicion: null, mi_posicion_antes: null }]);
   simularSesionGuardada();
   clienteConsultas.clear();
   clienteConsultas.setDefaultOptions({ queries: { retry: false, gcTime: Infinity } });
@@ -203,17 +209,27 @@ describe('menú inferior', () => {
     expect(screen.getByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
   });
 
-  it('S11: los accesos de Inicio llevan a Partidos y a Grupos (D103)', async () => {
+  it('S11: un pendiente y un grupo de Inicio abren S03 y S08 dentro de Inicio (F17, D76)', async () => {
+    pendientesFalsos.mockResolvedValue([pendienteDePrueba({ id: 1 })]);
     await abrir('/inicio');
 
-    await tocar('Predecir partidos');
-    expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
-    expect(screen.getByRole('tab', { name: 'Partidos' })).toBeSelected();
+    await fireEvent.press(await screen.findByLabelText(/^América contra Chivas/));
+    expect(await abrioS03()).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
 
     await tocar('Inicio', 'tab');
-    await tocar('Ver mis grupos');
-    expect(await screen.findByRole('header', { name: 'Grupos' })).toBeOnTheScreen();
-    expect(screen.getByRole('tab', { name: 'Grupos' })).toBeSelected();
+    await seCerroS03();
+    await tocar(GRUPO);
+    expect(await screen.findByRole('header', { name: GRUPO })).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
+  });
+
+  it('S11: "Ver partidos" de Pendientes lleva a la pestaña Partidos', async () => {
+    await abrir('/inicio');
+
+    await tocar('Ver partidos');
+    expect(await screen.findByRole('header', { name: 'Jornada 1' })).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Partidos' })).toBeSelected();
   });
 
   it('tocar la pestaña activa desde un detalle regresa a su primera pantalla', async () => {

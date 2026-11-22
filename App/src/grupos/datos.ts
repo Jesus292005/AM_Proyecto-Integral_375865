@@ -10,8 +10,15 @@ import { ErrorGrupo, esCodigoGrupo } from './errores';
 
 const entero = z.number().int();
 
-// F08 R8: `mi_posicion` en el ranking del torneo actual; vacía sin torneo actual.
-const esquemaMiGrupo = z.object({ id: entero, nombre: z.string(), miembros: entero, mi_posicion: entero.nullable() });
+// F08 R8: `mi_posicion` en el ranking del torneo actual; vacía sin torneo actual. F17 R8:
+// `mi_posicion_antes`, la misma sin la jornada de referencia; vacía si no hay un "antes".
+const esquemaMiGrupo = z.object({
+  id: entero,
+  nombre: z.string(),
+  miembros: entero,
+  mi_posicion: entero.nullable(),
+  mi_posicion_antes: entero.nullable(),
+});
 // F08 R6: una fila por miembro actual; de otros, solo nombre, foto y puntos.
 const esquemaFilaRanking = z.object({
   posicion: entero,
@@ -59,7 +66,7 @@ function comoErrorAccion(error: { message: string }, status: number): Error {
 export async function obtenerMisGrupos(): Promise<MiGrupo[]> {
   const { data, error, status } = await supabase
     .from('mis_grupos')
-    .select('id, nombre, miembros, mi_posicion')
+    .select('id, nombre, miembros, mi_posicion, mi_posicion_antes')
     .order('unido_en', { ascending: false })
     .order('id', { ascending: false });
   if (error) throw comoErrorDatos(error, status);

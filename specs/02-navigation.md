@@ -1,6 +1,6 @@
 # 02 — Pantallas y navegación
 
-> **Estado:** ✅ Aprobado v1.5 (2026-11-21, T99: S09 nuevo y S14 Cambiar nombre, F28, D108) · v1.4 (2026-11-07, T70: parámetros `jornada?` y `aviso?` de S08) · v1.3 (2026-11-02, D90: recordatorio agrupado abre S02) · v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
+> **Estado:** ✅ Aprobado v1.6 (2026-11-22, T109: S11 con los 5 bloques de F17 v2; D103 deja de aplicar a S11, D111) · v1.5 (2026-11-21, T99: S09 nuevo y S14 Cambiar nombre, F28, D108) · v1.4 (2026-11-07, T70: parámetros `jornada?` y `aviso?` de S08) · v1.3 (2026-11-02, D90: recordatorio agrupado abre S02) · v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
 > **Última actualización:** 2026-10-10
 > Base: [`01-mvp.md`](./01-mvp.md). Cada pantalla existe porque la necesita al menos una feature; si no, no se construye.
 > Este documento define **qué hay en cada pantalla y cómo se llega**, no cómo se ve (colores, tipografía, estilo): eso se define en la fase de Diseño.
@@ -43,7 +43,7 @@ Inicio de sesión (S01)
 | ID | Pantalla | Features | Qué muestra / permite | Estados obligatorios |
 |---|---|---|---|---|
 | S01 | Inicio de sesión | F01 | Botón "Continuar con Google". | Cargando, error de Google, sin internet |
-| S11 | Inicio | F17, F18 | **Tres bloques fijos** (no configurables): (1) Próximo partido de mi equipo favorito con acceso directo a predecir — si no tengo equipo, invitación a elegirlo (S12); (2) Partidos de la jornada **pendientes de predecir**; (3) Mis grupos con mi posición — si no tengo grupos, invitación a crear/unirme. Cada bloque lleva a la pantalla correspondiente. | Por bloque: cargando, vacío, error (un bloque con error no rompe los demás) |
+| S11 | Inicio | F17, F18, F25 | Barra superior (F25) y **cinco bloques fijos** (no configurables, F17 v2, D111): (1) **Pendientes de predecir** de la jornada actual y la siguiente, con la cuenta regresiva del próximo cierre; (2) Próximo partido de mi equipo favorito — si no tengo equipo, invitación a elegirlo (S12); (3) **Mi última jornada**: puntos base + bono, la nota de mi mejor análisis y si subí o bajé en cada grupo; (4) **Mejor análisis de la jornada** en mis grupos (solo después del cierre, R04); (5) Mis grupos con mi posición — si no tengo grupos, invitación a crear/unirme. Cada bloque lleva a la pantalla correspondiente. | Por bloque: cargando, vacío, error (un bloque con error no rompe los demás) |
 | S12 | Elegir equipo favorito | F18 | Lista de los 18 equipos de la Liga MX; seleccionar uno. También accesible desde Perfil para cambiarlo. | Cargando, error |
 | S02 | Partidos | F02, F03, F10 | Partidos de una jornada (selector de jornada). Cada partido indica hora, estado (por jugar / en juego / terminado) y si ya predije. En jornadas pasadas muestra mis puntos por partido → **cubre el historial de F10** (D34). | Cargando, con datos, jornada sin partidos, error/sin internet |
 | S03 | Detalle de partido | F03, F04, F06, F10, F21, (F16) | **Antes del inicio:** previa del partido (forma, tabla, enfrentamientos directos) + formulario de predicción + justificación (crear/editar); las predicciones de los demás **no se ven**. **Desde la hora de inicio:** mi predicción bloqueada + predicciones y justificaciones de quienes comparten al menos un grupo conmigo (D35). **Terminado:** resultado, estadísticas usadas, mis puntos con desglose (base + bono + explicación de la IA; "bono pendiente" si la IA no ha evaluado). | Cargando, error al guardar, partido ya iniciado al intentar guardar, sin internet |
@@ -66,7 +66,7 @@ Inicio de sesión (S01)
 | Ruta | Pantalla | Parámetros | Llega desde | Puede ir a |
 |---|---|---|---|---|
 | `/login` | S01 | — | Arranque sin sesión; cerrar sesión | Inicio |
-| `/inicio` | S11 | — | Login, pestaña | S03, S02, S08, S04, S12 |
+| `/inicio` | S11 | — | Login, pestaña | S03, S02, S08, S05, S06, S12 |
 | `/equipo` | S12 | — | S11, S09 | Atrás |
 | `/nombre` | S14 | — | S09 | Atrás |
 | `/partidos` | S02 | `jornada?` (por defecto la actual) | Pestaña, S11 | S03 |

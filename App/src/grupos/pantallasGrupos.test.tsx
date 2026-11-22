@@ -154,8 +154,8 @@ describe('S04 Grupos', () => {
 
   it('F07 CA9, F08 R8: lista mis grupos con mi posición (o el número de miembros sin ella)', async () => {
     misGrupos.mockResolvedValue([
-      { id: 2, nombre: 'Oficina', miembros: 1, mi_posicion: null },
-      { id: 1, nombre: GRUPO, miembros: 4, mi_posicion: 2 },
+      { id: 2, nombre: 'Oficina', miembros: 1, mi_posicion: null, mi_posicion_antes: null },
+      { id: 1, nombre: GRUPO, miembros: 4, mi_posicion: 2, mi_posicion_antes: null },
     ]);
     await abrir('/grupos');
 
@@ -439,7 +439,7 @@ describe('S08 Grupo', () => {
 
 describe('S03, "En tus grupos" (F07 R7)', () => {
   beforeEach(() => {
-    misGrupos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 3, mi_posicion: 1 }]);
+    misGrupos.mockResolvedValue([{ id: 1, nombre: GRUPO, miembros: 3, mi_posicion: 1, mi_posicion_antes: null }]);
   });
 
   it('F07 CA10: cerrado, una fila por persona con su predicción y su análisis', async () => {
