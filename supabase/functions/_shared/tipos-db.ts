@@ -323,6 +323,7 @@ export type Database = {
       grupo: {
         Row: {
           codigo_invitacion: string
+          color: Database["public"]["Enums"]["color_grupo"] | null
           creado_en: string
           creador_id: string | null
           id: number
@@ -330,6 +331,7 @@ export type Database = {
         }
         Insert: {
           codigo_invitacion: string
+          color?: Database["public"]["Enums"]["color_grupo"] | null
           creado_en?: string
           creador_id?: string | null
           id?: never
@@ -337,6 +339,7 @@ export type Database = {
         }
         Update: {
           codigo_invitacion?: string
+          color?: Database["public"]["Enums"]["color_grupo"] | null
           creado_en?: string
           creador_id?: string | null
           id?: never
@@ -924,6 +927,73 @@ export type Database = {
           },
         ]
       }
+      reaccion: {
+        Row: {
+          creada_en: string
+          grupo_id: number
+          prediccion_id: number
+          tipo: Database["public"]["Enums"]["tipo_reaccion"]
+          usuario_id: string
+        }
+        Insert: {
+          creada_en?: string
+          grupo_id: number
+          prediccion_id: number
+          tipo: Database["public"]["Enums"]["tipo_reaccion"]
+          usuario_id: string
+        }
+        Update: {
+          creada_en?: string
+          grupo_id?: number
+          prediccion_id?: number
+          tipo?: Database["public"]["Enums"]["tipo_reaccion"]
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reaccion_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reaccion_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "mis_grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reaccion_prediccion_id_fkey"
+            columns: ["prediccion_id"]
+            isOneToOne: false
+            referencedRelation: "mis_puntos"
+            referencedColumns: ["prediccion_id"]
+          },
+          {
+            foreignKeyName: "reaccion_prediccion_id_fkey"
+            columns: ["prediccion_id"]
+            isOneToOne: false
+            referencedRelation: "prediccion"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reaccion_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reaccion_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sincronizacion: {
         Row: {
           consultas_usadas: number
@@ -1178,7 +1248,11 @@ export type Database = {
       }
       mis_grupos: {
         Row: {
+          color: Database["public"]["Enums"]["color_grupo"] | null
           id: number | null
+          lider_es_yo: boolean | null
+          lider_nombre: string | null
+          lideres: number | null
           mi_posicion: number | null
           mi_posicion_antes: number | null
           miembros: number | null
@@ -1424,9 +1498,43 @@ export type Database = {
           visitante: string
         }[]
       }
+      carta_de: {
+        Args: { id_usuario: string }
+        Returns: {
+          analisis: number
+          calificadas: number
+          constancia: number
+          incluye_simulados: boolean
+          media: number
+          nivel: Database["public"]["Enums"]["nivel_metal"]
+          precision: number
+          punteria: number
+        }[]
+      }
+      color_de_grupo: {
+        Args: {
+          elegido: Database["public"]["Enums"]["color_grupo"]
+          id_grupo: number
+        }
+        Returns: Database["public"]["Enums"]["color_grupo"]
+      }
       comparte_grupo: { Args: { otro: string }; Returns: boolean }
       crear_grupo: { Args: { nombre: string }; Returns: number }
+      editar_grupo: {
+        Args: { color: string; id_grupo: number; nombre: string }
+        Returns: undefined
+      }
       es_miembro: { Args: { id_grupo: number }; Returns: boolean }
+      faltan_por_predecir: {
+        Args: { id_grupo: number }
+        Returns: {
+          abiertos: number
+          faltan: number
+          jornada_id: number
+          jornada_nombre: string
+          usuario_id: string
+        }[]
+      }
       generar_codigo_invitacion: { Args: never; Returns: string }
       guardar_carga_inicial: { Args: { carga: Json }; Returns: Json }
       guardar_datos_partido: { Args: { datos: Json }; Returns: Json }
@@ -1438,13 +1546,36 @@ export type Database = {
         Args: { ahora: string; tope: number }
         Returns: boolean
       }
+      insignias_usuario: {
+        Args: { id_usuario: string }
+        Returns: {
+          codigo: string
+          descripcion: string
+          icono: string
+          nivel: Database["public"]["Enums"]["nivel_metal"]
+          nombre: string
+          orden: number
+          repetible: boolean
+          ultima_en: string
+          ultima_simulada: boolean
+          veces: number
+        }[]
+      }
       jornada_actual: { Args: { ahora?: string }; Returns: number }
       jornada_referencia: { Args: never; Returns: number }
       liberar_evaluaciones: { Args: { ids: number[] }; Returns: undefined }
+      lider_de_grupo: {
+        Args: { id_grupo: number }
+        Returns: {
+          lider_es_yo: boolean
+          lider_nombre: string
+          lideres: number
+        }[]
+      }
       llamadas_ia_hoy: { Args: { ahora: string }; Returns: number }
       marcar_insignias_vistas: { Args: never; Returns: number }
       mejor_analisis_jornada: {
-        Args: never
+        Args: { id_grupo?: number; id_jornada?: number }
         Returns: {
           en_curso: boolean
           es_simulada: boolean
@@ -1477,6 +1608,43 @@ export type Database = {
         Returns: number
       }
       mi_posicion_en_grupo: { Args: { id_grupo: number }; Returns: number }
+      muro_jornada: {
+        Args: { id_grupo: number; id_jornada: number }
+        Returns: {
+          es_simulada: boolean
+          es_yo: boolean
+          estado: Database["public"]["Enums"]["estado_partido"]
+          estado_evaluacion: Database["public"]["Enums"]["estado_evaluacion"]
+          explicacion: string
+          foto_url: string
+          goles_local: number
+          goles_visitante: number
+          inicio: string
+          justificacion: string
+          local_color_primario: string
+          local_color_texto: string
+          local_escudo_url: string
+          local_nombre_corto: string
+          marcador_local: number
+          marcador_visitante: number
+          mi_reaccion: Database["public"]["Enums"]["tipo_reaccion"]
+          nombre: string
+          partido_id: number
+          prediccion_id: number
+          puntos_bono: number
+          rango_goles: Database["public"]["Enums"]["rango_goles"]
+          reacciones_bien_visto: number
+          reacciones_buen_analisis: number
+          reacciones_la_clavo: number
+          reacciones_me_rio: number
+          resultado: Database["public"]["Enums"]["resultado_prediccion"]
+          usuario_id: string
+          visitante_color_primario: string
+          visitante_color_texto: string
+          visitante_escudo_url: string
+          visitante_nombre_corto: string
+        }[]
+      }
       normalizar_codigo_invitacion: {
         Args: { codigo: string }
         Returns: string
@@ -1497,6 +1665,31 @@ export type Database = {
           partido_id: number
         }[]
       }
+      perfil_usuario: {
+        Args: { id_usuario: string }
+        Returns: {
+          analisis: number
+          calificadas: number
+          carta_incluye_simulados: boolean
+          constancia: number
+          equipo_color_primario: string
+          equipo_color_texto: string
+          equipo_escudo_url: string
+          equipo_nombre_corto: string
+          es_yo: boolean
+          foto_url: string
+          media: number
+          mejor_racha: number
+          nivel: Database["public"]["Enums"]["nivel_metal"]
+          nombre: string
+          precision: number
+          punteria: number
+          racha_actual: number
+          racha_incluye_simulados: boolean
+          ultima_calificacion: string
+          usuario_id: string
+        }[]
+      }
       posiciones_grupo: {
         Args: {
           antes_de_orden?: number
@@ -1515,6 +1708,15 @@ export type Database = {
           usuario_id: string
         }[]
       }
+      racha_de: {
+        Args: { id_usuario: string }
+        Returns: {
+          incluye_simulados: boolean
+          mejor_racha: number
+          racha_actual: number
+          ultima_calificacion: string
+        }[]
+      }
       ranking_grupo: {
         Args: { id_grupo: number; id_jornada?: number }
         Returns: {
@@ -1530,6 +1732,10 @@ export type Database = {
           ultima_calificacion: string
           usuario_id: string
         }[]
+      }
+      reaccionar: {
+        Args: { id_grupo: number; id_prediccion: number; tipo: string }
+        Returns: undefined
       }
       recordatorios_pendientes: {
         Args: { ahora: string }
@@ -1578,6 +1784,15 @@ export type Database = {
       }
     }
     Enums: {
+      color_grupo:
+        | "ROJO"
+        | "AMARILLO"
+        | "VERDE"
+        | "TURQUESA"
+        | "AZUL"
+        | "MORADO"
+        | "ROSA"
+        | "CAFE"
       estado_evaluacion: "PENDIENTE" | "EVALUADA" | "ERROR"
       estado_partido:
         | "PROGRAMADO"
@@ -1598,6 +1813,7 @@ export type Database = {
       rol_usuario: "USUARIO" | "ADMIN"
       tipo_evento: "GOL" | "TARJETA" | "CAMBIO" | "VAR"
       tipo_notificacion: "RECORDATORIO" | "PUNTOS_LISTOS"
+      tipo_reaccion: "BIEN_VISTO" | "BUEN_ANALISIS" | "LA_CLAVO" | "ME_RIO"
       tipo_sincronizacion:
         | "CARGA_INICIAL"
         | "ACTUALIZACION_DIARIA"
@@ -1730,6 +1946,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      color_grupo: [
+        "ROJO",
+        "AMARILLO",
+        "VERDE",
+        "TURQUESA",
+        "AZUL",
+        "MORADO",
+        "ROSA",
+        "CAFE",
+      ],
       estado_evaluacion: ["PENDIENTE", "EVALUADA", "ERROR"],
       estado_partido: [
         "PROGRAMADO",
@@ -1752,6 +1978,7 @@ export const Constants = {
       rol_usuario: ["USUARIO", "ADMIN"],
       tipo_evento: ["GOL", "TARJETA", "CAMBIO", "VAR"],
       tipo_notificacion: ["RECORDATORIO", "PUNTOS_LISTOS"],
+      tipo_reaccion: ["BIEN_VISTO", "BUEN_ANALISIS", "LA_CLAVO", "ME_RIO"],
       tipo_sincronizacion: [
         "CARGA_INICIAL",
         "ACTUALIZACION_DIARIA",
