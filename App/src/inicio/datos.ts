@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { COLUMNAS_EQUIPOS, columnasEquipos, equipos, type FilaEquipos } from '../datos/equipos';
 import { comoErrorDatos } from '../datos/errores';
 import type { EquipoDePartido } from '../partidos/datos';
 import { supabase } from '../supabase/cliente';
@@ -18,39 +19,6 @@ function validar<T>(esquema: z.ZodType<T>, datos: unknown, que: string): T {
   const resultado = esquema.safeParse(datos);
   if (!resultado.success) throw new Error(`${que} con forma inválida: ${z.prettifyError(resultado.error)}`);
   return resultado.data;
-}
-
-// Los equipos llegan en columnas planas `local_*` / `visitante_*`.
-const columnasEquipos = {
-  local_nombre_corto: z.string(),
-  local_escudo_url: z.string(),
-  local_color_primario: z.string().nullable(),
-  local_color_texto: z.string().nullable(),
-  visitante_nombre_corto: z.string(),
-  visitante_escudo_url: z.string(),
-  visitante_color_primario: z.string().nullable(),
-  visitante_color_texto: z.string().nullable(),
-};
-const COLUMNAS_EQUIPOS =
-  'local_nombre_corto, local_escudo_url, local_color_primario, local_color_texto, visitante_nombre_corto, visitante_escudo_url, visitante_color_primario, visitante_color_texto';
-
-type FilaEquipos = { [K in keyof typeof columnasEquipos]: z.infer<(typeof columnasEquipos)[K]> };
-
-function equipos(fila: FilaEquipos): { local: EquipoDePartido; visitante: EquipoDePartido } {
-  return {
-    local: {
-      nombre_corto: fila.local_nombre_corto,
-      escudo_url: fila.local_escudo_url,
-      color_primario: fila.local_color_primario,
-      color_texto: fila.local_color_texto,
-    },
-    visitante: {
-      nombre_corto: fila.visitante_nombre_corto,
-      escudo_url: fila.visitante_escudo_url,
-      color_primario: fila.visitante_color_primario,
-      color_texto: fila.visitante_color_texto,
-    },
-  };
 }
 
 export type JornadaDePartido = { id: number; orden: number; nombre: string };
@@ -209,8 +177,19 @@ export type MejorAnalisis = Omit<FilaMejorAnalisis, keyof FilaEquipos> & {
 };
 
 /** El mayor bono (≥ 50) de la jornada entre mis grupos (R10); null si no hay. */
-export async function obtenerMejorAnalisis(): Promise<MejorAnalisis | null> {
-  const { data, error, status } = await supabase.rpc('mejor_analisis_jornada');
+export function obtenerMejorAnalisis(): Promise<MejorAnalisis | null> {
+  return leerMejorAnalisis(supabase.rpc('mejor_analisis_jornada'));
+}
+
+/** "Analista de la jornada" de un grupo en una jornada: las mismas reglas de R10 (F26 R10). */
+export function obtenerAnalistaDeJornada(grupoId: number, jornadaId: number): Promise<MejorAnalisis | null> {
+  return leerMejorAnalisis(supabase.rpc('mejor_analisis_jornada', { id_grupo: grupoId, id_jornada: jornadaId }));
+}
+
+async function leerMejorAnalisis(
+  llamada: PromiseLike<{ data: unknown; error: { message: string } | null; status: number }>,
+): Promise<MejorAnalisis | null> {
+  const { data, error, status } = await llamada;
   if (error) throw comoErrorDatos(error, status);
   const filas = validar(z.array(esquemaMejorAnalisis).max(1), data, 'Mejor análisis');
   const fila = filas[0];

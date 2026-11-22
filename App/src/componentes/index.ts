@@ -2,6 +2,7 @@ export { AvisoSinConexion } from './AvisoSinConexion';
 export { Boton } from './Boton';
 export { BotonIcono } from './BotonIcono';
 export { CampoTexto } from './CampoTexto';
+export { ChipReaccion } from './ChipReaccion';
 export { ChipFiltro } from './ChipFiltro';
 export { DegradadoMetal } from './DegradadoMetal';
 export { EncabezadoPantalla } from './EncabezadoPantalla';

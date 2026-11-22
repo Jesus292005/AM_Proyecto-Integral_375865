@@ -103,7 +103,7 @@ beforeEach(() => {
   misGrupos.mockReset().mockResolvedValue([]);
   grupoFalso
     .mockReset()
-    .mockImplementation(async (id) => ({ id, nombre: GRUPO, codigo_invitacion: 'ABCDEFGH', color: 'AZUL', rol: 'MIEMBRO' }));
+    .mockImplementation(async (id) => ({ id, nombre: GRUPO, codigo_invitacion: 'ABCDEFGH', color: 'AZUL', rol: 'MIEMBRO', miembros: 2 }));
   rankingFalso.mockReset().mockResolvedValue({ filas: [], incluyeSimulados: false });
   torneoFalso.mockReset().mockResolvedValue({
     nombre: 'Apertura 2026',
@@ -236,6 +236,7 @@ describe('S15 Editar grupo (F26 R6)', () => {
       codigo_invitacion: 'ABCDEFGH',
       color: 'AZUL',
       rol: 'ADMIN',
+      miembros: 2,
     }));
 
   it('F26 CA8: un MIEMBRO no ve "Editar" en S08', async () => {
@@ -443,10 +444,10 @@ describe('S08 Grupo', () => {
       backgroundColor: coloresGrafito.superficie2,
     });
     expect(screen.getByLabelText('1.º, Ana, 500 puntos')).toHaveStyle({ backgroundColor: 'transparent' });
-    expect(screen.getByRole('tab', { name: 'Torneo' })).toBeSelected();
+    expect(screen.getByRole('tab', { name: 'Ranking' })).toBeSelected();
+    expect(screen.queryByRole('tab', { name: 'Torneo' })).not.toBeOnTheScreen();
     expect(screen.getByText('Base + bono de la IA. Desempate: marcadores exactos y bono.')).toBeOnTheScreen();
     expect(screen.queryByText('Incluye partidos simulados')).not.toBeOnTheScreen();
-    expect(screen.getByText('ABCD-EFGH')).toBeOnTheScreen();
     expect(screen.getByText('2 de 30 miembros')).toBeOnTheScreen();
     expect(rankingFalso).toHaveBeenCalledTimes(1);
     expect(rankingFalso).toHaveBeenCalledWith(1, null);
@@ -486,7 +487,7 @@ describe('S08 Grupo', () => {
     await waitFor(() => expect(rankingFalso).toHaveBeenLastCalledWith(1, 11));
     expect(screen.queryAllByRole('header', { name: GRUPO, includeHiddenElements: true })).toHaveLength(1);
 
-    await fireEvent.press(screen.getByRole('tab', { name: 'Torneo' }));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Ranking' }));
     await waitFor(() => expect(rankingFalso).toHaveBeenLastCalledWith(1, null));
     expect(screen.queryAllByRole('header', { name: GRUPO, includeHiddenElements: true })).toHaveLength(1);
   });
@@ -549,7 +550,7 @@ describe('S08 Grupo', () => {
 
   it('F07 R5: salir pide confirmación y regresa a Grupos', async () => {
     const alerta = confirmarAlerta();
-    await abrir('/grupo/1');
+    await abrir('/grupo/1?pestana=miembros');
 
     await tocar('Salir del grupo');
 
@@ -561,7 +562,7 @@ describe('S08 Grupo', () => {
   it('F07 R5: si salir falla lo dice y se queda en el grupo', async () => {
     confirmarAlerta();
     salirFalso.mockRejectedValue(new ErrorDatos('boom', false));
-    await abrir('/grupo/1');
+    await abrir('/grupo/1?pestana=miembros');
 
     await tocar('Salir del grupo');
 

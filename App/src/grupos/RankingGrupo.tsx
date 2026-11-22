@@ -2,19 +2,13 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
-import { Esqueleto, EstadoPantalla, FotoUsuario, PestanasTexto, TablaFila, Texto } from '../componentes';
+import { Esqueleto, EstadoPantalla, FotoUsuario, TablaFila, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
-import { SelectorJornada } from '../partidos/SelectorJornada';
 import { useTema } from '../tema';
 import type { FilaRanking, Ranking } from './datos';
 import { ErrorGrupo, mensajesGrupo } from './errores';
 
 export type Vista = 'torneo' | 'jornada';
-
-const pestanas: readonly { valor: Vista; titulo: string }[] = [
-  { valor: 'torneo', titulo: 'Torneo' },
-  { valor: 'jornada', titulo: 'Jornada' },
-];
 
 function Fila({ fila }: { fila: FilaRanking }) {
   const { medidas } = useTema();
@@ -56,22 +50,16 @@ function EsqueletoRanking() {
 }
 
 interface Props {
+  /** Del torneo (pestaña Ranking) o de la jornada elegida (pestaña Jornada, F26 decisión 4). */
   vista: Vista;
-  /** La jornada elegida en la vista "Jornada" con su torneo; undefined mientras carga. */
-  jornada?: { nombre: string; torneo: string; anterior?: number; siguiente?: number };
   ranking: { datos: Ranking | undefined; error: Error | null; reintentar: () => void };
   /** Jornada sin partidos o torneo sin jornadas: el texto reemplaza al ranking (F08 Estados). */
   vacio?: string;
 }
 
-/**
- * S08, ranking del grupo (F08 R9): pestañas Torneo / Jornada, selector de jornada y una fila por
- * miembro con su posición y puntos. Cambiar de vista o de jornada no agrega historial (D78).
- */
-export function RankingGrupo({ vista, jornada, ranking, vacio }: Props) {
+/** S08, ranking del grupo (F08 R9): una fila por miembro con su posición y puntos. */
+export function RankingGrupo({ vista, ranking, vacio }: Props) {
   const { espacio } = useTema();
-  const irAJornada = (orden: number | undefined) =>
-    orden === undefined ? undefined : () => router.setParams({ jornada: String(orden) });
 
   let contenido: ReactNode;
   if (vacio !== undefined) {
@@ -102,10 +90,16 @@ export function RankingGrupo({ vista, jornada, ranking, vacio }: Props) {
       </View>
     );
   } else if (ranking.error !== null) {
-    const sinTorneo = ranking.error instanceof ErrorGrupo && ranking.error.codigo === 'SIN_TORNEO_ACTUAL';
-    contenido = sinTorneo ? (
-      <EstadoPantalla mensaje={mensajesGrupo.sinTorneo} />
-    ) : (
+    const codigo = ranking.error instanceof ErrorGrupo ? ranking.error.codigo : null;
+    if (codigo === 'SIN_TORNEO_ACTUAL') contenido = <EstadoPantalla mensaje={mensajesGrupo.sinTorneo} />;
+    else if (codigo === 'NO_MIEMBRO') {
+      contenido = (
+        <EstadoPantalla
+          mensaje={mensajesGrupo.noMiembro}
+          accion={{ titulo: 'Ir a Grupos', onPress: () => router.navigate('/grupos') }}
+        />
+      );
+    } else contenido = (
       <EstadoPantalla
         mensaje={esSinConexion(ranking.error) ? mensajesGrupo.sinConexion : mensajesGrupo.errorRanking}
         accion={{ titulo: 'Reintentar', onPress: ranking.reintentar }}
@@ -115,22 +109,5 @@ export function RankingGrupo({ vista, jornada, ranking, vacio }: Props) {
     contenido = <EsqueletoRanking />;
   }
 
-  return (
-    <View style={{ gap: espacio.m }}>
-      <PestanasTexto
-        pestanas={pestanas}
-        activa={vista}
-        onCambiar={(valor) => router.setParams({ vista: valor })}
-      />
-      {vista === 'jornada' && jornada !== undefined && (
-        <SelectorJornada
-          nombre={jornada.nombre}
-          torneo={jornada.torneo}
-          onAnterior={irAJornada(jornada.anterior)}
-          onSiguiente={irAJornada(jornada.siguiente)}
-        />
-      )}
-      {contenido}
-    </View>
-  );
+  return <>{contenido}</>;
 }

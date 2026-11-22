@@ -64,6 +64,31 @@ export const mensajesGrupo = {
   noAdmin: 'Solo el administrador puede editar el grupo.',
   colorInvalido: 'Elige un color de la paleta.',
   fallaEditar: 'No se pudo guardar. Inténtalo de nuevo.',
+  // S08 Jornada (F26 R9–R14).
+  analista: 'Analista de la jornada',
+  rankingJornada: 'Ranking de la jornada',
+  muro: 'Análisis de la jornada',
+  analistaNadie: (jornada: string) => `Nadie del grupo llegó a 50 en la ${jornada}.`,
+  analistaSinCalificados: (jornada: string) => `Aún no hay análisis calificados en la ${jornada}.`,
+  errorAnalista: 'No pudimos cargar al analista de la jornada.',
+  muroAntesDelCierre: 'Los análisis se revelan cuando cierra cada partido.',
+  muroVacio: (jornada: string) => `Nadie del grupo escribió un análisis en la ${jornada}.`,
+  errorMuro: 'No pudimos cargar los análisis. Inténtalo de nuevo.',
+  notaPendiente: 'Nota pendiente',
+  sinNota: 'Sin nota',
+  falloReaccion: 'No se pudo guardar tu reacción.',
+  // S08 Miembros (F26 R15–R17).
+  abiertos: (n: number, jornada: string) =>
+    n === 1 ? `1 partido abierto en la ${jornada}` : `${n} partidos abiertos en la ${jornada}`,
+  sinAbiertos: (jornada: string) => `No hay partidos abiertos en la ${jornada}`,
+  alDia: 'Al día',
+  leFaltan: (n: number) => `Le faltan ${n}`,
+  errorFaltan: 'No se pudo cargar quién falta.',
+  admin: 'Admin',
+  compartir: 'Compartir invitación',
+  invitacion: (nombre: string, codigo: string) =>
+    `Únete a mi grupo «${nombre}» en Campeón de Sillón. En la app ve a Grupos, toca + › Unirse a un grupo y escribe el código ${codigo}.`,
+  falloCompartir: 'No se pudo abrir la hoja para compartir.',
 } as const;
 
 function mensajeDeFalla(error: Error, porCodigo: Partial<Record<CodigoGrupo, string>>, falla: string): string {

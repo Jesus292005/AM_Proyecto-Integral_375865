@@ -3,7 +3,11 @@ import { supabase } from '../supabase/cliente';
 import {
   crearGrupo,
   editarGrupo,
+  obtenerFaltan,
   obtenerGrupo,
+  obtenerMuro,
+  obtenerRoles,
+  reaccionar,
   obtenerMisGrupos,
   obtenerRanking,
   obtenerPrediccionesDelGrupo,
@@ -126,7 +130,7 @@ describe('lecturas', () => {
 describe('grupo para S08 y S15 (F26 R6, R7)', () => {
   it('junta el código de `grupo` con nombre, color resuelto y mi rol de `mis_grupos`', async () => {
     const codigo = consulta({ data: { codigo_invitacion: 'ABCDEFGH' }, error: null, status: 200 });
-    const mio = consulta({ data: { id: 4, nombre: 'Primos', color: 'ROSA', rol: 'ADMIN' }, error: null, status: 200 });
+    const mio = consulta({ data: { id: 4, nombre: 'Primos', color: 'ROSA', rol: 'ADMIN', miembros: 3 }, error: null, status: 200 });
     desde.mockImplementation((tabla: string) => (tabla === 'grupo' ? codigo : mio));
 
     expect(await obtenerGrupo(4)).toEqual({
@@ -134,6 +138,7 @@ describe('grupo para S08 y S15 (F26 R6, R7)', () => {
       nombre: 'Primos',
       color: 'ROSA',
       rol: 'ADMIN',
+      miembros: 3,
       codigo_invitacion: 'ABCDEFGH',
     });
     expect(mio.llamadas).toContainEqual(['eq', 'id', 4]);
@@ -204,5 +209,116 @@ describe('acciones', () => {
     rpc.mockResolvedValue({ data: null, error: { message: 'boom' }, status: 500 });
 
     await expect(crearGrupo('Amigos')).rejects.toBeInstanceOf(ErrorDatos);
+  });
+});
+
+describe('S08 (F26 R11, R13, R15, R16)', () => {
+  const filaMuro = {
+    prediccion_id: 5,
+    partido_id: 9,
+    inicio: '2026-11-20T20:00:00Z',
+    estado: 'TERMINADO',
+    goles_local: 2,
+    goles_visitante: 1,
+    local_nombre_corto: 'Puebla',
+    local_escudo_url: 'https://x.mx/l.png',
+    local_color_primario: null,
+    local_color_texto: null,
+    visitante_nombre_corto: 'Santos',
+    visitante_escudo_url: 'https://x.mx/v.png',
+    visitante_color_primario: '#00FF00',
+    visitante_color_texto: '#000000',
+    usuario_id: 'b',
+    nombre: 'Beto',
+    foto_url: null,
+    es_yo: false,
+    resultado: null,
+    rango_goles: null,
+    marcador_local: 2,
+    marcador_visitante: 0,
+    justificacion: 'Presión arriba.',
+    estado_evaluacion: 'EVALUADA',
+    puntos_bono: 80,
+    explicacion: 'Acertó.',
+    es_simulada: true,
+    reacciones_bien_visto: 1,
+    reacciones_buen_analisis: 2,
+    reacciones_la_clavo: 3,
+    reacciones_me_rio: 4,
+    mi_reaccion: 'LA_CLAVO',
+  };
+
+  it('F26 CA9: el muro es una llamada a muro_jornada y arma partido, autor, evaluación y reacciones', async () => {
+    rpc.mockResolvedValue({ data: [filaMuro], error: null, status: 200 });
+
+    const [a] = await obtenerMuro(1, 12);
+    expect(rpc).toHaveBeenCalledWith('muro_jornada', { id_grupo: 1, id_jornada: 12 });
+    expect(a).toEqual({
+      prediccionId: 5,
+      partido: {
+        id: 9,
+        inicio: '2026-11-20T20:00:00Z',
+        estado: 'TERMINADO',
+        goles_local: 2,
+        goles_visitante: 1,
+        local: { nombre_corto: 'Puebla', escudo_url: 'https://x.mx/l.png', color_primario: null, color_texto: null },
+        visitante: { nombre_corto: 'Santos', escudo_url: 'https://x.mx/v.png', color_primario: '#00FF00', color_texto: '#000000' },
+      },
+      autor: { usuario_id: 'b', nombre: 'Beto', foto_url: null, es_yo: false },
+      prediccion: { resultado: null, rango_goles: null, marcador_local: 2, marcador_visitante: 0 },
+      justificacion: 'Presión arriba.',
+      evaluacion: { estado: 'EVALUADA', puntos_bono: 80, explicacion: 'Acertó.' },
+      esSimulada: true,
+      reacciones: { BIEN_VISTO: 1, BUEN_ANALISIS: 2, LA_CLAVO: 3, ME_RIO: 4 },
+      miReaccion: 'LA_CLAVO',
+    });
+  });
+
+  it('una reacción desconocida en el muro es un error, no un dato (D54)', async () => {
+    rpc.mockResolvedValue({ data: [{ ...filaMuro, mi_reaccion: 'FUEGO' }], error: null, status: 200 });
+
+    await expect(obtenerMuro(1, 12)).rejects.toThrow('forma inválida');
+  });
+
+  it('F26 CA10: reaccionar pone con el tipo y quita con vacío; PROPIO se distingue de una falla', async () => {
+    rpc.mockResolvedValue({ data: null, error: null, status: 204 });
+    await reaccionar(1, 5, 'BIEN_VISTO');
+    await reaccionar(1, 5, null);
+    expect(rpc.mock.calls).toEqual([
+      ['reaccionar', { id_grupo: 1, id_prediccion: 5, tipo: 'BIEN_VISTO' }],
+      ['reaccionar', { id_grupo: 1, id_prediccion: 5, tipo: null }],
+    ]);
+
+    rpc.mockResolvedValue({ data: null, error: { message: 'NO_MIEMBRO' }, status: 400 });
+    await expect(reaccionar(1, 5, 'BIEN_VISTO')).rejects.toBeInstanceOf(ErrorGrupo);
+  });
+
+  it('F26 CA10: quién falta da cuántos por miembro, los abiertos y la jornada', async () => {
+    rpc.mockResolvedValue({
+      data: [
+        { usuario_id: 'a', faltan: 0, abiertos: 3, jornada_id: 12, jornada_nombre: 'Jornada 2' },
+        { usuario_id: 'b', faltan: 2, abiertos: 3, jornada_id: 12, jornada_nombre: 'Jornada 2' },
+      ],
+      error: null,
+      status: 200,
+    });
+
+    const faltan = await obtenerFaltan(1);
+    expect(rpc).toHaveBeenCalledWith('faltan_por_predecir', { id_grupo: 1 });
+    expect(faltan.abiertos).toBe(3);
+    expect(faltan.jornada).toBe('Jornada 2');
+    expect([...faltan.porMiembro]).toEqual([
+      ['a', 0],
+      ['b', 2],
+    ]);
+  });
+
+  it('F26 R16: los roles salen de miembros_grupo del grupo', async () => {
+    const c = consulta({ data: [{ usuario_id: 'a', rol: 'ADMIN' }], error: null, status: 200 });
+    desde.mockReturnValue(c);
+
+    expect(await obtenerRoles(4)).toEqual([{ usuario_id: 'a', rol: 'ADMIN' }]);
+    expect(desde).toHaveBeenCalledWith('miembros_grupo');
+    expect(c.llamadas).toContainEqual(['eq', 'grupo_id', 4]);
   });
 });

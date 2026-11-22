@@ -73,3 +73,6 @@ export const obtenerPendientes = jest.fn(async (): Promise<Pendiente[]> => []);
 export const obtenerProximoPartidoEquipo = jest.fn(async (): Promise<ProximoPartido | null> => null);
 export const obtenerMiUltimaJornada = jest.fn(async (): Promise<UltimaJornada | null> => null);
 export const obtenerMejorAnalisis = jest.fn(async (): Promise<MejorAnalisis | null> => null);
+export const obtenerAnalistaDeJornada = jest.fn(
+  async (_grupoId: number, _jornadaId: number): Promise<MejorAnalisis | null> => null,
+);

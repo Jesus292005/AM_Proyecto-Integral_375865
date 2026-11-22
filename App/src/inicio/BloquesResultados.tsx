@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Boton, Esqueleto, FotoUsuario, Icono, IconoGrupo, TablaFila, Texto } from '../componentes';
+import { Boton, Esqueleto, Icono, IconoGrupo, TablaFila, Texto } from '../componentes';
 import type { MiGrupo } from '../grupos/datos';
 import { useTema } from '../tema';
 import { BloqueInicio, type Consulta } from './BloqueInicio';
+import { TarjetaAnalisis } from './TarjetaAnalisis';
 import type { MejorAnalisis, UltimaJornada } from './datos';
 
 // Bloques 3, 4 y 5 de S11 (F17 R8–R12).
@@ -188,74 +189,6 @@ export function BloqueUltimaJornada({
 // Bloque 4 · Mejor análisis de la jornada en mis grupos (R10–R11)
 // ---------------------------------------------------------------------------
 
-function textoPartido(a: MejorAnalisis): string {
-  return a.goles_local === null || a.goles_visitante === null
-    ? `${a.local.nombre_corto} vs ${a.visitante.nombre_corto}`
-    : `${a.local.nombre_corto} ${a.goles_local} - ${a.goles_visitante} ${a.visitante.nombre_corto}`;
-}
-
-function TarjetaAnalisis({ analisis }: { analisis: MejorAnalisis }) {
-  const { colores, espacio, medidas } = useTema();
-  const quien = analisis.es_yo ? 'Tú' : analisis.nombre;
-
-  return (
-    <Pressable
-      onPress={() => abrirPartido(analisis.partido_id)}
-      accessibilityRole="button"
-      accessibilityLabel={[
-        `Mejor análisis: ${quien} en ${analisis.grupo_nombre}, ${analisis.puntos_bono} de 100`,
-        textoPartido(analisis),
-        analisis.justificacion,
-        `Comentario de la IA: ${analisis.explicacion}`,
-        analisis.en_curso && mensajesResultados.hastaAhora,
-        analisis.es_simulada && 'Simulado',
-        'Ver el partido',
-      ]
-        .filter(Boolean)
-        .join('. ')}
-      style={({ pressed }) => ({
-        gap: espacio.s,
-        padding: espacio.m,
-        borderRadius: medidas.radio,
-        backgroundColor: colores.superficie,
-        opacity: pressed ? medidas.opacidadPresionado : 1,
-      })}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
-        <FotoUsuario url={analisis.foto_url} nombre={analisis.nombre} />
-        <View style={{ flex: 1 }}>
-          <Texto variante="cuerpoFuerte" numberOfLines={1}>
-            {quien}
-          </Texto>
-          <Texto variante="meta" color="textoTenue" numberOfLines={1}>
-            {`en ${analisis.grupo_nombre}`}
-          </Texto>
-        </View>
-        <Texto variante="titulo2">{`${analisis.puntos_bono}/100`}</Texto>
-      </View>
-      <Texto variante="etiqueta" color="textoTenue">
-        {`${analisis.jornada_nombre} · ${textoPartido(analisis)}`}
-      </Texto>
-      <Texto variante="cuerpo">{analisis.justificacion}</Texto>
-      <View style={{ gap: espacio.xxs }}>
-        <Texto variante="etiqueta" color="textoTenue">
-          Comentario de la IA
-        </Texto>
-        <Texto variante="cuerpo" color="texto2">
-          {analisis.explicacion}
-        </Texto>
-      </View>
-      {(analisis.en_curso || analisis.es_simulada) && (
-        <Texto variante="meta" color="textoTenue">
-          {[analisis.en_curso && mensajesResultados.hastaAhora, analisis.es_simulada && 'Simulado']
-            .filter(Boolean)
-            .join(' · ')}
-        </Texto>
-      )}
-    </Pressable>
-  );
-}
-
 export function BloqueMejorAnalisis({
   consulta,
   grupos,
@@ -281,7 +214,7 @@ export function BloqueMejorAnalisis({
       esqueleto={<EsqueletoFilas filas={3} />}
     >
       {(analisis) => {
-        if (analisis !== null) return <TarjetaAnalisis analisis={analisis} />;
+        if (analisis !== null) return <TarjetaAnalisis analisis={analisis} conGrupo />;
         if (esperandoVacio) return <View testID="bloque-mejor-analisis-cargando"><EsqueletoFilas filas={3} /></View>;
         let mensaje: string;
         if (grupos?.length === 0) mensaje = mensajesResultados.sinGruposAnalisis;

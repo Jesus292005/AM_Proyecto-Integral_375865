@@ -35,6 +35,9 @@ const trazos = {
   // chevron-left / chevron-right
   chevronIzquierda: 'M15 18l-6-6 6-6',
   chevronDerecha: 'M9 18l6-6-6-6',
+  // M8 (F26 R12): chevron-up / chevron-down para desplegar el comentario de la IA.
+  chevronArriba: 'M18 15l-6-6-6 6',
+  chevronAbajo: 'M6 9l6 6 6-6',
   // M6 (F14 R2, F25 R2): Lucide flame, trophy, target y lightbulb.
   llama:
     'M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5' +

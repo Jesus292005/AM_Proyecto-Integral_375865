@@ -1,28 +1,40 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { Alert, RefreshControl, ScrollView, useWindowDimensions, View } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   AvisoSinConexion,
-  Boton,
   BotonIcono,
   EncabezadoPantalla,
   Esqueleto,
   EstadoPantalla,
-  Seccion,
+  IconoGrupo,
+  PestanasTexto,
   Texto,
 } from '../componentes';
 import { esSinConexion } from '../datos/errores';
-import { elegirJornada } from '../partidos/agruparPorDia';
-import { obtenerPartidosDeJornada, obtenerTorneoActual } from '../partidos/datos';
 import { useTema } from '../tema';
-import { formatearCodigo } from './codigo';
-import { obtenerGrupo, obtenerRanking, salirDeGrupo, type GrupoDetalle } from './datos';
-import { ErrorGrupo, mensajeAlSalir, mensajesGrupo } from './errores';
-import { RankingGrupo, type Vista } from './RankingGrupo';
+import { obtenerGrupo, obtenerRanking, type GrupoDetalle } from './datos';
+import { mensajesGrupo } from './errores';
+import { PestanaJornada } from './PestanaJornada';
+import { PestanaMiembros } from './PestanaMiembros';
+import { RankingGrupo } from './RankingGrupo';
+
+export type Pestana = 'ranking' | 'jornada' | 'miembros';
+
+const pestanas: readonly { valor: Pestana; titulo: string }[] = [
+  { valor: 'ranking', titulo: 'Ranking' },
+  { valor: 'jornada', titulo: 'Jornada' },
+  { valor: 'miembros', titulo: 'Miembros' },
+];
+
+/** `pestana?` de la ruta; una ruta vieja con `vista=jornada` (F08) abre Jornada (F26 R7). */
+export function pestanaDeRuta(pestana: string | undefined, vista: string | undefined): Pestana {
+  if (pestana === 'ranking' || pestana === 'jornada' || pestana === 'miembros') return pestana;
+  return vista === 'jornada' ? 'jornada' : 'ranking';
+}
 
 function EsqueletoGrupo() {
   const { espacio } = useTema();
@@ -37,164 +49,91 @@ function EsqueletoGrupo() {
   );
 }
 
-/**
- * QR con el código canónico, solo texto (F12 R1, R2, D37): módulos `fondo` sobre `texto` (los
- * lectores no siempre leen QR invertidos) y 4 módulos de margen (un QR versión 1 tiene 21 de lado).
- */
-function QRInvitacion({ codigo }: { codigo: string }) {
-  const { colores, medidas } = useTema();
-  const { width } = useWindowDimensions();
-  const lado = Math.min(medidas.qrInvitacion, width - 2 * medidas.margenPantalla);
-  const margen = Math.round((lado * 4) / 29);
+/** Pestaña Ranking: el del torneo de F08, sin cambios de reglas (F26 R8, decisión 4). */
+function PestanaRanking({ grupoId }: { grupoId: number }) {
+  const ranking = useQuery({
+    queryKey: ['grupo', grupoId, 'ranking', 'torneo', null],
+    queryFn: () => obtenerRanking(grupoId, null),
+  });
 
   return (
-    <View
-      accessible
-      accessibilityLabel="Código QR del grupo"
-      testID="qr-invitacion"
-      style={{ alignSelf: 'center' }}
-    >
-      <QRCode
-        value={formatearCodigo(codigo)}
-        size={lado - 2 * margen}
-        quietZone={margen}
-        color={colores.fondo}
-        backgroundColor={colores.texto}
-      />
+    <RankingGrupo
+      vista="torneo"
+      ranking={{ datos: ranking.data, error: ranking.error, reintentar: () => void ranking.refetch() }}
+    />
+  );
+}
+
+/** Encabezado (F26 R7): ícono del grupo, nombre y "Editar" para el `ADMIN` (R6). */
+function Encabezado({ grupo, aviso }: { grupo: GrupoDetalle; aviso: string | undefined }) {
+  const { espacio } = useTema();
+
+  return (
+    <View style={{ gap: espacio.xs }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
+        <IconoGrupo nombre={grupo.nombre} color={grupo.color} tamano="fotoPerfil" />
+        <View style={{ flex: 1 }}>
+          <Texto variante="titulo1" accessibilityRole="header" numberOfLines={2}>
+            {grupo.nombre}
+          </Texto>
+        </View>
+        {grupo.rol === 'ADMIN' && (
+          <BotonIcono
+            icono="lapiz"
+            etiqueta="Editar grupo"
+            onPress={() =>
+              router.navigate({ pathname: '/grupos/editar/[grupoId]', params: { grupoId: String(grupo.id) } })
+            }
+          />
+        )}
+      </View>
+      {aviso === 'ya-miembro' && (
+        <Texto variante="meta" color="texto2" accessibilityLiveRegion="polite">
+          {mensajesGrupo.yaEraMiembro}
+        </Texto>
+      )}
     </View>
   );
 }
 
-/** Código y QR para invitar (F07 R10, F12 R2) y salir del grupo. */
-function InvitarYSalir({ grupo }: { grupo: GrupoDetalle }) {
-  const { espacio } = useTema();
-  const clienteConsultas = useQueryClient();
-  const salida = useMutation({
-    mutationFn: () => salirDeGrupo(grupo.id),
-    onSuccess: () => {
-      void clienteConsultas.invalidateQueries({ queryKey: ['mis-grupos'] });
-      clienteConsultas.removeQueries({ queryKey: ['grupo', grupo.id] });
-      // F07 R5: dejo de ver al instante las predicciones de quienes ya no comparten grupo conmigo.
-      clienteConsultas.removeQueries({ queryKey: ['predicciones-grupo'] });
-      router.navigate('/grupos');
-    },
-  });
-
-  function confirmarSalida() {
-    Alert.alert(
-      '¿Salir del grupo?',
-      `Dejarás de ver las predicciones de ${grupo.nombre} y saldrás de su ranking.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Salir', style: 'destructive', onPress: () => salida.mutate() },
-      ],
-    );
-  }
-
-  return (
-    <>
-      <Seccion etiqueta="Invitar">
-        <Texto
-          variante="titulo2"
-          selectable
-          accessibilityLabel={`Código ${formatearCodigo(grupo.codigo_invitacion).split('').join(' ')}`}
-        >
-          {formatearCodigo(grupo.codigo_invitacion)}
-        </Texto>
-        <QRInvitacion codigo={grupo.codigo_invitacion} />
-        <Texto variante="meta" color="textoTenue">
-          Muéstralo para que lo escaneen desde Unirse a un grupo.
-        </Texto>
-      </Seccion>
-      <View style={{ gap: espacio.xs }}>
-        <Boton
-          titulo="Salir del grupo"
-          variante="secundario"
-          onPress={confirmarSalida}
-          cargando={salida.isPending}
-        />
-        {salida.error && (
-          <Texto variante="meta" color="fallo" accessibilityLiveRegion="polite">
-            {mensajeAlSalir(salida.error)}
-          </Texto>
-        )}
-      </View>
-    </>
-  );
-}
-
 /**
- * S08: ranking del grupo por torneo o jornada (F08), código para invitar y salir (F07). El ranking
- * se vuelve a pedir al abrir, al cambiar de vista o de jornada y al deslizar (F08 R7).
+ * S08 (F26 R7): encabezado y pestañas Ranking / Jornada / Miembros. Cambiar de pestaña o de jornada
+ * usa `setParams` (D78). Todo se vuelve a pedir al abrir, al cambiar de pestaña o de jornada y al
+ * deslizar para recargar (F08 R7).
  */
 export function PantallaGrupo() {
-  const { grupoId, aviso, vista: vistaRuta, jornada } = useLocalSearchParams<'/grupo/[grupoId]'>();
+  const { grupoId, aviso, pestana: pestanaRuta, vista, jornada } = useLocalSearchParams<'/grupo/[grupoId]'>();
   const id = Number(grupoId);
   const idValido = Number.isInteger(id) && id > 0;
-  const vista: Vista = vistaRuta === 'jornada' ? 'jornada' : 'torneo';
+  const pestana = pestanaDeRuta(
+    typeof pestanaRuta === 'string' ? pestanaRuta : undefined,
+    typeof vista === 'string' ? vista : undefined,
+  );
   const { colores, espacio, medidas } = useTema();
+  const clienteConsultas = useQueryClient();
   const [refrescando, setRefrescando] = useState(false);
 
   const grupo = useQuery({ queryKey: ['grupo', id], queryFn: () => obtenerGrupo(id), enabled: idValido });
-  const esMiembro = grupo.data != null;
-
-  // Vista "Jornada": las jornadas del torneo actual (las mismas de S02) y la elegida (D86).
-  const torneo = useQuery({
-    queryKey: ['torneo-actual'],
-    queryFn: obtenerTorneoActual,
-    enabled: esMiembro && vista === 'jornada',
-  });
-  const jornadas = torneo.data?.jornadas ?? [];
-  const elegida = elegirJornada(
-    jornadas,
-    typeof jornada === 'string' ? jornada : undefined,
-    torneo.data?.ordenActual ?? null,
-  );
-  const jornadaId = vista === 'jornada' ? (elegida?.id ?? null) : null;
-
-  // "Esta jornada no tiene partidos" (F08 Estados): la misma consulta y caché de S02.
-  const partidos = useQuery({
-    queryKey: ['partidos-de-jornada', elegida?.id],
-    queryFn: () => (elegida ? obtenerPartidosDeJornada(elegida.id) : Promise.resolve([])),
-    enabled: esMiembro && vista === 'jornada' && elegida !== undefined,
-  });
-  let vacio: string | undefined;
-  if (vista === 'jornada' && torneo.data != null && (jornadas.length === 0 || partidos.data?.length === 0)) {
-    vacio = mensajesGrupo.jornadaSinPartidos;
-  }
-
-  const ranking = useQuery({
-    queryKey: ['grupo', id, 'ranking', vista, jornadaId],
-    queryFn: () => obtenerRanking(id, jornadaId),
-    enabled: esMiembro && (vista === 'torneo' || elegida !== undefined),
-  });
 
   async function recargar() {
     setRefrescando(true);
-    await Promise.all([grupo.refetch(), ranking.refetch()]);
+    await Promise.all([
+      clienteConsultas.refetchQueries({ queryKey: ['grupo', id], type: 'active' }),
+      clienteConsultas.refetchQueries({ queryKey: ['torneo-actual'], type: 'active' }),
+      clienteConsultas.refetchQueries({ queryKey: ['partidos-de-jornada'], type: 'active' }),
+    ]);
     setRefrescando(false);
   }
 
-  // Sin torneo actual, la vista "Jornada" no tiene jornadas: lo dice como el ranking (F08 Estados).
-  let errorRanking: Error | null = ranking.error;
-  if (vista === 'jornada' && torneo.data === null) errorRanking = new ErrorGrupo('SIN_TORNEO_ACTUAL');
-  else if (vista === 'jornada' && torneo.error) errorRanking = torneo.error;
-
-  const indice = elegida ? jornadas.indexOf(elegida) : -1;
-  const noMiembro =
-    !idValido ||
-    grupo.data === null ||
-    (ranking.error instanceof ErrorGrupo && ranking.error.codigo === 'NO_MIEMBRO');
-
   let contenido: ReactNode;
-  if (noMiembro) {
+  if (!idValido || grupo.data === null) {
     contenido = (
       <EstadoPantalla
         mensaje={mensajesGrupo.noMiembro}
         accion={{ titulo: 'Ir a Grupos', onPress: () => router.navigate('/grupos') }}
       />
     );
-  } else if (grupo.data == null) {
+  } else if (grupo.data === undefined) {
     contenido = grupo.isError ? (
       <EstadoPantalla
         mensaje={esSinConexion(grupo.error) ? mensajesGrupo.sinConexion : mensajesGrupo.errorGrupo}
@@ -204,64 +143,23 @@ export function PantallaGrupo() {
       <EsqueletoGrupo />
     );
   } else {
-    const fallida = [grupo, ranking].find((c) => c.isRefetchError);
+    let deLaPestana: ReactNode;
+    if (pestana === 'jornada') {
+      deLaPestana = <PestanaJornada grupoId={id} jornadaRuta={typeof jornada === 'string' ? jornada : undefined} />;
+    } else if (pestana === 'miembros') deLaPestana = <PestanaMiembros grupo={grupo.data} />;
+    else deLaPestana = <PestanaRanking grupoId={id} />;
+
     contenido = (
-      <View style={{ gap: espacio.xl }}>
-        {fallida && (
-          <AvisoSinConexion
-            actualizadoEn={new Date(fallida.dataUpdatedAt)}
-            sinConexion={esSinConexion(fallida.error)}
-          />
+      <View style={{ gap: espacio.l }}>
+        {grupo.isRefetchError && (
+          <AvisoSinConexion actualizadoEn={new Date(grupo.dataUpdatedAt)} sinConexion={esSinConexion(grupo.error)} />
         )}
-        <View style={{ gap: espacio.xs }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: espacio.s }}>
-            <View style={{ flex: 1 }}>
-              <Texto variante="titulo1" accessibilityRole="header">
-                {grupo.data.nombre}
-              </Texto>
-            </View>
-            {/* F26 R6: solo el ADMIN edita nombre y color (S15). */}
-            {grupo.data.rol === 'ADMIN' && (
-              <BotonIcono
-                icono="lapiz"
-                etiqueta="Editar grupo"
-                onPress={() =>
-                  router.navigate({ pathname: '/grupos/editar/[grupoId]', params: { grupoId: String(id) } })
-                }
-              />
-            )}
-          </View>
-          {aviso === 'ya-miembro' && (
-            <Texto variante="meta" color="texto2" accessibilityLiveRegion="polite">
-              {mensajesGrupo.yaEraMiembro}
-            </Texto>
-          )}
-        </View>
-        <RankingGrupo
-          vista={vista}
-          jornada={
-            elegida && torneo.data
-              ? {
-                  nombre: elegida.nombre,
-                  torneo: torneo.data.nombre,
-                  anterior: jornadas[indice - 1]?.orden,
-                  siguiente: jornadas[indice + 1]?.orden,
-                }
-              : undefined
-          }
-          vacio={vacio}
-          ranking={{
-            datos: ranking.data,
-            error: errorRanking,
-            reintentar: () => void (vista === 'jornada' && torneo.isError ? torneo.refetch() : ranking.refetch()),
-          }}
-        />
-        <InvitarYSalir grupo={grupo.data} />
+        <Encabezado grupo={grupo.data} aviso={typeof aviso === 'string' ? aviso : undefined} />
+        <PestanasTexto pestanas={pestanas} activa={pestana} onCambiar={(valor) => router.setParams({ pestana: valor })} />
+        {deLaPestana}
       </View>
     );
   }
-
-  const miembros = ranking.data?.filas.length;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colores.fondo }}>
@@ -283,7 +181,7 @@ export function PantallaGrupo() {
       >
         <EncabezadoPantalla
           onVolver={router.canGoBack() ? () => router.back() : undefined}
-          meta={miembros !== undefined && !noMiembro ? `${miembros} de 30 miembros` : undefined}
+          meta={grupo.data ? `${grupo.data.miembros} de 30 miembros` : undefined}
         />
         {contenido}
       </ScrollView>

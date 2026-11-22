@@ -197,7 +197,7 @@ describe('S06 desde el QR', () => {
 
 describe('S08 QR', () => {
   it('F12 CA5: el QR contiene exactamente el código canónico del grupo', async () => {
-    await abrir('/grupo/1');
+    await abrir('/grupo/1?pestana=miembros');
 
     expect(await screen.findByTestId('contenido-qr')).toHaveTextContent('ABCD-EFGH', { exact: true });
     expect(screen.getByLabelText('Código QR del grupo')).toBeOnTheScreen();
