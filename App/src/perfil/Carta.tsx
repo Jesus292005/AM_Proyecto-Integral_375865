@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native';
 
-import { DegradadoMetal, EscudoEquipo, FotoUsuario, Texto } from '../componentes';
+import { DegradadoMetal, EscudoEquipo, FotoUsuario, Texto, type EquipoConEscudo } from '../componentes';
 import { useTema } from '../tema';
 import type { MiCarta, MiPerfil, Nivel } from './datos';
 import { renglonesDeNombre } from './nombre';
@@ -16,6 +16,8 @@ export const atributos: readonly {
   explicacion: string;
   calculo: string;
   sinDato?: string;
+  /** El mismo motivo en tercera persona, para el perfil de otro (F19 R3). */
+  sinDatoDeOtro?: string;
   valor: (carta: MiCarta) => number | null;
 }[] = [
   {
@@ -38,6 +40,7 @@ export const atributos: readonly {
     explicacion: 'Qué tan buenos son tus análisis: el bono promedio que te dio la IA, que va de 0 a 100.',
     calculo: '40 + 59 × (bono promedio ÷ 100)',
     sinDato: 'Aún no tienes análisis evaluados por la IA. Escribe por qué crees que pasará al predecir.',
+    sinDatoDeOtro: 'Aún no tiene análisis evaluados por la IA.',
     valor: (c) => c.analisis,
   },
   {
@@ -55,15 +58,21 @@ const metalDe = { BRONCE: 'bronce', PLATA: 'plata', ORO: 'oro' } as const;
 // F20 R3. El servidor decide la media y el nivel; este mínimo solo dice cuántas faltan.
 export const MINIMO_CALIFICADAS = 5;
 
-export const textoFaltan = (n: number) =>
-  n === 1 ? 'Te falta 1 predicción calificada' : `Te faltan ${n} predicciones calificadas`;
+/** Con `deOtro`, en tercera persona (S13, F19 R3). */
+export const textoFaltan = (n: number, deOtro = false) => {
+  if (deOtro) return n === 1 ? 'Le falta 1 predicción calificada' : `Le faltan ${n} predicciones calificadas`;
+  return n === 1 ? 'Te falta 1 predicción calificada' : `Te faltan ${n} predicciones calificadas`;
+};
 
 interface Props {
   carta: MiCarta;
-  perfil: Pick<MiPerfil, 'nombre' | 'foto_url' | 'equipo'>;
+  /** Mi perfil (S09) o el de otro (S13): solo nombre, foto y el escudo del favorito. */
+  perfil: Pick<MiPerfil, 'nombre' | 'foto_url'> & { equipo: EquipoConEscudo | null };
   /** Parte tocada: su detalle se abre en una hoja (R8). */
   elegido: ParteCarta | null;
   onElegir: (parte: ParteCarta) => void;
+  /** S13: la carta de otro, con los textos en tercera persona (F19 R3). */
+  deOtro?: boolean;
 }
 
 /**
@@ -71,7 +80,8 @@ interface Props {
  * foto, nombre, escudo del favorito y los 4 atributos. Sin nivel (menos de 5 calificadas) sale
  * bloqueada, en `superficie2` y sin metal (R3).
  */
-export function Carta({ carta, perfil, elegido, onElegir }: Props) {
+export function Carta({ carta, perfil, elegido, onElegir, deOtro = false }: Props) {
+  const deQuien = deOtro ? `Carta de ${perfil.nombre}` : 'Tu carta';
   const { colores, metales, espacio, medidas } = useTema();
   const metal = carta.nivel ? metales[metalDe[carta.nivel]] : null;
   // Sobre el metal, el texto usa su color "texto encima" (05-ui §2).
@@ -98,8 +108,8 @@ export function Carta({ carta, perfil, elegido, onElegir }: Props) {
           accessibilityRole="button"
           accessibilityLabel={
             carta.media !== null && carta.nivel
-              ? `Tu carta: media ${carta.media}, nivel ${textoNivel[carta.nivel]}`
-              : `Tu carta, bloqueada: ${textoFaltan(faltan)}`
+              ? `${deQuien}: media ${carta.media}, nivel ${textoNivel[carta.nivel]}`
+              : `${deQuien}, bloqueada: ${textoFaltan(faltan, deOtro)}`
           }
           accessibilityHint="Ver cómo se calcula"
           accessibilityState={{ selected: elegido === 'MEDIA' }}
@@ -153,7 +163,7 @@ export function Carta({ carta, perfil, elegido, onElegir }: Props) {
         </View>
       ) : (
         <Texto variante="cuerpo" color="texto2">
-          {`${textoFaltan(faltan)} para tu carta.`}
+          {`${textoFaltan(faltan, deOtro)} para ${deOtro ? 'su' : 'tu'} carta.`}
         </Texto>
       )}
     </View>

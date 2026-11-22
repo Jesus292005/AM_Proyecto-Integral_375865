@@ -3,12 +3,16 @@ import { View } from 'react-native';
 import { Boton, Esqueleto, Seccion, Texto } from '../componentes';
 import { esSinConexion } from '../datos/errores';
 import { useTema } from '../tema';
+import type { MiRacha } from './datos';
 import { useMiRacha } from './useMiRacha';
 import { useReleerAlVolver } from './useReleerAlVolver';
 
 const mensajes = {
   explicacion: 'Cuenta tus predicciones con puntos, una tras otra. Un partido sin predecir no la rompe.',
   sinRacha: 'Tu racha empieza con tu primer acierto.',
+  // S13 (F19 R3).
+  explicacionDeOtro: 'Cuenta sus predicciones con puntos, una tras otra. Un partido sin predecir no la rompe.',
+  sinRachaDeOtro: 'Su racha empieza con su primer acierto.',
   simulados: 'Incluye partidos simulados',
   error: 'No pudimos cargar tu racha.',
   // Mismo texto que F01 §10.
@@ -31,6 +35,32 @@ function Numero({ etiqueta, valor }: { etiqueta: string; valor: number }) {
   );
 }
 
+/** Los números de la racha y sus notas; S09 y S13 (con `deOtro`, F19 R3, R9) lo comparten. */
+export function ContenidoRacha({ racha, deOtro = false }: { racha: MiRacha; deOtro?: boolean }) {
+  const { espacio } = useTema();
+  const { racha_actual, mejor_racha, incluye_simulados, ultima_calificacion } = racha;
+
+  if (ultima_calificacion === null) {
+    return <Texto variante="cuerpo">{deOtro ? mensajes.sinRachaDeOtro : mensajes.sinRacha}</Texto>;
+  }
+  return (
+    <View style={{ gap: espacio.s }}>
+      <View style={{ flexDirection: 'row', gap: espacio.l }}>
+        <Numero etiqueta="Racha actual" valor={racha_actual} />
+        <Numero etiqueta="Mejor racha" valor={mejor_racha} />
+      </View>
+      <Texto variante="meta" color="textoTenue">
+        {deOtro ? mensajes.explicacionDeOtro : mensajes.explicacion}
+      </Texto>
+      {incluye_simulados && (
+        <Texto variante="meta" color="textoTenue">
+          {mensajes.simulados}
+        </Texto>
+      )}
+    </View>
+  );
+}
+
 /**
  * S09, sección "Racha" (F13 R7): racha actual y mejor racha, calculadas por el servidor (D52). Se
  * pide cada vez que se abre S09 (la pestaña sigue montada al cambiar a otra); un error no rompe el
@@ -45,26 +75,7 @@ export function SeccionRacha() {
 
   let contenido;
   if (racha.data !== undefined) {
-    const { racha_actual, mejor_racha, incluye_simulados, ultima_calificacion } = racha.data;
-    contenido =
-      ultima_calificacion === null ? (
-        <Texto variante="cuerpo">{mensajes.sinRacha}</Texto>
-      ) : (
-        <View style={{ gap: espacio.s }}>
-          <View style={{ flexDirection: 'row', gap: espacio.l }}>
-            <Numero etiqueta="Racha actual" valor={racha_actual} />
-            <Numero etiqueta="Mejor racha" valor={mejor_racha} />
-          </View>
-          <Texto variante="meta" color="textoTenue">
-            {mensajes.explicacion}
-          </Texto>
-          {incluye_simulados && (
-            <Texto variante="meta" color="textoTenue">
-              {mensajes.simulados}
-            </Texto>
-          )}
-        </View>
-      );
+    contenido = <ContenidoRacha racha={racha.data} />;
   } else if (racha.isError) {
     contenido = (
       <View style={{ gap: espacio.s }}>

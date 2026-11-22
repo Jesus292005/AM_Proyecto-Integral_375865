@@ -10,6 +10,7 @@ import { crearGrupo, obtenerGrupo, obtenerMisGrupos } from './grupos/datos';
 import { pendienteDePrueba } from './inicio/__mocks__/datos';
 import { obtenerPendientes } from './inicio/datos';
 import { obtenerPartido } from './partido/datos';
+import { obtenerPerfilDe } from './perfil/datosUsuario';
 import { simularSesionGuardada } from './pruebas/supabaseFalso';
 
 jest.mock('./supabase/cliente');
@@ -17,6 +18,7 @@ jest.mock('./supabase/cliente');
 jest.mock('./partido/datos');
 // S10 ya es real (T38): la cuenta de prueba es de usuario normal.
 jest.mock('./perfil/datos');
+jest.mock('./perfil/datosUsuario');
 jest.mock('./simulacion/datos');
 // S04–S08 ya son reales (T66, T67, T72): un grupo "Los del sillón"; la cámara la simula `jest.setup.ts`.
 jest.mock('./grupos/datos');
@@ -84,11 +86,6 @@ async function seCerroS03() {
   await waitFor(() => expect(screen.queryByRole('header', { name: S03 })).not.toBeOnTheScreen());
 }
 
-// Pantallas provisionales (T03): muestran su id.
-const rutas = [
-  { url: '/usuario/5', id: 'S13', titulo: 'Perfil de usuario' },
-] as const;
-
 // Pantallas reales: se reconocen por su encabezado.
 const rutasReales = [
   { url: '/inicio', id: 'S11', titulo: 'Inicio' },
@@ -100,16 +97,11 @@ const rutasReales = [
   { url: '/grupo/3', id: 'S08', titulo: GRUPO },
   { url: '/grupos/escanear', id: 'S07', titulo: 'Escanear QR' },
   { url: '/grupos/editar/3', id: 'S15', titulo: 'Editar grupo' },
+  // F19: el perfil de un compañero (el nombre del simulado).
+  { url: '/usuario/00000000-0000-0000-0000-000000000005', id: 'S13', titulo: 'Ana' },
 ] as const;
 
 describe('rutas', () => {
-  it.each(rutas)('$url abre $id', async ({ url, id, titulo }) => {
-    await abrir(url);
-
-    expect(await screen.findByRole('header', { name: titulo })).toBeOnTheScreen();
-    expect(screen.getByText(id)).toBeOnTheScreen();
-  });
-
   it.each(rutasReales)('$url abre $id', async ({ url, titulo }) => {
     await abrir(url);
 
@@ -150,24 +142,25 @@ describe('rutas', () => {
   });
 
   it('los parámetros de ruta llegan a la pantalla', async () => {
-    await abrir('/usuario/5');
+    await abrir('/usuario/00000000-0000-0000-0000-000000000005');
 
-    expect(await screen.findByText('usuarioId: 5')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Ana' })).toBeOnTheScreen();
+    expect(obtenerPerfilDe).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000005');
   });
 
-  it.each(['/partido/7', '/grupo/3', '/usuario/5', '/admin/simulacion'])(
+  it.each(['/partido/7', '/grupo/3', '/usuario/00000000-0000-0000-0000-000000000005', '/admin/simulacion'])(
     '%s se abre con el menú inferior',
     async (url) => {
       await abrir(url);
 
-      // Los 4 destinos del menú (S08 tiene además sus pestañas Torneo / Jornada, F08).
+      // Los 4 destinos del menú (S08 tiene además sus pestañas Ranking / Jornada / Miembros, F26).
       for (const destino of ['Inicio', 'Partidos', 'Grupos', 'Perfil']) {
         expect(await screen.findByRole('tab', { name: destino })).toBeOnTheScreen();
       }
     },
   );
 
-  it.each(['/equipo', '/grupos/nuevo', '/grupos/unirse', '/grupos/escanear'])(
+  it.each(['/equipo', '/grupos/nuevo', '/grupos/unirse', '/grupos/escanear', '/grupos/editar/3'])(
     '%s se abre sin menú inferior',
     async (url) => {
       await abrir(url);

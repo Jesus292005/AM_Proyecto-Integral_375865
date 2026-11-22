@@ -61,10 +61,13 @@ export function DetalleCarta({
   carta,
   parte,
   onCerrar,
+  deOtro = false,
 }: {
   carta: MiCarta;
   parte: ParteCarta | null;
   onCerrar: () => void;
+  /** S13: en tercera persona (F19 R3). */
+  deOtro?: boolean;
 }) {
   const { espacio } = useTema();
   const atributo = atributos.find((a) => a.codigo === parte);
@@ -84,16 +87,17 @@ export function DetalleCarta({
           </Texto>
         </View>
         <Bloque etiqueta="Qué es">
-          El promedio de tus cuatro atributos. Análisis solo cuenta si ya tienes análisis evaluados por
-          la IA.
+          {deOtro
+            ? 'El promedio de sus cuatro atributos. Análisis solo cuenta si ya tiene análisis evaluados por la IA.'
+            : 'El promedio de tus cuatro atributos. Análisis solo cuenta si ya tienes análisis evaluados por la IA.'}
         </Bloque>
         <Bloque etiqueta="Niveles">
           {niveles.map(({ nivel, rango }) => `${textoNivel[nivel]}: ${rango}`).join(' · ')}
         </Bloque>
         <Bloque etiqueta="Cuándo aparece">
           {carta.media !== null
-            ? `Con ${MINIMO_CALIFICADAS} predicciones calificadas o más. Llevas ${carta.calificadas}.`
-            : `Con ${MINIMO_CALIFICADAS} predicciones calificadas. ${textoFaltan(faltan)}.`}
+            ? `Con ${MINIMO_CALIFICADAS} predicciones calificadas o más. ${deOtro ? 'Lleva' : 'Llevas'} ${carta.calificadas}.`
+            : `Con ${MINIMO_CALIFICADAS} predicciones calificadas. ${textoFaltan(faltan, deOtro)}.`}
         </Bloque>
       </>
     );
@@ -112,7 +116,9 @@ export function DetalleCarta({
         </View>
         <Bloque etiqueta="Qué mide">{atributo.explicacion}</Bloque>
         <Bloque etiqueta="Cómo se calcula">{atributo.calculo}</Bloque>
-        {valor === null && atributo.sinDato && <Bloque etiqueta="Por qué sale —">{atributo.sinDato}</Bloque>}
+        {valor === null && atributo.sinDato && (
+          <Bloque etiqueta="Por qué sale —">{(deOtro && atributo.sinDatoDeOtro) || atributo.sinDato}</Bloque>
+        )}
       </>
     );
   }

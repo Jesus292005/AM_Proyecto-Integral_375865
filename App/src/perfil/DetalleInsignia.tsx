@@ -8,8 +8,9 @@ import type { InsigniaDeVitrina } from './datos';
 
 const metalDe = { BRONCE: 'bronce', PLATA: 'plata', ORO: 'oro' } as const;
 
-function estado(insignia: InsigniaDeVitrina): string {
-  if (insignia.veces === 0) return 'Aún no la tienes';
+function estado(insignia: InsigniaDeVitrina, deOtro: boolean): string {
+  if (insignia.veces === 0) return deOtro ? 'Aún no la tiene' : 'Aún no la tienes';
+  if (deOtro) return insignia.veces > 1 ? `La ganó ${insignia.veces} veces` : 'La ganó';
   return insignia.veces > 1 ? `La ganaste ${insignia.veces} veces` : 'La ganaste';
 }
 
@@ -21,9 +22,12 @@ function estado(insignia: InsigniaDeVitrina): string {
 export function DetalleInsignia({
   insignia,
   onCerrar,
+  deOtro = false,
 }: {
   insignia: InsigniaDeVitrina | null;
   onCerrar: () => void;
+  /** S13: en tercera persona y sin grupo ni jornada (F19 R3, decisión 5). */
+  deOtro?: boolean;
 }) {
   const { espacio } = useTema();
 
@@ -47,7 +51,7 @@ export function DetalleInsignia({
               {`${textoNivel[insignia.nivel]}${insignia.repetible ? ' · Se puede ganar varias veces' : ''}`}
             </Texto>
             <Texto variante="cuerpoFuerte" color={insignia.veces > 0 ? 'texto' : 'textoTenue'}>
-              {estado(insignia)}
+              {estado(insignia, deOtro)}
             </Texto>
           </View>
 

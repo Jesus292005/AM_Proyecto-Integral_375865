@@ -11,6 +11,7 @@ import { useReleerAlVolver } from './useReleerAlVolver';
 
 const mensajes = {
   sinInsignias: 'Tu primera insignia llega con tu primer acierto.',
+  sinInsigniasDeOtro: 'Su primera insignia llega con su primer acierto.',
   error: 'No pudimos cargar tu Vitrina.',
   // Mismo texto que F01 §10.
   sinConexion: 'Sin conexión. Revisa tu internet e inténtalo de nuevo.',
@@ -109,12 +110,37 @@ function EsqueletoVitrina() {
   );
 }
 
+/** La rejilla con el catálogo y el detalle en hoja; S09 y S13 (con `deOtro`, F19 R3, R9) la comparten. */
+export function RejillaVitrina({ insignias, deOtro = false }: { insignias: InsigniaDeVitrina[]; deOtro?: boolean }) {
+  const { espacio } = useTema();
+  const [elegida, setElegida] = useState<string | null>(null);
+  const tocada = insignias.find((i) => i.codigo === elegida) ?? null;
+
+  return (
+    <View style={{ gap: espacio.s }}>
+      {insignias.every((i) => i.veces === 0) && (
+        <Texto variante="cuerpo">{deOtro ? mensajes.sinInsigniasDeOtro : mensajes.sinInsignias}</Texto>
+      )}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        {insignias.map((insignia) => (
+          <Casilla
+            key={insignia.codigo}
+            insignia={insignia}
+            elegida={insignia.codigo === elegida}
+            onPress={() => setElegida(insignia.codigo)}
+          />
+        ))}
+      </View>
+      <DetalleInsignia insignia={tocada} onCerrar={() => setElegida(null)} deOtro={deOtro} />
+    </View>
+  );
+}
+
 /** S09, sección "Vitrina" (F14 R6–R7); un error no rompe el resto del perfil. */
 export function SeccionVitrina() {
   const { espacio } = useTema();
   const clienteConsultas = useQueryClient();
   const vitrina = useQuery({ queryKey: claveVitrina, queryFn: obtenerMisInsignias });
-  const [elegida, setElegida] = useState<string | null>(null);
   useReleerAlVolver(vitrina.refetch);
 
   // R7: las nuevas se marcan vistas una vez que ya se pintaron (y se animaron).
@@ -142,24 +168,7 @@ export function SeccionVitrina() {
 
   let contenido;
   if (vitrina.data !== undefined) {
-    const sinNinguna = vitrina.data.every((i) => i.veces === 0);
-    const tocada = vitrina.data.find((i) => i.codigo === elegida);
-    contenido = (
-      <View style={{ gap: espacio.s }}>
-        {sinNinguna && <Texto variante="cuerpo">{mensajes.sinInsignias}</Texto>}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          {vitrina.data.map((insignia) => (
-            <Casilla
-              key={insignia.codigo}
-              insignia={insignia}
-              elegida={insignia.codigo === elegida}
-              onPress={() => setElegida(insignia.codigo)}
-            />
-          ))}
-        </View>
-        <DetalleInsignia insignia={tocada ?? null} onCerrar={() => setElegida(null)} />
-      </View>
-    );
+    contenido = <RejillaVitrina insignias={vitrina.data} />;
   } else if (vitrina.isError) {
     contenido = (
       <View style={{ gap: espacio.s }}>
