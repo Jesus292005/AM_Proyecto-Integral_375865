@@ -1,6 +1,6 @@
 # 02 — Pantallas y navegación
 
-> **Estado:** ✅ Aprobado v1.4 (2026-11-07, T70: parámetros `jornada?` y `aviso?` de S08) · v1.3 (2026-11-02, D90: recordatorio agrupado abre S02) · v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
+> **Estado:** ✅ Aprobado v1.5 (2026-11-21, T99: S09 nuevo y S14 Cambiar nombre, F28, D108) · v1.4 (2026-11-07, T70: parámetros `jornada?` y `aviso?` de S08) · v1.3 (2026-11-02, D90: recordatorio agrupado abre S02) · v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
 > **Última actualización:** 2026-10-10
 > Base: [`01-mvp.md`](./01-mvp.md). Cada pantalla existe porque la necesita al menos una feature; si no, no se construye.
 > Este documento define **qué hay en cada pantalla y cómo se llega**, no cómo se ve (colores, tipografía, estilo): eso se define en la fase de Diseño.
@@ -29,12 +29,14 @@ Inicio de sesión (S01)
     │       └── Perfil de otro usuario (S13)
     │
     └── Perfil (S09)
+        ├── Elegir equipo favorito (S12, modal)
+        ├── Cambiar nombre (S14, modal)        ← F28 (D108)
         └── Simulación de partidos (S10)      ← solo cuentas administrador (D36)
 ```
 
-**Total: 13 pantallas** (3 modales, 1 solo administrador, 1 que reutiliza el diseño de Perfil).
+**Total: 14 pantallas** (4 modales, 1 solo administrador, 1 que reutiliza el diseño de Perfil).
 
-**Menú inferior (D76):** las pantallas que cuelgan de una pestaña (S03, S08, S13, S10) se abren **con el menú visible**, dentro de la pestaña desde la que se llegó (abrir un partido desde Inicio se queda en Inicio). Inicio de sesión (S01), los modales (S12, S05, S06) y la cámara (S07) **tapan el menú**. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar a otra. Una entrada externa (§4) abre el detalle en la pestaña Inicio.
+**Menú inferior (D76):** las pantallas que cuelgan de una pestaña (S03, S08, S13, S10) se abren **con el menú visible**, dentro de la pestaña desde la que se llegó (abrir un partido desde Inicio se queda en Inicio). Inicio de sesión (S01), los modales (S12, S14, S05, S06) y la cámara (S07) **tapan el menú**. Tocar la pestaña activa regresa a su primera pantalla; cada pestaña recuerda dónde se quedó al cambiar a otra. Una entrada externa (§4) abre el detalle en la pestaña Inicio.
 
 ## 2. Pantallas
 
@@ -50,7 +52,8 @@ Inicio de sesión (S01)
 | S06 | Unirse a grupo | F07, F12 | Campo de código + botón "Escanear QR". | Código vacío, código inválido, ya soy miembro, error |
 | S07 | Escanear QR | F12 | Cámara; al leer un QR válido regresa a S06 con el código lleno. Solo dentro de la app (D37). | Permiso de cámara negado, QR no válido |
 | S08 | Detalle de grupo | F07, F08, F12, F14, F15 | Ranking con dos vistas: **torneo** y **jornada**. En la vista de jornada, la tarjeta "Mejor análisis de la jornada". Código e imagen QR para invitar. Botón compartir. Tocar a un miembro abre S13 (D38). | Cargando, ranking sin puntos aún, error |
-| S09 | Perfil (propio) | F01, F11, F13, F14, F18, (F20) | Foto y nombre (de Google), equipo favorito, puntos totales, racha, "Vitrina" de insignias, (carta F20). Ajustes: recordatorios (sí/no), cambiar equipo. Cerrar sesión. Acceso a S10 solo si soy administrador. | Cargando, sin insignias aún, error |
+| S09 | Perfil (propio) | F01, F11, F13, F14, F18, F20, F28 | Encabezado con foto (de Google), nombre visible y equipo favorito (o "Elige tu equipo"); carta (F20), racha (F13) y Vitrina de insignias (F14). Ajustes: equipo favorito (S12), nombre (S14), recordatorios. Cerrar sesión. Acceso a S10 solo si soy administrador (F28 R1–R2). | Por sección: cargando, error (una sección que falla no rompe las demás) |
+| S14 | Cambiar nombre | F28 | Campo con el nombre actual (3–20 caracteres) y "Guardar"; al guardar vuelve a S09 (F28 R3–R4). | Nombre inválido, error al guardar, sin internet |
 | S13 | Perfil de otro usuario | F19 | Mismo diseño que S09 en **solo lectura**: foto, nombre, equipo, puntos, racha, Vitrina, (carta). **No** muestra predicciones de partidos que no han empezado. | Cargando, error, usuario no encontrado |
 | S10 | Simulación | F09 | Elegir un partido de 2024 y "jugarlo" como partido actual; forzar su final para disparar la calificación. | — (solo administrador) |
 
@@ -65,6 +68,7 @@ Inicio de sesión (S01)
 | `/login` | S01 | — | Arranque sin sesión; cerrar sesión | Inicio |
 | `/inicio` | S11 | — | Login, pestaña | S03, S02, S08, S04, S12 |
 | `/equipo` | S12 | — | S11, S09 | Atrás |
+| `/nombre` | S14 | — | S09 | Atrás |
 | `/partidos` | S02 | `jornada?` (por defecto la actual) | Pestaña, S11 | S03 |
 | `/partido/:partidoId` | S03 | `partidoId` | S02, S11, notificación | Atrás |
 | `/grupos` | S04 | — | Pestaña, S11 | S05, S06, S08 |
@@ -73,7 +77,7 @@ Inicio de sesión (S01)
 | `/grupos/escanear` | S07 | — | S06 | S06 con `codigo` |
 | `/grupo/:grupoId` | S08 | `grupoId`, `vista?` (`torneo`/`jornada`), `jornada?` (el `orden`, como en S02; F08), `aviso?` (`ya-miembro`, F07) | S04, S05, S06, S11, notificación | S13 |
 | `/usuario/:usuarioId` | S13 | `usuarioId` | S08 | Atrás |
-| `/perfil` | S09 | — | Pestaña | S12, S10, Login (cerrar sesión) |
+| `/perfil` | S09 | — | Pestaña | S12, S14, S10, Login (cerrar sesión) |
 | `/admin/simulacion` | S10 | — | S09 (solo administrador) | Atrás |
 
 ## 4. Entradas externas

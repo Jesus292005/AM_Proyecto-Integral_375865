@@ -7,7 +7,8 @@ import { Alert, type AlertButton } from 'react-native';
 
 import { clienteConsultas } from '../datos/clienteConsultas';
 import { ErrorDatos } from '../datos/errores';
-import { obtenerMiRol } from '../perfil/datos';
+import { perfilDePrueba } from '../perfil/__mocks__/datos';
+import { obtenerMiPerfil, obtenerMiRol } from '../perfil/datos';
 import { simularSesionGuardada } from '../pruebas/supabaseFalso';
 import {
   crearSimulado,
@@ -25,6 +26,10 @@ jest.mock('../perfil/datos');
 jest.mock('./datos');
 
 const rolFalso = obtenerMiRol as jest.MockedFunction<typeof obtenerMiRol>;
+// S09 toma el rol de su perfil (F28 R7) y S10 de `obtenerMiRol`: los dos siguen al mismo rol.
+(obtenerMiPerfil as jest.MockedFunction<typeof obtenerMiPerfil>).mockImplementation(async () =>
+  perfilDePrueba({ rol: await obtenerMiRol() }),
+);
 const enCursoFalso = obtenerSimuladosEnCurso as jest.MockedFunction<typeof obtenerSimuladosEnCurso>;
 const terminadosFalsos = obtenerSimuladosTerminados as jest.MockedFunction<
   typeof obtenerSimuladosTerminados

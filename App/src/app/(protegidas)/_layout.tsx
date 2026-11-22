@@ -46,6 +46,7 @@ export default function LayoutProtegidas() {
     <Stack screenOptions={opciones}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="equipo" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="nombre" options={{ presentation: 'modal' }} />
       <Stack.Screen name="grupos/nuevo" options={{ presentation: 'modal' }} />
       <Stack.Screen name="grupos/unirse" options={{ presentation: 'modal' }} />
     </Stack>
