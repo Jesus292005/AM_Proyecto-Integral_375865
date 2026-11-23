@@ -1,11 +1,27 @@
 # 01 — MVP: alcance, prioridades y plan
 
-> **Estado:** ✅ Aprobado v1.5 (2026-11-07; demo el 23 de noviembre, S7 adelantada y congelamiento 20–22 por D98) · v1.4 (2026-11-02; plan replanteado y F12 a Must por D88) · v1.3 (2026-10-10; F11 dividida por D69, módulos por D66) · antes v1.2 (2026-10-04; v1.1 agrega F17–F20 por D39/D41; v1.2 agrega F21 y reordena Should por D42)
-> **Última actualización:** 2026-11-07
+> **Estado:** ✅ Aprobado v1.6 (2026-11-22; estado real del rediseño y plan Pro hasta el 21 dic, D117) · v1.5 (2026-11-07; demo el 23 de noviembre, S7 adelantada y congelamiento 20–22 por D98) · v1.4 (2026-11-02; plan replanteado y F12 a Must por D88) · v1.3 (2026-10-10; F11 dividida por D69, módulos por D66) · antes v1.2 (2026-10-04; v1.1 agrega F17–F20 por D39/D41; v1.2 agrega F21 y reordena Should por D42)
+> **Última actualización:** 2026-11-22
 > Base: [`00-project.md`](./00-project.md) (aprobado) y [`decisions.md`](./decisions.md).
 > Este documento decide **qué entra y en qué orden**. El detalle de cada feature va en `features/Fxx-*.md`.
 
 ---
+
+## 0. Estado al 22 de noviembre de 2026
+
+| Módulo | Features | Estado |
+|---|---|---|
+| M1 Base | F01, F02 | ✅ D87 |
+| M2 Predecir | F03, F04, F09, F11a | ✅ D93 |
+| M3 Calificar | F05, F06, F10, F11b | ✅ D96 |
+| M4 Competir | F07, F08, F12, F13 | ✅ D99, D100, D102 |
+| M5 Base visual | F22, F23, F24 | ✅ D107 |
+| M6 Identidad | F28, F18, F20, F14, F25 | ✅ D110 |
+| M7 Inicio | F17 v2 | ✅ D112 |
+| M8 Grupos sociales | F26, F19 | ✅ D116 |
+| M9 Avisos en la app | F27 | ⬜ No implementado (D117) |
+
+Sin implementar: F15 (compartir resultado o ranking; la invitación a un grupo sí se comparte, F26), F16 (comentarios), F21 (previa del partido) y F27. El rediseño (§7) se adelantó a antes de la demo por D117.
 
 ## 1. Flujo núcleo (lo mínimo que debe funcionar para que el MVP tenga sentido)
 
@@ -48,7 +64,7 @@ Si una funcionalidad no aporta a este flujo o a la gamificación que lo hace atr
 
 **Prioridad de los Should (de mayor a menor, D42; F12 sale por D88):** F13 Rachas → F14 Insignias → F21 Previa → F19 Perfil público → F17 Inicio → F18 Equipo favorito → F15 Compartir. Could: F20 Carta (primero) → F16 Comentarios.
 
-**Dentro del plan (D88):** todos los Must y, solo si sobra tiempo en S7, F13 Rachas (entró y quedó terminada, D102). **F14–F21 quedan fuera del plan**; siguen en esta tabla como Should/Could por si el plan se adelanta.
+**Dentro del plan (D88):** todos los Must y, solo si sobra tiempo en S7, F13 Rachas (entró y quedó terminada, D102). **F14–F21 quedan fuera del plan**; siguen en esta tabla como Should/Could por si el plan se adelanta. *(Después entraron F14, F17, F18, F19 y F20 con el rediseño; estado en §0.)*
 
 **Orden de recorte si falta tiempo (inverso):** F16 → F20 → F15 → F18 → F17 → F19 → F21 → F14 → F13. Ningún Must se recorta; si un Must está en riesgo, se reduce su alcance (y se actualiza su spec), no se elimina.
 
@@ -69,9 +85,9 @@ Si una funcionalidad no aporta a este flujo o a la gamificación que lo hace atr
 | S5 | 2–8 nov | M2 Predecir | F03, F04, F09, F11a |
 | S6 | 2–7 nov (adelantada) | M3 Calificar | F05, F06, F10, F11b |
 | S7 | 9–19 nov (adelantada) | M4 Competir | F07, F08, F12 · F13 solo si las tres están aprobadas en el teléfono a más tardar el 17 nov |
-| S8 | 20–22 nov | **Congelamiento:** sin features nuevas; corregir, medir el tamaño y ensayar la demo. | — |
+| S8 | 20–22 nov | **Congelamiento:** sin features nuevas; corregir, medir el tamaño y ensayar la demo. *No se cumplió: esos días se hizo el rediseño M5–M8 (D117).* | — |
 
-**API-Football Pro (D24, D25):** 1 mes desde el 9 de noviembre (cubre la demo y la entrega); con él se pasa a la temporada 2026 al inicio de M4 (`tasks/S7.md` T63).
+**API-Football Pro (D24, D25):** pagado del 9 de noviembre al 21 de diciembre de 2026 (D117; cubre la demo y la entrega); con él se pasa a la temporada 2026 al inicio de M4 (`tasks/S7.md` T63).
 
 ### 4.1 Módulos (D66, D88)
 
@@ -94,7 +110,11 @@ Ciclo de cada módulo: specs → revisión → tareas → implementación por lo
 
 Es el de `00-project.md` §9: en la demo, 3+ usuarios en un grupo predicen; el partido termina (real o simulado) y **sin intervención manual** reciben puntos base y bono con explicación; los rankings se actualizan; se otorga al menos una racha o insignia (si F13/F14 entraron).
 
-## 7. Después de la demo: rediseño (D104)
+## 6. Pendientes de este documento
+
+Ninguno. M-01 y M-02 aprobados (D32, D33).
+
+## 7. Rediseño (D104; adelantado a antes de la demo por D117)
 
 El MVP cumple su criterio de éxito con M1–M4. El rediseño ataca por qué la app no engancha: la recompensa llega días después, el análisis con IA (lo que la distingue) está escondido, no hay identidad y lo social es solo una tabla. Mismo ciclo de los módulos anteriores (§4.1); un commit por tarea.
 
@@ -111,7 +131,3 @@ El MVP cumple su criterio de éxito con M1–M4. El rediseño ataca por qué la 
 **Dependencias nativas:** las de cada módulo entran juntas en una sola development build al inicio del módulo y se mide el tamaño contra D91 (M5: `expo-haptics`).
 
 **API-Football:** el plan Pro vence el 21 de diciembre de 2026; entre el fin del Apertura y el Clausura se desarrolla con simulados (F09).
-
-## 6. Pendientes de este documento
-
-Ninguno. M-01 y M-02 aprobados (D32, D33).

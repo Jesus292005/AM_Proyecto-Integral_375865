@@ -1,7 +1,7 @@
 # 04 — Herramientas (fase de Diseño)
 
 > **Estado:** ✅ Aprobado v1.6 (2026-11-21; `expo-haptics` para F24, D105) · v1.5 (2026-11-06; esfuerzo `medium`, D95) · v1.4 (2026-11-05; modelo de IA Claude Haiku 5.5, D94) · v1.3 (2026-11-02; medición 2 y tope de 35 MB, D91) · v1.2 (2026-10-19; medición de tamaño y tope de D79)
-> **Última actualización:** 2026-11-21
+> **Última actualización:** 2026-11-22
 > Base: specs 00–03 y `decisions.md`. Las herramientas se eligen por los requisitos ya definidos, no al revés.
 
 ---
@@ -121,7 +121,7 @@ Cómo repetirla: `npx eas-cli@24.12.1 build -p android --profile production`, de
 |---|---|
 | Reglas de negocio | Puntos, rangos de goles, cierre de predicciones, visibilidad, insignias y rankings se calculan **solo en el servidor**. La app nunca calcula puntos. |
 | Configuración | Valores de puntos, catálogo de insignias y textos de reglas viven en la base de datos; cambiarlos no requiere actualizar la app. |
-| Actualizaciones | Cambios de JavaScript/diseño por **EAS Update** (actualización por aire; Google Play lo permite para código JavaScript). Cambios nativos (nuevas librerías nativas, permisos) sí requieren nueva versión en la tienda. |
+| Actualizaciones | Cambios de JavaScript/diseño por **EAS Update** (actualización por aire; Google Play lo permite para código JavaScript). Cambios nativos (nuevas librerías nativas, permisos) sí requieren nueva versión en la tienda. **Estado al 22 nov: no implementado** (`expo-updates` no está instalado); por ahora cada cambio requiere un APK nuevo. |
 
 ## 8. iOS (aprobado, D53)
 

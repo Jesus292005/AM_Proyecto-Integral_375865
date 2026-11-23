@@ -1,7 +1,7 @@
 # 02 — Pantallas y navegación
 
 > **Estado:** ✅ Aprobado v1.7 (2026-11-22, T124: S04 con tarjetas y "+", S06 "Unirse a un grupo", S08 con pestañas `pestana?`, S13 de F19 y S15 Editar grupo nueva; F26, F19, D113) · v1.6 (2026-11-22, T109: S11 con los 5 bloques de F17 v2; D103 deja de aplicar a S11, D111) · v1.5 (2026-11-21, T99: S09 nuevo y S14 Cambiar nombre, F28, D108) · v1.4 (2026-11-07, T70: parámetros `jornada?` y `aviso?` de S08) · v1.3 (2026-11-02, D90: recordatorio agrupado abre S02) · v1.2 (2026-10-10, D78: sin pantallas duplicadas) · v1.1 (D76: menú inferior en los detalles) · antes v1.0 (D60)
-> **Última actualización:** 2026-10-10
+> **Última actualización:** 2026-11-22
 > Base: [`01-mvp.md`](./01-mvp.md). Cada pantalla existe porque la necesita al menos una feature; si no, no se construye.
 > Este documento define **qué hay en cada pantalla y cómo se llega**, no cómo se ve (colores, tipografía, estilo): eso se define en la fase de Diseño.
 > Las rutas están escritas sin depender de una librería; la herramienta de navegación se elige en la fase de Diseño.
