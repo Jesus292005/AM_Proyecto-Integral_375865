@@ -9,6 +9,14 @@ App móvil (React Native + Expo SDK 57, Android) de predicciones de la Liga MX c
 2. Busca en `specs/decisions.md` las decisiones que cita esa spec y las reglas de `specs/03-data-model.md` §3 que toca. No hace falta releer todo cada vez.
 3. Para una API de Expo que el repo **todavía no usa**, consulta la documentación de SDK 57 (`App/AGENTS.md`). Para lo que ya se usa, sigue el código existente.
 
+## Cambio pequeño en vivo (presentación)
+Cuando Jesús diga que es un **cambio en vivo**, hay un límite de ~4 minutos frente al docente. Se suspenden la lectura de "Al empezar una sesión", la spec previa, los lotes, el archivo de tareas, el `revisor` y el formato de reporte. Las **reglas técnicas** de abajo siguen aplicando.
+1. Jesús dice primero en qué archivo cree que va el cambio. Confírmalo o corrígelo en una línea, con el porqué.
+2. Haz el cambio mínimo, solo en los archivos necesarios: sin refactors, sin tocar nada más y sin dependencias nuevas.
+3. Si el cambio necesita el servidor (migración, función, regla de negocio, `valor_puntos`) o contradice una decisión o un criterio (cita el id), **dilo en una línea antes de tocar nada** con lo que implicaría, y espera a Jesús.
+4. Verifica: `cd App && npm run typecheck && npm run lint` y solo las pruebas de la sección que tocaste (`npx jest src/<sección>`). Si una prueba falla porque el comportamiento cambió a propósito, actualízala y dilo.
+5. Responde en máximo 8 líneas: archivos tocados, qué cambió (con el fragmento del diff), resultado de las verificaciones y qué revisar en el teléfono. Sin commits.
+
 ## Niveles de decisión
 Clasifica cada decisión antes de tomarla.
 
